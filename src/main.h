@@ -51,6 +51,11 @@ GType zak_cgi_main_get_type (void);
 
 ZakCgiMain *zak_cgi_main_new (void);
 
+void zak_cgi_main_out (const gchar *body);
+
+GHashTable *zak_cgi_main_get_env (void);
+gchar *zak_cgi_main_dump_env ();
+
 
 G_END_DECLS
 

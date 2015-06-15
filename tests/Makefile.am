@@ -8,4 +8,5 @@ LIBS = $(ZAKCGI_LIBS) \
 
 LDADD = $(top_builddir)/src/libzakcgi.la
 
-noinst_PROGRAMS = 
+noinst_PROGRAMS = \
+                    env

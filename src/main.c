@@ -20,7 +20,11 @@
 	#include <config.h>
 #endif
 
+#include <unistd.h>
+
 #include "main.h"
+
+extern char **environ;
 
 static void zak_cgi_main_class_init (ZakCgiMainClass *class);
 static void zak_cgi_main_init (ZakCgiMain *zak_cgi_main);
@@ -83,6 +87,82 @@ ZakCgiMain
 
 
 	return zak_cgi_main;
+}
+
+/**
+ * zak_cgi_main_out:
+ * body:
+ *
+ */
+void
+zak_cgi_main_out (const gchar *body)
+{
+	g_printf ("%s%c%c\n%s\n",
+	          "Content-Type: text/html; charset=UTF-8", 13, 10,
+	          body);
+}
+
+/**
+ * zak_cgi_main_get_env:
+ *
+ * Returns: a #GHashTable with all the environment variables.
+ */
+GHashTable
+*zak_cgi_main_get_env (void)
+{
+	GHashTable *ht;
+
+	guint l;
+	guint i;
+	gchar **envs;
+
+	ht = g_hash_table_new (g_str_hash, g_str_equal);
+
+	l = g_strv_length (environ);
+	for (i = 0; i < l; i++)
+		{
+			envs = g_strsplit (environ[i], "=", 2);
+			g_hash_table_replace (ht, g_strdup (envs[0]), g_strdup (envs[1]));
+			g_strfreev (envs);
+		}
+
+	return ht;
+}
+
+gchar
+*zak_cgi_main_dump_env ()
+{
+	GHashTable *ht_env;
+	GHashTableIter iter;
+
+	GString *str;
+	gchar *ret;
+
+	gpointer key;
+	gpointer value;
+
+	ht_env = zak_cgi_main_get_env ();
+
+	str = g_string_new ("");
+
+	if (g_hash_table_size (ht_env) > 0)
+		{
+			g_string_append_printf (str, "<table>\n");
+
+			g_hash_table_iter_init (&iter, ht_env);
+			while (g_hash_table_iter_next (&iter, &key, &value))
+				{
+					g_string_append_printf (str, "<tr><td>%s</td><td>%s</td></tr>\n",
+					                        (gchar *)key, (gchar *)value);
+				}
+
+			g_string_append_printf (str, "</table>\n");
+		}
+
+	ret = g_strdup (str->str);
+	g_string_free (str, TRUE);
+
+	return ret;
 }
 
 /* PRIVATE */
