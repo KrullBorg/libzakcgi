@@ -20,11 +20,7 @@
 	#include <config.h>
 #endif
 
-#include <unistd.h>
-
 #include "main.h"
-
-extern char **environ;
 
 static void zak_cgi_main_class_init (ZakCgiMainClass *class);
 static void zak_cgi_main_init (ZakCgiMain *zak_cgi_main);
@@ -112,12 +108,14 @@ GHashTable
 {
 	GHashTable *ht;
 
+	gchar **environ;
 	guint l;
 	guint i;
 	gchar **envs;
 
 	ht = g_hash_table_new (g_str_hash, g_str_equal);
 
+	environ = g_get_environ ();
 	l = g_strv_length (environ);
 	for (i = 0; i < l; i++)
 		{
@@ -163,6 +161,38 @@ gchar
 	g_string_free (str, TRUE);
 
 	return ret;
+}
+
+/**
+ * zak_cgi_main_get_parameters:
+ *
+ * Returns:
+ */
+GHashTable
+*zak_cgi_main_get_parameters (void)
+{
+	GHashTable *ht;
+
+	const gchar *qstring;
+
+	gchar **params;
+	gchar **parts;
+	guint i;
+	guint l;
+
+	ht = g_hash_table_new (g_str_hash, g_str_equal);
+
+	qstring = g_getenv ("QUERY_STRING");
+	params = g_strsplit (qstring, "&", -1);
+	l = g_strv_length (params);
+	for (i = 0; i < l; i++)
+		{
+			parts = g_strsplit (params[i], "=", 2);
+			g_hash_table_replace (ht, g_strdup (parts[0]), g_strdup (parts[1]));
+			g_strfreev (parts);
+		}
+
+	return ht;
 }
 
 /* PRIVATE */

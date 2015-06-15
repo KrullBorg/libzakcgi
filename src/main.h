@@ -56,6 +56,8 @@ void zak_cgi_main_out (const gchar *body);
 GHashTable *zak_cgi_main_get_env (void);
 gchar *zak_cgi_main_dump_env ();
 
+GHashTable *zak_cgi_main_get_parameters (void);
+
 
 G_END_DECLS
 

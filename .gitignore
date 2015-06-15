@@ -51,3 +51,4 @@ Rules-quot
 *.exe
 *.csv
 tests/env
+tests/querystring
