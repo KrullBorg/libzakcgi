@@ -1,0 +1,11 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: @PACKAGE_NAME@
+Description: Class for CGI.
+Version: @PACKAGE_VERSION@
+Requires: glib-2.0 >= 2.36
+Libs: -L${libdir} -lzakcgi
+Cflags: -I${includedir}
