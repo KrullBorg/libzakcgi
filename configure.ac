@@ -3,7 +3,7 @@
 
 AC_PREREQ(2.65)
 AC_INIT([libzakcgi], [0.0.1], [azagli@libero.it])
-AC_CONFIG_SRCDIR([src/zakcgimain.c])
+AC_CONFIG_SRCDIR([src/main.c])
 AC_CONFIG_HEADER([config.h])
 
 AM_INIT_AUTOMAKE(-Wall)
@@ -30,7 +30,8 @@ AC_PROG_LIBTOOL
 AC_PROG_RANLIB
 
 # Checks for libraries.
-PKG_CHECK_MODULES(ZAKCGI, [glib-2.0 >= 2.36])
+PKG_CHECK_MODULES(ZAKCGI, [glib-2.0 >= 2.36
+                           gobject-2.0 >= 2.36])
 
 AC_SUBST(ZAKCGI_CFLAGS)
 AC_SUBST(ZAKCGI_LIBS)
