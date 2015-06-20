@@ -58,6 +58,8 @@ gchar *zak_cgi_main_dump_env ();
 
 GHashTable *zak_cgi_main_get_parameters (void);
 
+gchar *zak_cgi_main_get_stdin (void);
+
 
 G_END_DECLS
 

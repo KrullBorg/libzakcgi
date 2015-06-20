@@ -20,6 +20,8 @@
 	#include <config.h>
 #endif
 
+#include <stdio.h>
+
 #include "main.h"
 
 static void zak_cgi_main_class_init (ZakCgiMainClass *class);
@@ -127,6 +129,11 @@ GHashTable
 	return ht;
 }
 
+/**
+ * zak_cgi_main_dump_env:
+ *
+ * Returns: an html table with each environment variables.
+ */
 gchar
 *zak_cgi_main_dump_env ()
 {
@@ -193,6 +200,31 @@ GHashTable
 		}
 
 	return ht;
+}
+
+/**
+ * zak_cgi_main_get_stdin:
+ *
+ * Returns: the stdin.
+ */
+gchar
+*zak_cgi_main_get_stdin (void)
+{
+	gchar *ret;
+
+	guint l;
+
+	ret = NULL;
+
+	l = strtol (g_getenv ("CONTENT_LENGTH"), NULL, 10);
+	if (l > 0)
+		{
+			ret = g_malloc (l + 1);
+			fread (ret, l, 1, stdin);
+			ret[l] = '\0';
+		}
+
+	return ret;
 }
 
 /* PRIVATE */

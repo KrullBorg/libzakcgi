@@ -33,6 +33,16 @@ main (int argc, char *argv[])
 	g_string_append_printf (str, "%s\n</body>", env);
 	g_free (env);
 
+	env = zak_cgi_main_get_stdin ();
+	if (env != NULL)
+		{
+			g_string_append_printf (str,
+			                        "<br/><hr/>\n"
+			                        "%s",
+			                        env);
+			g_free (env);
+		}
+
 	zak_cgi_main_out (str->str);
 	g_string_free (str, TRUE);
 
