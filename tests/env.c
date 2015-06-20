@@ -16,6 +16,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include <syslog.h>
+#include <string.h>
+
+#include <gio/gio.h>
+
 #include <main.h>
 
 int
@@ -23,6 +28,7 @@ main (int argc, char *argv[])
 {
 	gchar *env;
 	GString *str;
+	GHashTable *ht;
 
 	env = zak_cgi_main_dump_env ();
 
@@ -34,12 +40,71 @@ main (int argc, char *argv[])
 	g_free (env);
 
 	env = zak_cgi_main_get_stdin ();
+	syslog (LOG_MAKEPRI(LOG_SYSLOG, LOG_DEBUG), "stdin: %s", env);
 	if (env != NULL)
 		{
 			g_string_append_printf (str,
 			                        "<br/><hr/>\n"
 			                        "%s",
 			                        env);
+
+			const gchar *content_type = g_getenv ("CONTENT_TYPE");
+			gchar **splitted = g_strsplit (content_type, ";", -1);
+			if (g_strv_length (splitted) == 2)
+				{
+					gchar **boundary = g_strsplit (splitted[1], "=", 2);
+
+					ht = zak_cgi_main_parse_stdin (env, boundary[1]);
+
+					GHashTableIter iter;
+
+					gpointer key;
+					gpointer value;
+
+					if (g_hash_table_size (ht) > 0)
+						{
+							g_string_append_printf (str, "<br/><hr/>\n<table>\n");
+
+							g_hash_table_iter_init (&iter, ht);
+							while (g_hash_table_iter_next (&iter, &key, &value))
+								{
+									if (G_VALUE_HOLDS (value, G_TYPE_BOXED))
+										{
+											GPtrArray *ar = (GPtrArray *)g_value_get_boxed ((GValue *)value);
+
+											g_string_append_printf (str, "<tr><td>%s</td><td>%s</td></tr>\n",
+											                        (gchar *)key, (gchar *)g_ptr_array_index (ar, 0));
+
+											/* save the file to tmp */
+											GFile *gfile;
+											GFileIOStream *iostream;
+											GOutputStream *ostream;
+											
+											iostream = NULL;
+											gfile = g_file_new_tmp (g_strdup_printf ("cgi-XXXXXX-%s", (gchar *)g_ptr_array_index (ar, 0)),
+											                        &iostream,
+											                        NULL);
+											
+											ostream = g_io_stream_get_output_stream (G_IO_STREAM (iostream));
+											g_output_stream_write (ostream,
+											                       (gchar *)g_ptr_array_index (ar, 1),
+											                       strlen ((gchar *)g_ptr_array_index (ar, 1)),
+											                       NULL,
+											                       NULL);
+											g_output_stream_close (ostream, NULL, NULL);
+										}
+									else
+										{
+											g_string_append_printf (str, "<tr><td>%s</td><td>%s</td></tr>\n",
+											                        (gchar *)key, (gchar *)g_value_get_string ((GValue *)value));
+										}
+								}
+
+							g_string_append_printf (str, "</table>\n");
+						}
+				}
+			g_strfreev (splitted);
+
 			g_free (env);
 		}
 

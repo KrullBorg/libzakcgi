@@ -21,6 +21,9 @@
 #endif
 
 #include <stdio.h>
+#include <string.h>
+
+#include <syslog.h>
 
 #include <gio/gunixinputstream.h>
 
@@ -238,10 +241,127 @@ gchar
 					                     l,
 					                     NULL,
 					                     &error);
+					if (error != NULL)
+						{
+							syslog (LOG_MAKEPRI(LOG_SYSLOG, LOG_DEBUG), "error reading stdin: %s", error->message);
+						}
 				}
 		}
 
 	return ret;
+}
+
+GHashTable
+*zak_cgi_main_parse_stdin (const gchar *buf, const gchar *boundary)
+{
+	GHashTable *ht;
+
+	gchar *_boundary;
+
+	gchar **v_boundary;
+	guint l_v_boundary;
+
+	guint i_v_boundary;
+
+	ht = NULL;
+
+	_boundary = g_strdup_printf ("--%s", boundary);
+	v_boundary = g_strsplit (buf, _boundary, -1);
+	if (v_boundary != NULL)
+		{
+			gchar *eol;
+			gchar *deol;
+
+			eol = g_strdup_printf ("%c%c", 13, 10);
+			deol = g_strdup_printf ("%s%s", eol, eol);
+
+			ht = g_hash_table_new (g_str_hash, g_str_equal);
+
+			l_v_boundary = g_strv_length (v_boundary);
+			for (i_v_boundary = 1; i_v_boundary < l_v_boundary - 1; i_v_boundary++)
+				{
+					gchar *first_line;
+					gchar *end_line;
+					gchar **v_content;
+					gchar **parts;
+					guint l_v_content;
+					guint i_v_content;
+
+					gchar *param_name;
+					gchar *param_name_file;
+					gchar *param_value;
+
+					GValue *gval;
+
+					end_line = g_strstr_len (v_boundary[i_v_boundary] + 2, -1, eol);
+					first_line = g_strndup (v_boundary[i_v_boundary], strlen (v_boundary[i_v_boundary]) - strlen (end_line));
+
+					v_content = g_strsplit (first_line, ";", -1);
+					l_v_content = g_strv_length (v_content);
+
+					parts = g_strsplit (v_content[1], "=", 2);
+					param_name = g_strndup (parts[1] + 1, strlen (parts[1]) - 2);
+					param_name[strlen (parts[1]) - 2] = '\0';
+					g_strfreev (parts);
+
+					if (l_v_content == 3)
+						{
+							parts = g_strsplit (v_content[2], "=", 2);
+							param_name_file = g_strndup (parts[1] + 1, strlen (parts[1]) - 2);
+							param_name_file[strlen (parts[1]) - 2] = '\0';
+							g_strfreev (parts);
+						}
+
+					g_strfreev (v_content);
+					g_free (first_line);
+
+					end_line = g_strstr_len (v_boundary[i_v_boundary], -1, deol);
+					if (l_v_content == 3)
+						{
+							param_value = g_strndup (end_line + 4, strlen (end_line + 4) - 2);
+							param_value[ strlen (end_line + 4) - 2] = '\0';
+						}
+					else
+						{
+							param_value = g_strdup (end_line + 4);
+						}
+
+					gval = g_new0 (GValue, 1);
+
+					if (l_v_content == 3)
+						{
+							GPtrArray *ar;
+
+							ar = g_ptr_array_new ();
+							g_ptr_array_add (ar, g_strdup (param_name_file));
+							g_ptr_array_add (ar, g_strdup (param_value));
+
+							g_value_init (gval, G_TYPE_PTR_ARRAY);
+							g_value_take_boxed (gval, ar);
+						}
+					else
+						{
+							g_value_init (gval, G_TYPE_STRING);
+							g_value_set_string (gval, g_strdup (param_value));
+						}
+
+					g_hash_table_replace (ht, g_strdup (param_name), gval);
+
+					g_free (param_name);
+					g_free (param_value);
+					if (l_v_content == 3)
+						{
+							g_free (param_name_file);
+						}
+				}
+
+			g_strfreev (v_boundary);
+			g_free (deol);
+			g_free (eol);
+		}
+	g_free (_boundary);
+
+	return ht;
 }
 
 /* PRIVATE */
