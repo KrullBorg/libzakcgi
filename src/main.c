@@ -22,6 +22,8 @@
 
 #include <stdio.h>
 
+#include <gio/gunixinputstream.h>
+
 #include "main.h"
 
 static void zak_cgi_main_class_init (ZakCgiMainClass *class);
@@ -212,16 +214,31 @@ gchar
 {
 	gchar *ret;
 
+	const gchar *env;
 	guint l;
+
+	GError *error;
+	GInputStream *istream;
 
 	ret = NULL;
 
-	l = strtol (g_getenv ("CONTENT_LENGTH"), NULL, 10);
-	if (l > 0)
+	env = g_getenv ("CONTENT_LENGTH");
+	if (env != NULL)
 		{
-			ret = g_malloc (l + 1);
-			fread (ret, l, 1, stdin);
-			ret[l] = '\0';
+			l = strtol (env, NULL, 10);
+			if (l > 0)
+				{
+					error = NULL;
+
+					ret = g_malloc0 (l + 1);
+					istream = g_unix_input_stream_new (0, TRUE);
+
+					g_input_stream_read (istream,
+					                     ret,
+					                     l,
+					                     NULL,
+					                     &error);
+				}
 		}
 
 	return ret;
