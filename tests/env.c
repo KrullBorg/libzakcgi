@@ -40,7 +40,7 @@ main (int argc, char *argv[])
 	g_free (env);
 
 	env = zak_cgi_main_get_stdin ();
-	syslog (LOG_MAKEPRI(LOG_SYSLOG, LOG_DEBUG), "stdin: %s", env);
+	/*syslog (LOG_MAKEPRI(LOG_SYSLOG, LOG_DEBUG), "stdin: %s", env);*/
 	if (env != NULL)
 		{
 			g_string_append_printf (str,
@@ -75,23 +75,26 @@ main (int argc, char *argv[])
 											g_string_append_printf (str, "<tr><td>%s</td><td>%s</td></tr>\n",
 											                        (gchar *)key, (gchar *)g_ptr_array_index (ar, 0));
 
-											/* save the file to tmp */
-											GFile *gfile;
-											GFileIOStream *iostream;
-											GOutputStream *ostream;
-											
-											iostream = NULL;
-											gfile = g_file_new_tmp (g_strdup_printf ("cgi-XXXXXX-%s", (gchar *)g_ptr_array_index (ar, 0)),
-											                        &iostream,
-											                        NULL);
-											
-											ostream = g_io_stream_get_output_stream (G_IO_STREAM (iostream));
-											g_output_stream_write (ostream,
-											                       (gchar *)g_ptr_array_index (ar, 1),
-											                       strlen ((gchar *)g_ptr_array_index (ar, 1)),
-											                       NULL,
-											                       NULL);
-											g_output_stream_close (ostream, NULL, NULL);
+											if (g_strcmp0 ((gchar *)g_ptr_array_index (ar, 0), "") != 0)
+												{
+													/* save the file to tmp */
+													GFile *gfile;
+													GFileIOStream *iostream;
+													GOutputStream *ostream;
+
+													iostream = NULL;
+													gfile = g_file_new_tmp (g_strdup_printf ("cgi-XXXXXX-%s", (gchar *)g_ptr_array_index (ar, 0)),
+													                        &iostream,
+													                        NULL);
+
+													ostream = g_io_stream_get_output_stream (G_IO_STREAM (iostream));
+													g_output_stream_write (ostream,
+													                       g_ptr_array_index (ar, 1),
+													                       GPOINTER_TO_SIZE (g_ptr_array_index (ar, 2)),
+													                       NULL,
+													                       NULL);
+													g_output_stream_close (ostream, NULL, NULL);
+												}
 										}
 									else
 										{

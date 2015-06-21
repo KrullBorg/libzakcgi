@@ -62,6 +62,8 @@ gchar *zak_cgi_main_get_stdin (void);
 
 GHashTable *zak_cgi_main_parse_stdin (const gchar *buf, const gchar *boundary);
 
+GHashTable *zak_cgi_main_parse_stdin_bin (const gchar *buf, const gchar *boundary);
+
 
 G_END_DECLS
 
