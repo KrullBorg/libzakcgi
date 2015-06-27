@@ -45,6 +45,9 @@ main (int argc, char *argv[])
 	                        "\n%s",
 	                        zak_cgi_main_set_cookie ("PRIMO", "ilvaloredelcookie1234 56 6 7 7 8",
 	                                                 g_date_time_add_months (g_date_time_new_now_utc (), 3), NULL, NULL, FALSE, FALSE));
+	g_string_append_printf (header,
+	                        "\n%s",
+	                        zak_cgi_main_set_cookie ("SECONDO", "il secondo cookie", NULL, NULL, NULL, FALSE, FALSE));
 
 	zak_cgi_main_out (header->str, str->str);
 	g_string_free (str, TRUE);

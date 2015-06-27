@@ -51,6 +51,11 @@ GType zak_cgi_session_get_type (void);
 
 ZakCgiSession *zak_cgi_session_new (void);
 
+gchar *zak_cgi_session_get_header (ZakCgiSession *session);
+
+void zak_cgi_session_set_value (ZakCgiSession *session, const gchar *name, const gchar *value);
+gchar *zak_cgi_session_get_value (ZakCgiSession *session, const gchar *name);
+
 
 G_END_DECLS
 

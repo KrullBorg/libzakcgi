@@ -19,6 +19,7 @@
 #ifndef __LIBZAKCGI_H__
 #define __LIBZAKCGI_H__
 
-#include <libzakcgi/zakcgimain.h>
+#include <libzakcgi/main.h>
+#include <libzakcgi/session.h>
 
 #endif /* __LIBZAKCGI_H__ */

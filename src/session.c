@@ -20,6 +20,11 @@
 	#include <config.h>
 #endif
 
+#include <gio/gio.h>
+
+#include <string.h>
+
+#include "main.h"
 #include "session.h"
 
 static void zak_cgi_session_class_init (ZakCgiSessionClass *class);
@@ -42,6 +47,9 @@ static void zak_cgi_session_finalize (GObject *gobject);
 typedef struct _ZakCgiSessionPrivate ZakCgiSessionPrivate;
 struct _ZakCgiSessionPrivate
 	{
+		gchar *sid;
+		GFile *gfile;
+		GKeyFile *kfile;
 	};
 
 G_DEFINE_TYPE (ZakCgiSession, zak_cgi_session, G_TYPE_OBJECT)
@@ -74,6 +82,10 @@ zak_cgi_session_init (ZakCgiSession *zak_cgi_session)
 ZakCgiSession
 *zak_cgi_session_new (void)
 {
+	GHashTable *ht_cookies;
+
+	GError *error;
+
 	ZakCgiSession *zak_cgi_session;
 	ZakCgiSessionPrivate *priv;
 
@@ -81,8 +93,131 @@ ZakCgiSession
 
 	priv = ZAK_CGI_SESSION_GET_PRIVATE (zak_cgi_session);
 
+	ht_cookies = zak_cgi_main_get_cookies ();
+	priv->sid = g_hash_table_lookup (ht_cookies, "ZAKCGISID");
+
+	if (priv->sid != NULL)
+		{
+			/* open the file */
+			priv->gfile = g_file_new_for_path (g_build_filename (g_get_tmp_dir (), priv->sid, NULL));
+
+			error = NULL;
+
+			/* TODO */
+			/* check the content */
+			priv->kfile = g_key_file_new ();
+			if (!g_key_file_load_from_file (priv->kfile,
+			                                g_file_get_path (priv->gfile),
+			                                G_KEY_FILE_NONE,
+			                                &error)
+			    || error != NULL)
+				{
+					/* TODO */
+				}
+		}
 
 	return zak_cgi_session;
+}
+
+/**
+ * zak_cgi_session_get_header:
+ * @session:
+ *
+ * Returns: the header that set the cookie session, if needed; else an empty string.
+ */
+gchar
+*zak_cgi_session_get_header (ZakCgiSession *session)
+{
+	gchar *ret;
+
+	GError *error;
+	GFileIOStream *iostream;
+
+	ZakCgiSessionPrivate *priv = ZAK_CGI_SESSION_GET_PRIVATE (session);
+
+	if (priv->sid == NULL)
+		{
+			/* create new random name */
+			guint32 i;
+			gchar *tmp;
+
+			i = g_random_int ();
+
+			tmp = g_strdup_printf ("%d", i);
+			
+			priv->sid = g_compute_checksum_for_string (G_CHECKSUM_MD5,
+			                                           tmp,
+			                                           strlen (tmp));
+
+			g_free (tmp);
+
+			/* see if file already exists */
+			priv->gfile = g_file_new_for_path (g_build_filename (g_get_tmp_dir (), priv->sid, NULL));
+			error = NULL;
+			iostream = g_file_replace_readwrite (priv->gfile, NULL, FALSE, G_FILE_CREATE_PRIVATE, NULL, &error);
+			if (iostream == NULL
+			    || error != NULL)
+				{
+					/* TODO */
+				}
+			else
+				{
+					/* TODO */
+					/* insert some data (ex IP) */
+					g_io_stream_close (G_IO_STREAM (iostream), NULL, NULL);
+					g_object_unref (iostream);
+				}
+
+			ret = zak_cgi_main_set_cookie ("ZAKCGISID", priv->sid, NULL, NULL, NULL, FALSE, FALSE);
+		}
+	else
+		{
+			ret = g_strdup ("");
+		}
+
+	return ret;
+}
+
+/**
+ * zak_cgi_session_set_value:
+ * @session:
+ * @name:
+ * @value:
+ *
+ */
+void
+zak_cgi_session_set_value (ZakCgiSession *session, const gchar *name, const gchar *value)
+{
+	ZakCgiSessionPrivate *priv = ZAK_CGI_SESSION_GET_PRIVATE (session);
+
+	if (priv->kfile != NULL)
+		{
+			g_key_file_set_value (priv->kfile, "SESSION", name, value);
+			g_key_file_save_to_file (priv->kfile, g_file_get_path (priv->gfile), NULL);
+		}
+}
+
+/**
+ * zak_cgi_session_get_value:
+ * @session:
+ * @name:
+ *
+ * Returns: a value from session.
+ */
+gchar
+*zak_cgi_session_get_value (ZakCgiSession *session, const gchar *name)
+{
+	gchar *ret;
+
+	ZakCgiSessionPrivate *priv = ZAK_CGI_SESSION_GET_PRIVATE (session);
+
+	ret = NULL;
+	if (priv->kfile != NULL)
+		{
+			ret = g_key_file_get_value (priv->kfile, "SESSION", name, NULL);
+		}
+
+	return ret;
 }
 
 /* PRIVATE */
