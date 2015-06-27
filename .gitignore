@@ -50,6 +50,8 @@ intltool-*
 Rules-quot
 *.exe
 *.csv
+tests/cookies
 tests/env
 tests/querystring
 tests/redirect
+tests/session

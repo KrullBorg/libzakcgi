@@ -111,7 +111,7 @@ main (int argc, char *argv[])
 			g_free (env);
 		}
 
-	zak_cgi_main_out (str->str);
+	zak_cgi_main_out (NULL, str->str);
 	g_string_free (str, TRUE);
 
 	return 0;

@@ -9,6 +9,8 @@ LIBS = $(ZAKCGI_LIBS) \
 LDADD = $(top_builddir)/src/libzakcgi.la
 
 noinst_PROGRAMS = \
+                    cookies \
                     env \
                     querystring \
-                    redirect
+                    redirect \
+                    session

@@ -49,12 +49,26 @@ struct _ZakCgiMainClass
 GType zak_cgi_main_get_type (void);
 
 
+#define ZAK_CGI_STANDARD_HEADER_HTML "Content-Type: text/html; charset=UTF-8"
+
+
 ZakCgiMain *zak_cgi_main_new (void);
 
-void zak_cgi_main_out (const gchar *body);
+void zak_cgi_main_out (const gchar *header, const gchar *body);
 
 GHashTable *zak_cgi_main_get_env (void);
-gchar *zak_cgi_main_dump_env ();
+gchar *zak_cgi_main_dump_env (void);
+
+GHashTable *zak_cgi_main_get_cookies (void);
+gchar *zak_cgi_main_dump_cookies (void);
+
+gchar *zak_cgi_main_set_cookie (const gchar *name,
+                                const gchar *value,
+                                GDateTime *expires,
+                                const gchar *domain,
+                                const gchar *path,
+                                gboolean secure,
+                                gboolean http_only);
 
 GHashTable *zak_cgi_main_get_parameters (void);
 

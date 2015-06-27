@@ -22,6 +22,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <locale.h>
 
 #include <syslog.h>
 
@@ -98,11 +99,25 @@ ZakCgiMain
  *
  */
 void
-zak_cgi_main_out (const gchar *body)
+zak_cgi_main_out (const gchar *header, const gchar *body)
 {
+	gchar *_header;
+
+	if (header == NULL)
+		{
+			_header = g_strdup (ZAK_CGI_STANDARD_HEADER_HTML);
+		}
+	else
+		{
+			_header = g_strdup (header);
+		}
+
 	g_printf ("%s%c%c\n%s\n",
-	          "Content-Type: text/html; charset=UTF-8", 13, 10,
+	          _header,
+	          13, 10,
 	          body);
+
+	g_free (_header);
 }
 
 /**
@@ -140,7 +155,7 @@ GHashTable
  * Returns: an html table with each environment variables.
  */
 gchar
-*zak_cgi_main_dump_env ()
+*zak_cgi_main_dump_env (void)
 {
 	GHashTable *ht_env;
 	GHashTableIter iter;
@@ -171,6 +186,126 @@ gchar
 
 	ret = g_strdup (str->str);
 	g_string_free (str, TRUE);
+
+	return ret;
+}
+
+/**
+ * zak_cgi_main_get_cookies:
+ *
+ * Returns: a #GHashTable with all the cookies.
+ */
+GHashTable
+*zak_cgi_main_get_cookies (void)
+{
+	GHashTable *ht;
+	GHashTable *ht_env;
+
+	guint l;
+	guint i;
+	gchar *cookies;
+	gchar **strv_cookies;
+	gchar **parts;
+
+	ht = g_hash_table_new (g_str_hash, g_str_equal);
+
+	ht_env = zak_cgi_main_get_env ();
+
+	cookies = g_hash_table_lookup (ht_env, "HTTP_COOKIE");
+	if (cookies != NULL)
+		{
+			strv_cookies = g_strsplit (cookies, ";", -1);
+			l = g_strv_length (strv_cookies);
+			for (i = 0; i < l; i++)
+				{
+					parts = g_strsplit (strv_cookies[i], "=", 2);
+					g_hash_table_replace (ht, g_strstrip (g_strdup (parts[0])), g_strstrip (g_strdup (parts[1])));
+					g_strfreev (parts);
+				}
+		}
+
+	return ht;
+}
+
+/**
+ * zak_cgi_main_dump_cookies:
+ *
+ * Returns: an html table with each cookies.
+ */
+gchar
+*zak_cgi_main_dump_cookies (void)
+{
+	GHashTable *ht_env;
+	GHashTableIter iter;
+
+	GString *str;
+	gchar *ret;
+
+	gpointer key;
+	gpointer value;
+
+	ht_env = zak_cgi_main_get_cookies ();
+
+	str = g_string_new ("");
+
+	if (g_hash_table_size (ht_env) > 0)
+		{
+			g_string_append_printf (str, "<table>\n");
+
+			g_hash_table_iter_init (&iter, ht_env);
+			while (g_hash_table_iter_next (&iter, &key, &value))
+				{
+					g_string_append_printf (str, "<tr><td>%s</td><td>%s</td></tr>\n",
+					                        (gchar *)key, (gchar *)value);
+				}
+
+			g_string_append_printf (str, "</table>\n");
+		}
+
+	ret = g_strdup (str->str);
+	g_string_free (str, TRUE);
+
+	return ret;
+}
+
+/**
+ * zak_cgi_main_set_cookie:
+ * @name:
+ * @value:
+ * @expires:
+ * @domain:
+ * @path:
+ * @secure:
+ * @http_only:
+ *
+ * Returns: the string to set the cookie.
+ */
+gchar
+*zak_cgi_main_set_cookie (const gchar *name,
+                          const gchar *value,
+                          GDateTime *expires,
+                          const gchar *domain,
+                          const gchar *path,
+                          gboolean secure,
+                          gboolean http_only)
+{
+	char *ret;
+
+	char *cur = g_strdup (setlocale (LC_TIME, NULL));
+
+	setlocale (LC_NUMERIC, "C");
+
+	ret = g_strdup_printf ("Set-Cookie: %s=%s%s",
+	                       name,
+	                       value,
+	                       expires != NULL ? g_date_time_format (expires, "; expires=%a, %d-%b-%Y %H:%M:%S GMT") : "",
+	                       domain != NULL ? g_strdup_printf ("; domain=%s", domain) : "",
+	                       path != NULL  ? g_strdup_printf ("; path=%s", path) : "",
+	                       secure ? g_strdup ("; secure") : "",
+	                       http_only ? g_strdup ("; httponly") : "");
+
+	setlocale (LC_TIME, cur);
+	g_free (cur);
 
 	return ret;
 }

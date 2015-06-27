@@ -16,41 +16,37 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include <syslog.h>
+#include <string.h>
+
+#include <gio/gio.h>
+
 #include <main.h>
 
 int
 main (int argc, char *argv[])
 {
-	GHashTable *ht_env;
+	gchar *env;
 	GString *str;
+	GString *header;
+	GHashTable *ht;
 
-	GHashTableIter iter;
-	gpointer key;
-	gpointer value;
-
-	ht_env = zak_cgi_main_get_parameters ();
+	env = zak_cgi_main_dump_cookies ();
 
 	str = g_string_new ("<html>\n"
-	                    "<head><title>Query string</title></head>\n"
+	                    "<head><title>Cookies</title></head>\n"
 	                    "<body>\n");
 
-	if (g_hash_table_size (ht_env) > 0)
-		{
-			g_string_append_printf (str, "<table>\n");
+	g_string_append_printf (str, "%s\n</body>", env);
+	g_free (env);
 
-			g_hash_table_iter_init (&iter, ht_env);
-			while (g_hash_table_iter_next (&iter, &key, &value))
-				{
-					g_string_append_printf (str, "<tr><td>%s</td><td>%s</td></tr>\n",
-					                        (gchar *)key, (gchar *)value);
-				}
+	header = g_string_new (ZAK_CGI_STANDARD_HEADER_HTML);
+	g_string_append_printf (header,
+	                        "\n%s",
+	                        zak_cgi_main_set_cookie ("PRIMO", "ilvaloredelcookie1234 56 6 7 7 8",
+	                                                 g_date_time_add_months (g_date_time_new_now_utc (), 3), NULL, NULL, FALSE, FALSE));
 
-			g_string_append_printf (str, "</table>\n");
-		}
-
-	g_string_append_printf (str, "</body>\n");
-
-	zak_cgi_main_out (NULL, str->str);
+	zak_cgi_main_out (header->str, str->str);
 	g_string_free (str, TRUE);
 
 	return 0;

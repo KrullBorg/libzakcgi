@@ -6,12 +6,14 @@ AM_CPPFLAGS = $(ZAKCGI_CFLAGS) \
 lib_LTLIBRARIES = libzakcgi.la
 
 libzakcgi_la_SOURCES = main.c \
-                       url.c
+                        session.c \
+                        url.c
 
 libzakcgi_la_LDFLAGS = -no-undefined
 
 libzakcgi_include_HEADERS = libzakcgi.h \
                             main.h \
+                            session.h \
                             url.h
 
 libzakcgi_includedir = $(includedir)/libzakcgi
