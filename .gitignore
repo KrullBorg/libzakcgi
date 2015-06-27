@@ -52,3 +52,4 @@ Rules-quot
 *.csv
 tests/env
 tests/querystring
+tests/redirect

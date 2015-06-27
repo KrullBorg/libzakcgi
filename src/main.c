@@ -471,6 +471,15 @@ GHashTable
 	return ht;
 }
 
+void
+zak_cgi_main_redirect (const gchar *url)
+{
+	g_printf ("%s%s%c%c\n",
+	          "Location: ",
+	          url,
+	          13, 10);
+}
+
 /* PRIVATE */
 static void
 zak_cgi_main_set_property (GObject *object,

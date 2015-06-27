@@ -10,4 +10,5 @@ LDADD = $(top_builddir)/src/libzakcgi.la
 
 noinst_PROGRAMS = \
                     env \
-                    querystring
+                    querystring \
+                    redirect
