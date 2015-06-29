@@ -28,7 +28,7 @@ main (int argc, char *argv[])
 	gpointer key;
 	gpointer value;
 
-	ht_env = zak_cgi_main_get_parameters ();
+	ht_env = zak_cgi_main_get_parameters (NULL);
 
 	str = g_string_new ("<html>\n"
 	                    "<head><title>Query string</title></head>\n"
@@ -42,7 +42,7 @@ main (int argc, char *argv[])
 			while (g_hash_table_iter_next (&iter, &key, &value))
 				{
 					g_string_append_printf (str, "<tr><td>%s</td><td>%s</td></tr>\n",
-					                        (gchar *)key, (gchar *)value);
+					                        (gchar *)key, (gchar *)g_value_get_string ((GValue *)value));
 				}
 
 			g_string_append_printf (str, "</table>\n");

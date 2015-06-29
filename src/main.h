@@ -70,7 +70,7 @@ gchar *zak_cgi_main_set_cookie (const gchar *name,
                                 gboolean secure,
                                 gboolean http_only);
 
-GHashTable *zak_cgi_main_get_parameters (void);
+GHashTable *zak_cgi_main_get_parameters (const gchar *query_string);
 
 gchar *zak_cgi_main_get_stdin (void);
 

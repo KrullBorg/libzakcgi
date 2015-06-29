@@ -312,11 +312,12 @@ gchar
 
 /**
  * zak_cgi_main_get_parameters:
+ * @query_string:
  *
  * Returns:
  */
 GHashTable
-*zak_cgi_main_get_parameters (void)
+*zak_cgi_main_get_parameters (const gchar *query_string)
 {
 	GHashTable *ht;
 
@@ -327,15 +328,30 @@ GHashTable
 	guint i;
 	guint l;
 
+	GValue *gval;
+
 	ht = g_hash_table_new (g_str_hash, g_str_equal);
 
-	qstring = g_getenv ("QUERY_STRING");
+	if (query_string == NULL)
+		{
+			qstring = g_getenv ("QUERY_STRING");
+		}
+	else
+		{
+			qstring = query_string;
+		}
 	params = g_strsplit (qstring, "&", -1);
 	l = g_strv_length (params);
 	for (i = 0; i < l; i++)
 		{
+			gval = g_new0 (GValue, 1);
+
 			parts = g_strsplit (params[i], "=", 2);
-			g_hash_table_replace (ht, g_strdup (parts[0]), g_strdup (parts[1]));
+
+			g_value_init (gval, G_TYPE_STRING);
+			g_value_set_string (gval, g_strdup (parts[1] == NULL ? "" : parts[1]));
+
+			g_hash_table_replace (ht, g_strdup (parts[0]), gval);
 			g_strfreev (parts);
 		}
 
@@ -386,8 +402,6 @@ gchar
 						{
 							syslog (LOG_MAKEPRI(LOG_SYSLOG, LOG_DEBUG), "error reading stdin: %s", error->message);
 						}
-
-					syslog (LOG_MAKEPRI(LOG_SYSLOG, LOG_DEBUG), "stdin: %s", ret);
 				}
 		}
 
@@ -451,172 +465,191 @@ GHashTable
 
 	ht = NULL;
 
-    content_type = (gchar *)g_getenv ("CONTENT_TYPE");
-	gchar **splitted = g_strsplit (content_type, ";", -1);
-	if (g_strv_length (splitted) > 1
-		&& boundary == NULL)
-	  {
-			gchar **boundary_splitted = g_strsplit (splitted[1], "=", 2);
-			_boundary = g_strdup_printf ("--%s", boundary_splitted[1]);
-			g_strfreev (boundary_splitted);
-	  }
-	else
-	  {
-		if (boundary != NULL)
-		  {
-			_boundary = g_strdup_printf ("--%s", boundary);			
-		  }
-	  }
-	g_strfreev (splitted);
-
 	env = g_getenv ("CONTENT_LENGTH");
 	if (env != NULL)
 		{
 			l = strtol (env, NULL, 10);
-			if (l > 0)
+			if (l < 1)
 				{
-					ht = g_hash_table_new (g_str_hash, g_str_equal);
+					return ht;
+				}
+		}
+	else
+		{
+			return ht;
+		}
 
-					i = 0;
-					do
+    content_type = (gchar *)g_getenv ("CONTENT_TYPE");
+	if (content_type == NULL)
+		{
+			return ht;
+		}
+
+	gchar **splitted = g_strsplit (content_type, ";", -1);
+	if (g_strcmp0 (content_type, "") == 0
+		|| g_strcmp0 (splitted[0], "application/x-www-form-urlencoded") == 0)
+		{
+			return zak_cgi_main_get_parameters (buf);
+		}
+	else if (g_strcmp0 (splitted[0], "multipart/form-data") == 0)
+		{
+			if (g_strv_length (splitted) > 1
+				&& boundary == NULL)
+				{
+					gchar **boundary_splitted = g_strsplit (splitted[1], "=", 2);
+					_boundary = g_strdup_printf ("--%s", boundary_splitted[1]);
+					g_strfreev (boundary_splitted);
+				}
+			else
+				{
+					if (boundary != NULL)
 						{
-							/* read line */
-							line = zak_cgi_main_read_line (buf, l, &i, TRUE, &bytesread);
-							syslog (LOG_MAKEPRI(LOG_SYSLOG, LOG_DEBUG), "boundary: %s %d", line, bytesread);
-							if (g_strcmp0 (line, _boundary) == 0)
+							_boundary = g_strdup_printf ("--%s", boundary);
+						}
+				}
+			g_strfreev (splitted);
+
+			ht = g_hash_table_new (g_str_hash, g_str_equal);
+
+			i = 0;
+			do
+				{
+					/* read line */
+					line = zak_cgi_main_read_line (buf, l, &i, TRUE, &bytesread);
+					syslog (LOG_MAKEPRI(LOG_SYSLOG, LOG_DEBUG), "boundary: %s %d", line, bytesread);
+					if (g_strcmp0 (line, _boundary) == 0)
+						{
+							/* content-disposition */
+							gchar **v_content;
+							gchar **parts;
+							guint l_v_content;
+
+							gchar *param_name;
+							gchar *param_name_file;
+							gchar *param_value;
+							guint file_l;
+
+							GValue *gval;
+
+							content_disposition = zak_cgi_main_read_line (buf, l, &i, TRUE, &bytesread);
+							syslog (LOG_MAKEPRI(LOG_SYSLOG, LOG_DEBUG), "content_disposition: %s", content_disposition);
+
+							v_content = g_strsplit (content_disposition, ";", -1);
+							l_v_content = g_strv_length (v_content);
+
+							parts = g_strsplit (v_content[1], "=", 2);
+							param_name = g_strndup (parts[1] + 1, strlen (parts[1]) - 2);
+							param_name[strlen (parts[1]) - 2] = '\0';
+							g_strfreev (parts);
+
+							if (l_v_content == 3)
 								{
-									/* content-disposition */
-									gchar **v_content;
-									gchar **parts;
-									guint l_v_content;
-
-									gchar *param_name;
-									gchar *param_name_file;
-									gchar *param_value;
-									guint file_l;
-
-									GValue *gval;
-
-									content_disposition = zak_cgi_main_read_line (buf, l, &i, TRUE, &bytesread);
-									syslog (LOG_MAKEPRI(LOG_SYSLOG, LOG_DEBUG), "content_disposition: %s", content_disposition);
-
-									v_content = g_strsplit (content_disposition, ";", -1);
-									l_v_content = g_strv_length (v_content);
-
-									parts = g_strsplit (v_content[1], "=", 2);
-									param_name = g_strndup (parts[1] + 1, strlen (parts[1]) - 2);
-									param_name[strlen (parts[1]) - 2] = '\0';
+									parts = g_strsplit (v_content[2], "=", 2);
+									param_name_file = g_strndup (parts[1] + 1, strlen (parts[1]) - 2);
+									param_name_file[strlen (parts[1]) - 2] = '\0';
+									syslog (LOG_MAKEPRI(LOG_SYSLOG, LOG_DEBUG), "param_name_file: %s", param_name_file);
 									g_strfreev (parts);
 
-									if (l_v_content == 3)
+									/* content-type */
+									content_type = zak_cgi_main_read_line (buf, l, &i, TRUE, &bytesread);
+									syslog (LOG_MAKEPRI(LOG_SYSLOG, LOG_DEBUG), "content_type: %s", content_type);
+									g_free (content_type);
+								}
+
+							g_strfreev (v_content);
+							g_free (content_disposition);
+
+							/* empty */
+							g_free (zak_cgi_main_read_line (buf, l, &i, TRUE, &bytesread));
+
+							if (l_v_content == 3)
+								{
+									param_value = (gchar *)g_malloc (1);
+									if (g_strcmp0 (param_name_file, "") != 0)
 										{
-											parts = g_strsplit (v_content[2], "=", 2);
-											param_name_file = g_strndup (parts[1] + 1, strlen (parts[1]) - 2);
-											param_name_file[strlen (parts[1]) - 2] = '\0';
-											syslog (LOG_MAKEPRI(LOG_SYSLOG, LOG_DEBUG), "param_name_file: %s", param_name_file);
-											g_strfreev (parts);
+											gboolean exit;
 
-											/* content-type */
-											content_type = zak_cgi_main_read_line (buf, l, &i, TRUE, &bytesread);
-											syslog (LOG_MAKEPRI(LOG_SYSLOG, LOG_DEBUG), "content_type: %s", content_type);
-											g_free (content_type);
-										}
-
-									g_strfreev (v_content);
-									g_free (content_disposition);
-
-									/* empty */
-									g_free (zak_cgi_main_read_line (buf, l, &i, TRUE, &bytesread));
-
-									if (l_v_content == 3)
-										{
-											param_value = (gchar *)g_malloc (1);
-											if (g_strcmp0 (param_name_file, "") != 0)
+											exit = FALSE;
+											file_l = 0;
+											do
 												{
-													gboolean exit;
+													tmp = zak_cgi_main_read_line (buf, l, &i, FALSE, &bytesread);
+													syslog (LOG_MAKEPRI(LOG_SYSLOG, LOG_DEBUG), "tmp: %s %d", tmp, bytesread);
 
-													exit = FALSE;
-													file_l = 0;
-													do
+													if (memcmp (tmp, _boundary, strlen (_boundary)) == 0)
 														{
-															tmp = zak_cgi_main_read_line (buf, l, &i, FALSE, &bytesread);
-															syslog (LOG_MAKEPRI(LOG_SYSLOG, LOG_DEBUG), "tmp: %s %d", tmp, bytesread);
+															i -= bytesread;
+															exit = TRUE;
+														}
+													else
+														{
+															param_value = g_realloc (param_value, file_l + bytesread);
+															memmove (param_value + file_l, tmp, bytesread);
+															file_l += bytesread;
+														}
 
-															if (memcmp (tmp, _boundary, strlen (_boundary)) == 0)
-																{
-																	i -= bytesread;
-																	exit = TRUE;
-																}
-															else
-																{
-																	param_value = g_realloc (param_value, file_l + bytesread);
-																	memmove (param_value + file_l, tmp, bytesread);
-																	file_l += bytesread;
-																}
-
-															g_free (tmp);
-														} while (!exit);
-												}
-											else
-												{
-													/* empty */
-													g_free (zak_cgi_main_read_line (buf, l, &i, TRUE, &bytesread));
-
-													file_l = 3;
-													param_value[0] = '\0';
-												}
+													g_free (tmp);
+												} while (!exit);
 										}
 									else
 										{
-											param_value = zak_cgi_main_read_line (buf, l, &i, TRUE, &bytesread);
-											syslog (LOG_MAKEPRI(LOG_SYSLOG, LOG_DEBUG), "param_value: %s", param_value);
-										}
+											/* empty */
+											g_free (zak_cgi_main_read_line (buf, l, &i, TRUE, &bytesread));
 
-									gval = g_new0 (GValue, 1);
-
-									if (l_v_content == 3)
-										{
-											GPtrArray *ar;
-
-											ar = g_ptr_array_new ();
-											g_ptr_array_add (ar, g_strdup (param_name_file));
-											g_ptr_array_add (ar, g_memdup (param_value, file_l - 2));
-											g_ptr_array_add (ar, GSIZE_TO_POINTER (file_l - 2));
-
-											g_value_init (gval, G_TYPE_PTR_ARRAY);
-											g_value_take_boxed (gval, ar);
-										}
-									else
-										{
-											g_value_init (gval, G_TYPE_STRING);
-											g_value_set_string (gval, g_strdup (param_value));
-										}
-
-									g_hash_table_replace (ht, g_strdup (param_name), gval);
-
-									g_free (param_name);
-									g_free (param_value);
-									if (l_v_content == 3)
-										{
-											g_free (param_name_file);
+											file_l = 3;
+											param_value[0] = '\0';
 										}
 								}
 							else
 								{
-									tmp = g_strdup_printf ("%s--", _boundary);
-									if (g_strcmp0 (line, tmp) == 0)
-										{
-											g_free (tmp);
-											break;
-										}
-									g_free (tmp);
+									param_value = zak_cgi_main_read_line (buf, l, &i, TRUE, &bytesread);
+									syslog (LOG_MAKEPRI(LOG_SYSLOG, LOG_DEBUG), "param_value: %s", param_value);
 								}
 
-							g_free (line);
-						} while (i < l);
+							gval = g_new0 (GValue, 1);
+
+							if (l_v_content == 3)
+								{
+									GPtrArray *ar;
+
+									ar = g_ptr_array_new ();
+									g_ptr_array_add (ar, g_strdup (param_name_file));
+									g_ptr_array_add (ar, g_memdup (param_value, file_l - 2));
+									g_ptr_array_add (ar, GSIZE_TO_POINTER (file_l - 2));
+
+									g_value_init (gval, G_TYPE_PTR_ARRAY);
+									g_value_take_boxed (gval, ar);
+								}
+							else
+								{
+									g_value_init (gval, G_TYPE_STRING);
+									g_value_set_string (gval, g_strdup (param_value));
+								}
+
+							g_hash_table_replace (ht, g_strdup (param_name), gval);
+
+							g_free (param_name);
+							g_free (param_value);
+							if (l_v_content == 3)
+								{
+									g_free (param_name_file);
+								}
+						}
+					else
+						{
+							tmp = g_strdup_printf ("%s--", _boundary);
+							if (g_strcmp0 (line, tmp) == 0)
+								{
+									g_free (tmp);
+									break;
+								}
+							g_free (tmp);
+						}
+
+					g_free (line);
+				} while (i < l);
 					
-					g_free (_boundary);
-				}
+			g_free (_boundary);
 		}
 	
 	return ht;
