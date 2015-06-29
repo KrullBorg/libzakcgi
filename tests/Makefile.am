@@ -13,4 +13,5 @@ noinst_PROGRAMS = \
                     env \
                     querystring \
                     redirect \
-                    session
+                    session \
+                    url

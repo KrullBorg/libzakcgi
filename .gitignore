@@ -55,3 +55,4 @@ tests/env
 tests/querystring
 tests/redirect
 tests/session
+tests/url

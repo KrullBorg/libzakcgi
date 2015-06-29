@@ -20,6 +20,9 @@
 	#include <config.h>
 #endif
 
+#include <syslog.h>
+
+#include "main.h"
 #include "url.h"
 
 static void zak_cgi_url_class_init (ZakCgiUrlClass *class);
@@ -42,6 +45,10 @@ static void zak_cgi_url_finalize (GObject *gobject);
 typedef struct _ZakCgiUrlPrivate ZakCgiUrlPrivate;
 struct _ZakCgiUrlPrivate
 	{
+		gchar *controller;
+		gchar *action;
+
+		GHashTable *ht_functions;
 	};
 
 G_DEFINE_TYPE (ZakCgiUrl, zak_cgi_url, G_TYPE_OBJECT)
@@ -64,6 +71,10 @@ zak_cgi_url_init (ZakCgiUrl *zak_cgi_url)
 {
 	ZakCgiUrlPrivate *priv = ZAK_CGI_URL_GET_PRIVATE (zak_cgi_url);
 
+	priv->controller = NULL;
+	priv->action = NULL;
+
+	priv->ht_functions = g_hash_table_new (g_str_hash, g_str_equal);
 }
 
 /**
@@ -77,12 +88,69 @@ ZakCgiUrl
 	ZakCgiUrl *zak_cgi_url;
 	ZakCgiUrlPrivate *priv;
 
+	GHashTable *ht_env;
+
+	GValue *url;
+
 	zak_cgi_url = ZAK_CGI_URL (g_object_new (zak_cgi_url_get_type (), NULL));
 
 	priv = ZAK_CGI_URL_GET_PRIVATE (zak_cgi_url);
 
+	/* parsing */
+	ht_env = zak_cgi_main_get_parameters (NULL);
+	url = g_hash_table_lookup (ht_env, "_url");
+	if (url != NULL)
+		{
+			gchar **splitted;
+
+			splitted = g_strsplit (g_value_get_string (url), "/", -1);
+			if (g_strv_length (splitted) >= 3)
+				{
+					priv->controller = g_strdup (splitted[1]);
+					priv->action = g_strdup (splitted [2]);
+				}
+			g_strfreev (splitted);
+		}
 
 	return zak_cgi_url;
+}
+
+void
+zak_cgi_url_connect (ZakCgiUrl *url,
+					 const gchar *controller,
+					 const gchar *action,
+					 ZakCgiUrlConnectedFunction function,
+					 gpointer user_data)
+{
+	GPtrArray *ar;
+
+	ZakCgiUrlPrivate *priv = ZAK_CGI_URL_GET_PRIVATE (url);
+
+	ar = g_ptr_array_new ();
+	g_ptr_array_add (ar, function);
+	g_ptr_array_add (ar, user_data);
+
+	g_hash_table_replace (priv->ht_functions, g_strdup_printf ("%s|%s", controller, action), g_ptr_array_ref (ar));
+
+	g_ptr_array_unref (ar);
+}
+
+void
+zak_cgi_url_dispatch (ZakCgiUrl *url)
+{
+	gchar *name;
+	GPtrArray *ar;
+	ZakCgiUrlConnectedFunction function;
+	
+	ZakCgiUrlPrivate *priv = ZAK_CGI_URL_GET_PRIVATE (url);
+
+	name = g_strdup_printf ("%s|%s", priv->controller, priv->action);
+	ar = (GPtrArray *)g_hash_table_lookup (priv->ht_functions, name);
+	if (ar != NULL)
+		{
+			function = g_ptr_array_index (ar, 0);
+			(*function)(g_ptr_array_index (ar, 1));
+		}
 }
 
 /* PRIVATE */

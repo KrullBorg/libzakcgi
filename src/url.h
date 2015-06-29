@@ -51,6 +51,16 @@ GType zak_cgi_url_get_type (void);
 
 ZakCgiUrl *zak_cgi_url_new (void);
 
+typedef void (*ZakCgiUrlConnectedFunction) (GString *buf);
+
+void zak_cgi_url_connect (ZakCgiUrl *url,
+						  const gchar *controller,
+						  const gchar *action,
+						  ZakCgiUrlConnectedFunction function,
+						  gpointer user_data);
+
+void zak_cgi_url_dispatch (ZakCgiUrl *url);
+
 
 G_END_DECLS
 
