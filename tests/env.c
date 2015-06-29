@@ -54,7 +54,8 @@ main (int argc, char *argv[])
 				{
 					gchar **boundary = g_strsplit (splitted[1], "=", 2);
 
-					ht = zak_cgi_main_parse_stdin (env, boundary[1]);
+					/*ht = zak_cgi_main_parse_stdin (env, boundary[1]);*/
+					ht = zak_cgi_main_parse_stdin (env, NULL);
 
 					GHashTableIter iter;
 

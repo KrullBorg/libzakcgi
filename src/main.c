@@ -451,6 +451,24 @@ GHashTable
 
 	ht = NULL;
 
+    content_type = (gchar *)g_getenv ("CONTENT_TYPE");
+	gchar **splitted = g_strsplit (content_type, ";", -1);
+	if (g_strv_length (splitted) > 1
+		&& boundary == NULL)
+	  {
+			gchar **boundary_splitted = g_strsplit (splitted[1], "=", 2);
+			_boundary = g_strdup_printf ("--%s", boundary_splitted[1]);
+			g_strfreev (boundary_splitted);
+	  }
+	else
+	  {
+		if (boundary != NULL)
+		  {
+			_boundary = g_strdup_printf ("--%s", boundary);			
+		  }
+	  }
+	g_strfreev (splitted);
+
 	env = g_getenv ("CONTENT_LENGTH");
 	if (env != NULL)
 		{
@@ -458,8 +476,6 @@ GHashTable
 			if (l > 0)
 				{
 					ht = g_hash_table_new (g_str_hash, g_str_equal);
-
-					_boundary = g_strdup_printf ("--%s", boundary);
 
 					i = 0;
 					do
