@@ -21,5 +21,6 @@
 
 #include <libzakcgi/main.h>
 #include <libzakcgi/session.h>
+#include <libzakcgi/url.h>
 
 #endif /* __LIBZAKCGI_H__ */
