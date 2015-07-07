@@ -50,6 +50,10 @@ static void zak_cgi_main_finalize (GObject *gobject);
 typedef struct _ZakCgiMainPrivate ZakCgiMainPrivate;
 struct _ZakCgiMainPrivate
 	{
+		GHashTable *ht_env;
+		GHashTable *ht_cookies;
+		GHashTable *ht_parameters;
+		gchar *stdin;
 	};
 
 G_DEFINE_TYPE (ZakCgiMain, zak_cgi_main, G_TYPE_OBJECT)
@@ -72,6 +76,10 @@ zak_cgi_main_init (ZakCgiMain *zak_cgi_main)
 {
 	ZakCgiMainPrivate *priv = ZAK_CGI_MAIN_GET_PRIVATE (zak_cgi_main);
 
+	priv->ht_env = NULL;
+	priv->ht_cookies = NULL;
+	priv->ht_parameters = NULL;
+	priv->stdin = NULL;
 }
 
 /**
@@ -88,7 +96,6 @@ ZakCgiMain
 	zak_cgi_main = ZAK_CGI_MAIN (g_object_new (zak_cgi_main_get_type (), NULL));
 
 	priv = ZAK_CGI_MAIN_GET_PRIVATE (zak_cgi_main);
-
 
 	return zak_cgi_main;
 }
@@ -122,12 +129,14 @@ zak_cgi_main_out (const gchar *header, const gchar *body)
 
 /**
  * zak_cgi_main_get_env:
+ * @zakcgimain:
  *
  * Returns: a #GHashTable with all the environment variables.
  */
 GHashTable
-*zak_cgi_main_get_env (void)
+*zak_cgi_main_get_env (ZakCgiMain *zakcgimain)
 {
+	ZakCgiMainPrivate *priv;
 	GHashTable *ht;
 
 	gchar **environ;
@@ -135,7 +144,20 @@ GHashTable
 	guint i;
 	gchar **envs;
 
+	if (zakcgimain != NULL)
+		{
+			priv = ZAK_CGI_MAIN_GET_PRIVATE (zakcgimain);
+			if (priv->ht_env != NULL)
+				{
+					return g_hash_table_ref (priv->ht_env);
+				}
+		}
+	
 	ht = g_hash_table_new (g_str_hash, g_str_equal);
+	if (zakcgimain != NULL)
+		{
+			priv->ht_env = g_hash_table_ref (ht);
+		}
 
 	environ = g_get_environ ();
 	l = g_strv_length (environ);
@@ -151,11 +173,12 @@ GHashTable
 
 /**
  * zak_cgi_main_dump_env:
+ * @zakcgimain:
  *
  * Returns: an html table with each environment variables.
  */
 gchar
-*zak_cgi_main_dump_env (void)
+*zak_cgi_main_dump_env (ZakCgiMain *zakcgimain)
 {
 	GHashTable *ht_env;
 	GHashTableIter iter;
@@ -166,7 +189,7 @@ gchar
 	gpointer key;
 	gpointer value;
 
-	ht_env = zak_cgi_main_get_env ();
+	ht_env = zak_cgi_main_get_env (zakcgimain);
 
 	str = g_string_new ("");
 
@@ -192,12 +215,14 @@ gchar
 
 /**
  * zak_cgi_main_get_cookies:
+ * @zakcgimain:
  *
  * Returns: a #GHashTable with all the cookies.
  */
 GHashTable
-*zak_cgi_main_get_cookies (void)
+*zak_cgi_main_get_cookies (ZakCgiMain *zakcgimain)
 {
+	ZakCgiMainPrivate *priv;
 	GHashTable *ht;
 	GHashTable *ht_env;
 
@@ -207,9 +232,21 @@ GHashTable
 	gchar **strv_cookies;
 	gchar **parts;
 
+	if (zakcgimain != NULL)
+		{
+			priv = ZAK_CGI_MAIN_GET_PRIVATE (zakcgimain);
+			if (priv->ht_cookies != NULL)
+				{
+					return g_hash_table_ref (priv->ht_cookies);
+				}			
+		}
 	ht = g_hash_table_new (g_str_hash, g_str_equal);
+	if (zakcgimain != NULL)
+		{
+			priv->ht_cookies = g_hash_table_ref (ht);
+		}
 
-	ht_env = zak_cgi_main_get_env ();
+	ht_env = zak_cgi_main_get_env (zakcgimain);
 
 	cookies = g_hash_table_lookup (ht_env, "HTTP_COOKIE");
 	if (cookies != NULL)
@@ -229,11 +266,12 @@ GHashTable
 
 /**
  * zak_cgi_main_dump_cookies:
+ * @zakcgimain:
  *
  * Returns: an html table with each cookies.
  */
 gchar
-*zak_cgi_main_dump_cookies (void)
+*zak_cgi_main_dump_cookies (ZakCgiMain *zakcgimain)
 {
 	GHashTable *ht_env;
 	GHashTableIter iter;
@@ -244,7 +282,7 @@ gchar
 	gpointer key;
 	gpointer value;
 
-	ht_env = zak_cgi_main_get_cookies ();
+	ht_env = zak_cgi_main_get_cookies (zakcgimain);
 
 	str = g_string_new ("");
 
@@ -312,13 +350,15 @@ gchar
 
 /**
  * zak_cgi_main_get_parameters:
+ * @zakcgimain:
  * @query_string:
  *
  * Returns:
  */
 GHashTable
-*zak_cgi_main_get_parameters (const gchar *query_string)
+*zak_cgi_main_get_parameters (ZakCgiMain *zakcgimain, const gchar *query_string)
 {
+	ZakCgiMainPrivate *priv;
 	GHashTable *ht;
 
 	const gchar *qstring;
@@ -330,7 +370,25 @@ GHashTable
 
 	GValue *gval;
 
-	ht = g_hash_table_new (g_str_hash, g_str_equal);
+	ht = NULL;
+	
+	if (zakcgimain != NULL)
+		{
+			priv = ZAK_CGI_MAIN_GET_PRIVATE (zakcgimain);
+			if (priv->ht_parameters != NULL)
+				{
+					ht = g_hash_table_ref (priv->ht_parameters);
+				}			
+		}
+
+	if (ht == NULL)
+		{
+			ht = g_hash_table_new (g_str_hash, g_str_equal);
+			if (zakcgimain != NULL)
+				{
+					priv->ht_parameters = g_hash_table_ref (ht);
+				}
+		}
 
 	if (query_string == NULL)
 		{
@@ -360,14 +418,17 @@ GHashTable
 
 /**
  * zak_cgi_main_get_stdin:
+ * @zakcgimain:
  *
  * Returns: the stdin.
  */
 gchar
-*zak_cgi_main_get_stdin (void)
+*zak_cgi_main_get_stdin (ZakCgiMain *zakcgimain)
 {
 	gchar *ret;
 
+	ZakCgiMainPrivate *priv;
+	
 	const gchar *env;
 	guint l;
 	gsize bytesread;
@@ -376,6 +437,14 @@ gchar
 	GInputStream *istream;
 
 	ret = NULL;
+	if (zakcgimain != NULL)
+		{
+			priv = ZAK_CGI_MAIN_GET_PRIVATE (zakcgimain);
+			if (priv->stdin != NULL)
+				{
+					return g_strdup (priv->stdin);
+				}
+		}
 
 	env = g_getenv ("CONTENT_LENGTH");
 	if (env != NULL)
@@ -405,6 +474,11 @@ gchar
 				}
 		}
 
+	if (zakcgimain != NULL)
+		{
+			priv->stdin = g_strdup (ret);
+		}
+	
 	return ret;
 }
 
@@ -489,7 +563,7 @@ GHashTable
 	if (g_strcmp0 (content_type, "") == 0
 		|| g_strcmp0 (splitted[0], "application/x-www-form-urlencoded") == 0)
 		{
-			return zak_cgi_main_get_parameters (buf);
+			return zak_cgi_main_get_parameters (NULL, buf);
 		}
 	else if (g_strcmp0 (splitted[0], "multipart/form-data") == 0)
 		{
@@ -716,6 +790,22 @@ zak_cgi_main_finalize (GObject *gobject)
 	ZakCgiMain *zak_cgi_main = (ZakCgiMain *)gobject;
 	ZakCgiMainPrivate *priv = ZAK_CGI_MAIN_GET_PRIVATE (zak_cgi_main);
 
+	if (priv->ht_env != NULL)
+		{
+			g_hash_table_destroy (priv->ht_env);
+		}
+	if (priv->ht_cookies != NULL)
+		{
+			g_hash_table_destroy (priv->ht_cookies);
+		}
+	if (priv->ht_parameters != NULL)
+		{
+			g_hash_table_destroy (priv->ht_parameters);
+		}
+	if (priv->stdin != NULL)
+		{
+			g_free (priv->stdin);
+		}
 
 	GObjectClass *parent_class = g_type_class_peek_parent (G_OBJECT_GET_CLASS (gobject));
 	parent_class->finalize (gobject);

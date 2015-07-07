@@ -24,7 +24,6 @@
 
 #include <string.h>
 
-#include "main.h"
 #include "session.h"
 
 static void zak_cgi_session_class_init (ZakCgiSessionClass *class);
@@ -47,6 +46,7 @@ static void zak_cgi_session_finalize (GObject *gobject);
 typedef struct _ZakCgiSessionPrivate ZakCgiSessionPrivate;
 struct _ZakCgiSessionPrivate
 	{
+		ZakCgiMain *zakcgimain;
 		gchar *sid;
 		GFile *gfile;
 		GKeyFile *kfile;
@@ -72,15 +72,17 @@ zak_cgi_session_init (ZakCgiSession *zak_cgi_session)
 {
 	ZakCgiSessionPrivate *priv = ZAK_CGI_SESSION_GET_PRIVATE (zak_cgi_session);
 
+	priv->zakcgimain;
 }
 
 /**
  * zak_cgi_session_new:
+ * @zakcgimain:
  *
  * Returns: the newly created #ZakCgiSession object.
  */
 ZakCgiSession
-*zak_cgi_session_new (void)
+*zak_cgi_session_new (ZakCgiMain *zakcgimain)
 {
 	GHashTable *ht_cookies;
 
@@ -92,8 +94,9 @@ ZakCgiSession
 	zak_cgi_session = ZAK_CGI_SESSION (g_object_new (zak_cgi_session_get_type (), NULL));
 
 	priv = ZAK_CGI_SESSION_GET_PRIVATE (zak_cgi_session);
+	priv->zakcgimain = zakcgimain;
 
-	ht_cookies = zak_cgi_main_get_cookies ();
+	ht_cookies = zak_cgi_main_get_cookies (priv->zakcgimain);
 	priv->sid = g_hash_table_lookup (ht_cookies, "ZAKCGISID");
 
 	if (priv->sid != NULL)

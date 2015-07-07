@@ -36,7 +36,7 @@ main (int argc, char *argv[])
 	                    "<head><title>Url</title></head>\n"
 	                    "<body>\n");
 
-	url = zak_cgi_url_new ();
+	url = zak_cgi_url_new (NULL);
 
 	zak_cgi_url_connect (url, "thecontroller", "theaction", (ZakCgiUrlConnectedFunction)hook, str);
 

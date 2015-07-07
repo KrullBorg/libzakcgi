@@ -23,7 +23,7 @@ main (int argc, char *argv[])
 {
 	GHashTable *ht_env;
 
-	ht_env = zak_cgi_main_get_parameters (NULL);
+	ht_env = zak_cgi_main_get_parameters (NULL, NULL);
 
 	zak_cgi_main_redirect ((gchar *)g_value_get_string ((GValue *)(const gchar *)g_hash_table_lookup (ht_env, "redirectto")));
 

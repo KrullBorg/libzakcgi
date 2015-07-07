@@ -31,7 +31,7 @@ main (int argc, char *argv[])
 	GString *header;
 	GHashTable *ht;
 
-	env = zak_cgi_main_dump_cookies ();
+	env = zak_cgi_main_dump_cookies (NULL);
 
 	str = g_string_new ("<html>\n"
 	                    "<head><title>Cookies</title></head>\n"

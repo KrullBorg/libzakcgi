@@ -22,6 +22,8 @@
 
 #include <glib-object.h>
 
+#include "main.h"
+
 
 G_BEGIN_DECLS
 
@@ -49,7 +51,7 @@ struct _ZakCgiUrlClass
 GType zak_cgi_url_get_type (void);
 
 
-ZakCgiUrl *zak_cgi_url_new (void);
+ZakCgiUrl *zak_cgi_url_new (ZakCgiMain *zakcgimain);
 
 typedef void (*ZakCgiUrlConnectedFunction) (GString *buf);
 

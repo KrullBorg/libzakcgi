@@ -22,7 +22,6 @@
 
 #include <syslog.h>
 
-#include "main.h"
 #include "url.h"
 
 static void zak_cgi_url_class_init (ZakCgiUrlClass *class);
@@ -45,6 +44,8 @@ static void zak_cgi_url_finalize (GObject *gobject);
 typedef struct _ZakCgiUrlPrivate ZakCgiUrlPrivate;
 struct _ZakCgiUrlPrivate
 	{
+		ZakCgiMain *zakcgimain;
+		
 		gchar *controller;
 		gchar *action;
 
@@ -71,6 +72,8 @@ zak_cgi_url_init (ZakCgiUrl *zak_cgi_url)
 {
 	ZakCgiUrlPrivate *priv = ZAK_CGI_URL_GET_PRIVATE (zak_cgi_url);
 
+	priv->zakcgimain = NULL;
+	
 	priv->controller = NULL;
 	priv->action = NULL;
 
@@ -79,11 +82,12 @@ zak_cgi_url_init (ZakCgiUrl *zak_cgi_url)
 
 /**
  * zak_cgi_url_new:
+ * @zakcgimain:
  *
  * Returns: the newly created #ZakCgiUrl object.
  */
 ZakCgiUrl
-*zak_cgi_url_new (void)
+*zak_cgi_url_new (ZakCgiMain *zakcgimain)
 {
 	ZakCgiUrl *zak_cgi_url;
 	ZakCgiUrlPrivate *priv;
@@ -95,9 +99,10 @@ ZakCgiUrl
 	zak_cgi_url = ZAK_CGI_URL (g_object_new (zak_cgi_url_get_type (), NULL));
 
 	priv = ZAK_CGI_URL_GET_PRIVATE (zak_cgi_url);
+	priv->zakcgimain = zakcgimain;
 
 	/* parsing */
-	ht_env = zak_cgi_main_get_parameters (NULL);
+	ht_env = zak_cgi_main_get_parameters (priv->zakcgimain, NULL);
 	url = g_hash_table_lookup (ht_env, "_url");
 	if (url != NULL)
 		{

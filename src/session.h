@@ -22,6 +22,8 @@
 
 #include <glib-object.h>
 
+#include "main.h"
+
 
 G_BEGIN_DECLS
 
@@ -49,7 +51,7 @@ struct _ZakCgiSessionClass
 GType zak_cgi_session_get_type (void);
 
 
-ZakCgiSession *zak_cgi_session_new (void);
+ZakCgiSession *zak_cgi_session_new (ZakCgiMain *zakcgimain);
 
 gchar *zak_cgi_session_get_header (ZakCgiSession *session);
 

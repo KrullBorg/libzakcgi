@@ -6,6 +6,6 @@ includedir=@includedir@
 Name: @PACKAGE_NAME@
 Description: Class for CGI.
 Version: @PACKAGE_VERSION@
-Requires: glib-2.0 >= 2.36
+Requires: glib-2.0 >= 2.36 gobject gio gio-unix
 Libs: -L${libdir} -lzakcgi
 Cflags: -I${includedir}

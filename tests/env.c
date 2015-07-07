@@ -30,7 +30,7 @@ main (int argc, char *argv[])
 	GString *str;
 	GHashTable *ht;
 
-	env = zak_cgi_main_dump_env ();
+	env = zak_cgi_main_dump_env (NULL);
 
 	str = g_string_new ("<html>\n"
 						"<head><title>Environment variables</title></head>\n"
@@ -39,7 +39,7 @@ main (int argc, char *argv[])
 	g_string_append_printf (str, "%s\n</body>", env);
 	g_free (env);
 
-	env = zak_cgi_main_get_stdin ();
+	env = zak_cgi_main_get_stdin (NULL);
 	/*syslog (LOG_MAKEPRI(LOG_SYSLOG, LOG_DEBUG), "stdin: %s", env);*/
 	if (env != NULL)
 		{

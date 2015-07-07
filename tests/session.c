@@ -34,13 +34,13 @@ main (int argc, char *argv[])
 
 	gchar *method;
 
-	session = zak_cgi_session_new ();
+	session = zak_cgi_session_new (NULL);
 
 	str = g_string_new ("<html>\n"
 	                    "<head><title>Session Cookie</title></head>\n"
 	                    "<body>\n");
 
-	ht = zak_cgi_main_get_env ();
+	ht = zak_cgi_main_get_env (NULL);
 	if (ht != NULL)
 		{
 			method = g_hash_table_lookup (ht, "REQUEST_METHOD");
@@ -52,7 +52,7 @@ main (int argc, char *argv[])
 						{
 							gchar **boundary = g_strsplit (splitted[1], "=", 2);
 
-							env = zak_cgi_main_get_stdin ();
+							env = zak_cgi_main_get_stdin (NULL);
 
 							ht_stdin = zak_cgi_main_parse_stdin (env, boundary[1]);
 

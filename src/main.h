@@ -56,11 +56,11 @@ ZakCgiMain *zak_cgi_main_new (void);
 
 void zak_cgi_main_out (const gchar *header, const gchar *body);
 
-GHashTable *zak_cgi_main_get_env (void);
-gchar *zak_cgi_main_dump_env (void);
+GHashTable *zak_cgi_main_get_env (ZakCgiMain *zakcgimain);
+gchar *zak_cgi_main_dump_env (ZakCgiMain *zakcgimain);
 
-GHashTable *zak_cgi_main_get_cookies (void);
-gchar *zak_cgi_main_dump_cookies (void);
+GHashTable *zak_cgi_main_get_cookies (ZakCgiMain *zakcgimain);
+gchar *zak_cgi_main_dump_cookies (ZakCgiMain *zakcgimain);
 
 gchar *zak_cgi_main_set_cookie (const gchar *name,
                                 const gchar *value,
@@ -70,9 +70,9 @@ gchar *zak_cgi_main_set_cookie (const gchar *name,
                                 gboolean secure,
                                 gboolean http_only);
 
-GHashTable *zak_cgi_main_get_parameters (const gchar *query_string);
+GHashTable *zak_cgi_main_get_parameters (ZakCgiMain *zakcgimain, const gchar *query_string);
 
-gchar *zak_cgi_main_get_stdin (void);
+gchar *zak_cgi_main_get_stdin (ZakCgiMain *zakcgimain);
 
 GHashTable *zak_cgi_main_parse_stdin (const gchar *buf, const gchar *boundary);
 
