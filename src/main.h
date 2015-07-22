@@ -76,8 +76,6 @@ gchar *zak_cgi_main_get_stdin (ZakCgiMain *zakcgimain);
 
 GHashTable *zak_cgi_main_parse_stdin (const gchar *buf, const gchar *boundary);
 
-GHashTable *zak_cgi_main_parse_stdin_bin (const gchar *buf, const gchar *boundary);
-
 void zak_cgi_main_redirect (const gchar *url);
 
 

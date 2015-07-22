@@ -45,9 +45,6 @@ typedef struct _ZakCgiUrlPrivate ZakCgiUrlPrivate;
 struct _ZakCgiUrlPrivate
 	{
 		ZakCgiMain *zakcgimain;
-		
-		gchar *controller;
-		gchar *action;
 
 		GHashTable *ht_functions;
 	};
@@ -73,9 +70,6 @@ zak_cgi_url_init (ZakCgiUrl *zak_cgi_url)
 	ZakCgiUrlPrivate *priv = ZAK_CGI_URL_GET_PRIVATE (zak_cgi_url);
 
 	priv->zakcgimain = NULL;
-	
-	priv->controller = NULL;
-	priv->action = NULL;
 
 	priv->ht_functions = g_hash_table_new (g_str_hash, g_str_equal);
 }
@@ -92,38 +86,17 @@ ZakCgiUrl
 	ZakCgiUrl *zak_cgi_url;
 	ZakCgiUrlPrivate *priv;
 
-	GHashTable *ht_env;
-
-	GValue *url;
-
 	zak_cgi_url = ZAK_CGI_URL (g_object_new (zak_cgi_url_get_type (), NULL));
 
 	priv = ZAK_CGI_URL_GET_PRIVATE (zak_cgi_url);
 	priv->zakcgimain = zakcgimain;
-
-	/* parsing */
-	ht_env = zak_cgi_main_get_parameters (priv->zakcgimain, NULL);
-	url = g_hash_table_lookup (ht_env, "_url");
-	if (url != NULL)
-		{
-			gchar **splitted;
-
-			splitted = g_strsplit (g_value_get_string (url), "/", -1);
-			if (g_strv_length (splitted) >= 3)
-				{
-					priv->controller = g_strdup (splitted[1]);
-					priv->action = g_strdup (splitted [2]);
-				}
-			g_strfreev (splitted);
-		}
 
 	return zak_cgi_url;
 }
 
 void
 zak_cgi_url_connect (ZakCgiUrl *url,
-					 const gchar *controller,
-					 const gchar *action,
+					 const gchar *regex,
 					 ZakCgiUrlConnectedFunction function,
 					 gpointer user_data)
 {
@@ -135,7 +108,7 @@ zak_cgi_url_connect (ZakCgiUrl *url,
 	g_ptr_array_add (ar, function);
 	g_ptr_array_add (ar, user_data);
 
-	g_hash_table_replace (priv->ht_functions, g_strdup_printf ("%s|%s", controller, action), g_ptr_array_ref (ar));
+	g_hash_table_replace (priv->ht_functions, g_strdup (regex), g_ptr_array_ref (ar));
 
 	g_ptr_array_unref (ar);
 }
@@ -143,18 +116,50 @@ zak_cgi_url_connect (ZakCgiUrl *url,
 void
 zak_cgi_url_dispatch (ZakCgiUrl *url)
 {
-	gchar *name;
+	GError *error;
+
+	const gchar *_url;
+
+	GHashTable *ht_env;
+	GHashTableIter iter;
+	gpointer key;
+	gpointer value;
+
+	GRegex *regex;
+	GMatchInfo *minfo;
+	gchar *str_regex;
+
 	GPtrArray *ar;
 	ZakCgiUrlConnectedFunction function;
-	
+
 	ZakCgiUrlPrivate *priv = ZAK_CGI_URL_GET_PRIVATE (url);
 
-	name = g_strdup_printf ("%s|%s", priv->controller, priv->action);
-	ar = (GPtrArray *)g_hash_table_lookup (priv->ht_functions, name);
-	if (ar != NULL)
+	ht_env = zak_cgi_main_get_parameters (priv->zakcgimain, NULL);
+	_url = g_value_get_string (g_hash_table_lookup (ht_env, "_url"));
+	if (_url != NULL)
 		{
-			function = g_ptr_array_index (ar, 0);
-			(*function)(g_ptr_array_index (ar, 1));
+			g_hash_table_iter_init (&iter, priv->ht_functions);
+			while (g_hash_table_iter_next (&iter, &key, &value))
+				{
+					error = NULL;
+					str_regex = g_strdup_printf ("%s$", (gchar *)key);
+					regex = g_regex_new (str_regex, 0, 0, &error);
+					g_free (str_regex);
+					if (regex == NULL
+						|| error != NULL)
+						{
+							syslog (LOG_MAKEPRI(LOG_SYSLOG, LOG_DEBUG), "Error on creating regex: %s.",
+									error->message != NULL ? error->message : "no details");
+							return;
+						}
+
+					if (g_regex_match ((const GRegex *)regex, _url, 0, &minfo))
+						{
+							ar = (GPtrArray *)value;
+							function = g_ptr_array_index (ar, 0);
+							(*function)(minfo, g_ptr_array_index (ar, 1));
+						}
+				}
 		}
 }
 
