@@ -152,7 +152,7 @@ GHashTable
 					return g_hash_table_ref (priv->ht_env);
 				}
 		}
-	
+
 	ht = g_hash_table_new (g_str_hash, g_str_equal);
 	if (zakcgimain != NULL)
 		{
@@ -238,7 +238,7 @@ GHashTable
 			if (priv->ht_cookies != NULL)
 				{
 					return g_hash_table_ref (priv->ht_cookies);
-				}			
+				}
 		}
 	ht = g_hash_table_new (g_str_hash, g_str_equal);
 	if (zakcgimain != NULL)
@@ -369,16 +369,17 @@ GHashTable
 	guint l;
 
 	GValue *gval;
+	GPtrArray *ar;
 
 	ht = NULL;
-	
+
 	if (zakcgimain != NULL)
 		{
 			priv = ZAK_CGI_MAIN_GET_PRIVATE (zakcgimain);
 			if (priv->ht_parameters != NULL)
 				{
 					ht = g_hash_table_ref (priv->ht_parameters);
-				}			
+				}
 		}
 
 	if (ht == NULL)
@@ -402,16 +403,41 @@ GHashTable
 	l = g_strv_length (params);
 	for (i = 0; i < l; i++)
 		{
-			gval = g_new0 (GValue, 1);
-
 			parts = g_strsplit (params[i], "=", 2);
 
-			g_value_init (gval, G_TYPE_STRING);
-			g_value_set_string (gval, g_strdup (parts[1] == NULL ? "" : parts[1]));
+			gval = (GValue *)g_hash_table_lookup (ht, parts[0]);
+			if (gval != NULL)
+				{
+					if (!G_VALUE_HOLDS (gval, G_TYPE_BOXED))
+						{
+							/* convert to GPtrArray */
+							ar = g_ptr_array_new ();
 
-			g_hash_table_replace (ht, g_strdup (parts[0]), gval);
-			g_strfreev (parts);
+							g_ptr_array_add (ar, g_strdup (g_value_get_string (gval)));
+							g_value_unset (gval);
+
+							g_value_init (gval, G_TYPE_PTR_ARRAY);
+							g_value_take_boxed (gval, ar);
+							g_hash_table_replace (ht, g_strdup (parts[0]), gval);
+						}
+					else
+						{
+							ar = (GPtrArray *)g_value_get_boxed (gval);
+						}
+					g_ptr_array_add (ar, g_strdup (parts[1] == NULL ? "" : parts[1]));
+				}
+			else
+				{
+					gval = g_new0 (GValue, 1);
+
+					g_value_init (gval, G_TYPE_STRING);
+					g_value_set_string (gval, g_strdup (parts[1] == NULL ? "" : parts[1]));
+
+					g_hash_table_replace (ht, g_strdup (parts[0]), gval);
+					g_strfreev (parts);
+				}
 		}
+	g_strfreev (params);
 
 	return ht;
 }
@@ -428,7 +454,7 @@ gchar
 	gchar *ret;
 
 	ZakCgiMainPrivate *priv;
-	
+
 	const gchar *env;
 	guint l;
 	gsize bytesread;
@@ -478,7 +504,7 @@ gchar
 		{
 			priv->stdin = g_strdup (ret);
 		}
-	
+
 	return ret;
 }
 
@@ -590,7 +616,6 @@ GHashTable
 				{
 					/* read line */
 					line = zak_cgi_main_read_line (buf, l, &i, TRUE, &bytesread);
-					syslog (LOG_MAKEPRI(LOG_SYSLOG, LOG_DEBUG), "boundary: %s %d", line, bytesread);
 					if (g_strcmp0 (line, _boundary) == 0)
 						{
 							/* content-disposition */
@@ -606,7 +631,6 @@ GHashTable
 							GValue *gval;
 
 							content_disposition = zak_cgi_main_read_line (buf, l, &i, TRUE, &bytesread);
-							syslog (LOG_MAKEPRI(LOG_SYSLOG, LOG_DEBUG), "content_disposition: %s", content_disposition);
 
 							v_content = g_strsplit (content_disposition, ";", -1);
 							l_v_content = g_strv_length (v_content);
@@ -621,12 +645,10 @@ GHashTable
 									parts = g_strsplit (v_content[2], "=", 2);
 									param_name_file = g_strndup (parts[1] + 1, strlen (parts[1]) - 2);
 									param_name_file[strlen (parts[1]) - 2] = '\0';
-									syslog (LOG_MAKEPRI(LOG_SYSLOG, LOG_DEBUG), "param_name_file: %s", param_name_file);
 									g_strfreev (parts);
 
 									/* content-type */
 									content_type = zak_cgi_main_read_line (buf, l, &i, TRUE, &bytesread);
-									syslog (LOG_MAKEPRI(LOG_SYSLOG, LOG_DEBUG), "content_type: %s", content_type);
 									g_free (content_type);
 								}
 
@@ -648,7 +670,6 @@ GHashTable
 											do
 												{
 													tmp = zak_cgi_main_read_line (buf, l, &i, FALSE, &bytesread);
-													syslog (LOG_MAKEPRI(LOG_SYSLOG, LOG_DEBUG), "tmp: %s %d", tmp, bytesread);
 
 													if (memcmp (tmp, _boundary, strlen (_boundary)) == 0)
 														{
@@ -677,7 +698,6 @@ GHashTable
 							else
 								{
 									param_value = zak_cgi_main_read_line (buf, l, &i, TRUE, &bytesread);
-									syslog (LOG_MAKEPRI(LOG_SYSLOG, LOG_DEBUG), "param_value: %s", param_value);
 								}
 
 							gval = g_new0 (GValue, 1);
@@ -722,10 +742,10 @@ GHashTable
 
 					g_free (line);
 				} while (i < l);
-					
+
 			g_free (_boundary);
 		}
-	
+
 	return ht;
 }
 

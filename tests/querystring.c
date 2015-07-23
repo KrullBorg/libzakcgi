@@ -41,8 +41,26 @@ main (int argc, char *argv[])
 			g_hash_table_iter_init (&iter, ht_env);
 			while (g_hash_table_iter_next (&iter, &key, &value))
 				{
-					g_string_append_printf (str, "<tr><td>%s</td><td>%s</td></tr>\n",
-					                        (gchar *)key, (gchar *)g_value_get_string ((GValue *)value));
+					if (G_VALUE_HOLDS ((GValue *)value, G_TYPE_BOXED))
+						{
+							guint i;
+							GPtrArray *ar = (GPtrArray *)g_value_get_boxed ((GValue *)value);
+							for (i = 0; i < ar->len; i++)
+								{
+									g_string_append_printf (str,
+															"<tr><td>%s[%d]</td><td>%s</td></tr>\n",
+															(gchar *)key,
+															i,
+															(gchar *)g_ptr_array_index (ar, i));
+								}
+						}
+					else
+						{
+							g_string_append_printf (str,
+													"<tr><td>%s</td><td>%s</td></tr>\n",
+													(gchar *)key,
+													(gchar *)g_value_get_string ((GValue *)value));
+						}
 				}
 
 			g_string_append_printf (str, "</table>\n");
@@ -55,4 +73,3 @@ main (int argc, char *argv[])
 
 	return 0;
 }
-
