@@ -408,7 +408,7 @@ GHashTable
 			gval = (GValue *)g_hash_table_lookup (ht, parts[0]);
 			if (gval != NULL)
 				{
-					if (!G_VALUE_HOLDS (gval, G_TYPE_BOXED))
+					if (!G_VALUE_HOLDS (gval, G_TYPE_PTR_ARRAY))
 						{
 							/* convert to GPtrArray */
 							ar = g_ptr_array_new ();
@@ -547,7 +547,7 @@ ZakCgiFile
 
 	b = g_slice_new (ZakCgiFile);
 	b->name = g_strdup (file->name);
-	b->content = g_strdup (file->content);
+	b->content = g_memdup (file->content, file->size);
 	b->size = file->size;
 
 	return b;
@@ -653,8 +653,11 @@ GHashTable
 							guint file_l;
 
 							GValue *gval;
+							GValue *gval_tmp;
 
 							ZakCgiFile *zgfile;
+
+							GPtrArray *ar;
 
 							content_disposition = zak_cgi_main_read_line (buf, l, &i, TRUE, &bytesread);
 
@@ -726,8 +729,7 @@ GHashTable
 									param_value = zak_cgi_main_read_line (buf, l, &i, TRUE, &bytesread);
 								}
 
-							gval = g_new0 (GValue, 1);
-
+							gval_tmp = g_new0 (GValue, 1);
 							if (l_v_content == 3)
 								{
 									zgfile = (ZakCgiFile *)g_new0 (ZakCgiFile, 1);
@@ -735,16 +737,46 @@ GHashTable
 									zgfile->content = g_memdup (param_value, file_l - 2);
 									zgfile->size = file_l - 2;
 
-									g_value_init (gval, ZAK_CGI_TYPE_FILE);
-									g_value_take_boxed (gval, zgfile);
+									g_value_init (gval_tmp, ZAK_CGI_TYPE_FILE);
+									g_value_take_boxed (gval_tmp, zgfile);
 								}
 							else
 								{
-									g_value_init (gval, G_TYPE_STRING);
-									g_value_set_string (gval, g_strdup (param_value));
+									g_value_init (gval_tmp, G_TYPE_STRING);
+									g_value_set_string (gval_tmp, g_strdup (param_value));
 								}
 
-							g_hash_table_replace (ht, g_strdup (param_name), gval);
+							gval = g_hash_table_lookup (ht, param_name);
+							if (gval != NULL)
+								{
+									if (!G_VALUE_HOLDS (gval, G_TYPE_PTR_ARRAY))
+										{
+											GValue *g;
+
+											g = (GValue *)g_new0 (GValue, 1);
+											g_value_init (g, G_VALUE_TYPE (gval));
+											g_value_copy (gval, g);
+											g_value_unset (gval);
+
+											/* converto to GPtrArray */
+											ar = g_ptr_array_new ();
+
+											g_ptr_array_add (ar, g);
+
+											g_value_init (gval, G_TYPE_PTR_ARRAY);
+											g_value_take_boxed (gval, ar);
+											g_hash_table_replace (ht, g_strdup (param_name), gval);
+										}
+									else
+										{
+											ar = (GPtrArray *)g_value_get_boxed (gval);
+										}
+									g_ptr_array_add (ar, gval_tmp);
+								}
+							else
+								{
+									g_hash_table_replace (ht, g_strdup (param_name), gval_tmp);
+								}
 
 							g_free (param_name);
 							g_free (param_value);

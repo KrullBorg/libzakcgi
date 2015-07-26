@@ -3,11 +3,20 @@
 <form method="POST" action="/cgi-bin/env" enctype="multipart/form-data">
 <!--<form method="POST" action="/cgi-bin/env" enctype="application/x-www-form-urlencoded">-->
 <!--<form method="POST" action="/cgi-bin/env">-->
-	<input name="pippo" />
-	<input name="pluto" />
-	<input name="paperino" />
-	<input type="file" name="ilfile" />
-	<input name="topolino" />
+	pippo: <input name="pippo" /><br/>
+	pluto: <input name="pluto" /><br/>
+	paperino: <input name="paperino" /><br/>
+	file: <input type="file" name="ilfile" /><br/>
+	file: <input type="file" name="ilfile" /><br/>
+	file: <input type="file" name="ilfile" /><br/>
+	topolino: <input name="topolino" /><br/>
+	multiple: <select name="multiple" multiple>
+		<option value="1">One</option>
+		<option value="2">Two</option>
+		<option value="3">Three</option>
+		<option value="4">For</option>
+		<option value="5">Five</option>
+	</select><br/>
 	<input type="submit" value="invia" />
 </form>
 </body>

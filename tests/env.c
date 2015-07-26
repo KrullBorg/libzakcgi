@@ -23,12 +23,60 @@
 
 #include <main.h>
 
+gchar
+*get_value (GValue *value)
+{
+	gchar *ret;
+
+	if (G_VALUE_HOLDS (value, ZAK_CGI_TYPE_FILE))
+		{
+			ZakCgiFile *zgfile = (ZakCgiFile *)g_value_get_boxed ((GValue *)value);
+
+			ret = g_strdup (zgfile->name);
+
+			if (g_strcmp0 (zgfile->name, "") != 0)
+				{
+					/* save the file to tmp */
+					GFile *gfile;
+					GFileIOStream *iostream;
+					GOutputStream *ostream;
+
+					iostream = NULL;
+					gfile = g_file_new_tmp (g_strdup_printf ("cgi-XXXXXX-%s", zgfile->name),
+											&iostream,
+											NULL);
+
+					ostream = g_io_stream_get_output_stream (G_IO_STREAM (iostream));
+					g_output_stream_write (ostream,
+										   zgfile->content,
+										   zgfile->size,
+										   NULL,
+										   NULL);
+					g_output_stream_close (ostream, NULL, NULL);
+
+					g_object_unref (ostream);
+					g_object_unref (gfile);
+				}
+		}
+	else if (G_VALUE_HOLDS (value, G_TYPE_STRING))
+		{
+			ret = g_strdup ((gchar *)g_value_get_string ((GValue *)value));
+		}
+	else
+		{
+			ret = g_strdup ("value of unknown type");
+		}
+
+	return ret;
+}
+
 int
 main (int argc, char *argv[])
 {
 	gchar *env;
 	GString *str;
 	GHashTable *ht;
+	gchar *ret;
 
 	env = zak_cgi_main_dump_env (NULL);
 
@@ -62,49 +110,26 @@ main (int argc, char *argv[])
 					g_hash_table_iter_init (&iter, ht);
 					while (g_hash_table_iter_next (&iter, &key, &value))
 						{
-							if (G_VALUE_HOLDS (value, ZAK_CGI_TYPE_FILE))
+							if (G_VALUE_HOLDS (value, G_TYPE_PTR_ARRAY))
 								{
-									ZakCgiFile *zgfile = (ZakCgiFile *)g_value_get_boxed ((GValue *)value);
-
-									g_string_append_printf (str,
-															"<tr><td>%s</td><td>%s</td></tr>\n",
-															(gchar *)key, zgfile->name);
-
-									if (g_strcmp0 (zgfile->name, "") != 0)
+									guint i;
+									GPtrArray *ar = (GPtrArray *)g_value_get_boxed (value);
+									for (i = 0; i < ar->len; i++)
 										{
-											/* save the file to tmp */
-											GFile *gfile;
-											GFileIOStream *iostream;
-											GOutputStream *ostream;
-
-											iostream = NULL;
-											gfile = g_file_new_tmp (g_strdup_printf ("cgi-XXXXXX-%s", zgfile->name),
-																	&iostream,
-																	NULL);
-
-											ostream = g_io_stream_get_output_stream (G_IO_STREAM (iostream));
-											g_output_stream_write (ostream,
-																   zgfile->content,
-																   zgfile->size,
-																   NULL,
-																   NULL);
-											g_output_stream_close (ostream, NULL, NULL);
-
-											g_object_unref (ostream);
-										    g_object_unref (gfile);
+											ret = get_value (g_ptr_array_index (ar, i));
+											g_string_append_printf (str,
+																	"<tr><td>%s[%d]</td><td>%s</td></tr>\n",
+																	(gchar *)key, i, ret);
+											g_free (ret);
 										}
-								}
-							else if (G_VALUE_HOLDS (value, G_TYPE_STRING))
-								{
-									g_string_append_printf (str,
-															"<tr><td>%s</td><td>%s</td></tr>\n",
-															(gchar *)key, (gchar *)g_value_get_string ((GValue *)value));
 								}
 							else
 								{
+									ret = get_value ((GValue *)value);
 									g_string_append_printf (str,
 															"<tr><td>%s</td><td>%s</td></tr>\n",
-															(gchar *)key, "value of unknown type");
+															(gchar *)key, ret);
+									g_free (ret);
 								}
 						}
 
