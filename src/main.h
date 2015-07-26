@@ -72,6 +72,21 @@ gchar *zak_cgi_main_set_cookie (const gchar *name,
 
 GHashTable *zak_cgi_main_get_parameters (ZakCgiMain *zakcgimain, const gchar *query_string);
 
+
+typedef struct _ZakCgiFile ZakCgiFile;
+
+struct _ZakCgiFile
+{
+	gchar *name;
+	gchar *content;
+    guint size;
+};
+
+#define ZAK_CGI_TYPE_FILE (zak_cgi_file_get_type ())
+
+GType zak_cgi_file_get_type ();
+
+
 gchar *zak_cgi_main_get_stdin (ZakCgiMain *zakcgimain);
 
 GHashTable *zak_cgi_main_parse_stdin (const gchar *buf, const gchar *boundary);

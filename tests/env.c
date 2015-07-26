@@ -62,15 +62,15 @@ main (int argc, char *argv[])
 					g_hash_table_iter_init (&iter, ht);
 					while (g_hash_table_iter_next (&iter, &key, &value))
 						{
-							if (G_VALUE_HOLDS (value, G_TYPE_BOXED))
+							if (G_VALUE_HOLDS (value, ZAK_CGI_TYPE_FILE))
 								{
-									GPtrArray *ar = (GPtrArray *)g_value_get_boxed ((GValue *)value);
+									ZakCgiFile *zgfile = (ZakCgiFile *)g_value_get_boxed ((GValue *)value);
 
 									g_string_append_printf (str,
 															"<tr><td>%s</td><td>%s</td></tr>\n",
-															(gchar *)key, (gchar *)g_ptr_array_index (ar, 0));
+															(gchar *)key, zgfile->name);
 
-									if (g_strcmp0 ((gchar *)g_ptr_array_index (ar, 0), "") != 0)
+									if (g_strcmp0 (zgfile->name, "") != 0)
 										{
 											/* save the file to tmp */
 											GFile *gfile;
@@ -78,14 +78,14 @@ main (int argc, char *argv[])
 											GOutputStream *ostream;
 
 											iostream = NULL;
-											gfile = g_file_new_tmp (g_strdup_printf ("cgi-XXXXXX-%s", (gchar *)g_ptr_array_index (ar, 0)),
+											gfile = g_file_new_tmp (g_strdup_printf ("cgi-XXXXXX-%s", zgfile->name),
 																	&iostream,
 																	NULL);
 
 											ostream = g_io_stream_get_output_stream (G_IO_STREAM (iostream));
 											g_output_stream_write (ostream,
-																   g_ptr_array_index (ar, 1),
-																   GPOINTER_TO_SIZE (g_ptr_array_index (ar, 2)),
+																   zgfile->content,
+																   zgfile->size,
 																   NULL,
 																   NULL);
 											g_output_stream_close (ostream, NULL, NULL);
@@ -119,4 +119,3 @@ main (int argc, char *argv[])
 
 	return 0;
 }
-

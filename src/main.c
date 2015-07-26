@@ -540,6 +540,30 @@ static gchar
 	return line;
 }
 
+ZakCgiFile
+*zak_cgi_file_copy (ZakCgiFile *file)
+{
+	ZakCgiFile *b;
+
+	b = g_slice_new (ZakCgiFile);
+	b->name = g_strdup (file->name);
+	b->content = g_strdup (file->content);
+	b->size = file->size;
+
+	return b;
+}
+
+void
+zak_cgi_file_free (ZakCgiFile *file)
+{
+	g_free (file->name);
+	g_free (file->content);
+	g_slice_free (ZakCgiFile, file);
+}
+
+G_DEFINE_BOXED_TYPE (ZakCgiFile, zak_cgi_file, zak_cgi_file_copy, zak_cgi_file_free)
+
+
 /**
  * zak_cgi_main_parse_stdin:
  *
@@ -630,6 +654,8 @@ GHashTable
 
 							GValue *gval;
 
+							ZakCgiFile *zgfile;
+
 							content_disposition = zak_cgi_main_read_line (buf, l, &i, TRUE, &bytesread);
 
 							v_content = g_strsplit (content_disposition, ";", -1);
@@ -704,15 +730,13 @@ GHashTable
 
 							if (l_v_content == 3)
 								{
-									GPtrArray *ar;
+									zgfile = (ZakCgiFile *)g_new0 (ZakCgiFile, 1);
+									zgfile->name = g_strdup (param_name_file);
+									zgfile->content = g_memdup (param_value, file_l - 2);
+									zgfile->size = file_l - 2;
 
-									ar = g_ptr_array_new ();
-									g_ptr_array_add (ar, g_strdup (param_name_file));
-									g_ptr_array_add (ar, g_memdup (param_value, file_l - 2));
-									g_ptr_array_add (ar, GSIZE_TO_POINTER (file_l - 2));
-
-									g_value_init (gval, G_TYPE_PTR_ARRAY);
-									g_value_take_boxed (gval, ar);
+									g_value_init (gval, ZAK_CGI_TYPE_FILE);
+									g_value_take_boxed (gval, zgfile);
 								}
 							else
 								{
