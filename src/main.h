@@ -93,6 +93,8 @@ GHashTable *zak_cgi_main_parse_stdin (const gchar *buf, const gchar *boundary);
 
 void zak_cgi_main_redirect (const gchar *url);
 
+gboolean zak_cgi_main_is_request_method (ZakCgiMain *zakcgimain, const gchar *method);
+
 gboolean zak_cgi_main_is_get (ZakCgiMain *zakcgimain);
 gboolean zak_cgi_main_is_post (ZakCgiMain *zakcgimain);
 

@@ -815,7 +815,7 @@ zak_cgi_main_redirect (const gchar *url)
 }
 
 gboolean
-zak_cgi_main_is_get (ZakCgiMain *zakcgimain)
+zak_cgi_main_is_request_method (ZakCgiMain *zakcgimain, const gchar *method)
 {
 	gboolean ret;
 
@@ -829,8 +829,18 @@ zak_cgi_main_is_get (ZakCgiMain *zakcgimain)
 	param = (gchar *)g_hash_table_lookup (ht, "REQUEST_METHOD");
 	if (param != NULL)
 		{
-			ret = (g_strcmp0 (param, "GET") == 0);
+			ret = (g_strcmp0 (param, method) == 0);
 		}
+
+	return ret;
+}
+
+gboolean
+zak_cgi_main_is_get (ZakCgiMain *zakcgimain)
+{
+	gboolean ret;
+
+	ret = zak_cgi_main_is_request_method (zakcgimain, "GET");
 
 	return ret;
 }
@@ -840,18 +850,7 @@ zak_cgi_main_is_post (ZakCgiMain *zakcgimain)
 {
 	gboolean ret;
 
-	GHashTable *ht;
-
-	gchar *param;
-
-	ret = FALSE;
-
-	ht = zak_cgi_main_get_env (zakcgimain);
-	param = (gchar *)g_hash_table_lookup (ht, "REQUEST_METHOD");
-	if (param != NULL)
-		{
-			ret = (g_strcmp0 (param, "POST") == 0);
-		}
+	ret = zak_cgi_main_is_request_method (zakcgimain, "POST");
 
 	return ret;
 }
