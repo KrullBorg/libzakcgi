@@ -814,6 +814,48 @@ zak_cgi_main_redirect (const gchar *url)
 	          13, 10);
 }
 
+gboolean
+zak_cgi_main_is_get (ZakCgiMain *zakcgimain)
+{
+	gboolean ret;
+
+	GHashTable *ht;
+
+	gchar *param;
+
+	ret = FALSE;
+
+	ht = zak_cgi_main_get_env (zakcgimain);
+	param = (gchar *)g_hash_table_lookup (ht, "REQUEST_METHOD");
+	if (param != NULL)
+		{
+			ret = (g_strcmp0 (param, "GET") == 0);
+		}
+
+	return ret;
+}
+
+gboolean
+zak_cgi_main_is_post (ZakCgiMain *zakcgimain)
+{
+	gboolean ret;
+
+	GHashTable *ht;
+
+	gchar *param;
+
+	ret = FALSE;
+
+	ht = zak_cgi_main_get_env (zakcgimain);
+	param = (gchar *)g_hash_table_lookup (ht, "REQUEST_METHOD");
+	if (param != NULL)
+		{
+			ret = (g_strcmp0 (param, "POST") == 0);
+		}
+
+	return ret;
+}
+
 /* PRIVATE */
 static void
 zak_cgi_main_set_property (GObject *object,
