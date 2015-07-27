@@ -74,9 +74,15 @@ static gchar
 
 	str = g_string_new ("");
 	g_string_append_printf (str,
-							"<%s id=\"%s\"",
-							name,
-							id);
+							"<%s",
+							name);
+
+	if (id != NULL)
+		{
+			g_string_append_printf (str,
+									" id=\"%s\"",
+									id);
+		}
 
 	l = ar_attrs->len;
 	for (i = 0; i < l; i++)
@@ -121,7 +127,8 @@ static gchar
 				}
 		}
 
-	if (!with_name)
+	if (!with_name
+		&& id != NULL)
 		{
 			g_string_append_printf (str,
 									" name=\"%s\"",

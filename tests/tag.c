@@ -22,6 +22,7 @@ int
 main (int argc, char *argv[])
 {
 	GString *str;
+	GString *select_content;
 
 	str = g_string_new ("");
 
@@ -40,6 +41,24 @@ main (int argc, char *argv[])
 	g_string_append_printf (str, "%s<br/>\n", zak_cgi_tag_text ("thetext", NULL));
 
 	g_string_append_printf (str, "%s<br/>\n", zak_cgi_tag_submit ("submit", NULL));
+
+	select_content = g_string_new ("");
+	g_string_append_printf (select_content,
+							zak_cgi_tag_tag ("option", NULL,
+											 "value", "1",
+											 "content", "One",
+											 NULL));
+	g_string_append_printf (select_content,
+							zak_cgi_tag_tag ("option", NULL,
+											 "value", "2",
+											 "content", "Two",
+											 NULL));
+	g_string_append_printf (select_content,
+							zak_cgi_tag_tag ("option", NULL,
+											 "value", "3",
+											 "content", "Three",
+											 NULL));
+	g_string_append_printf (str, "%s<br/>\n", zak_cgi_tag_tag ("select", "idselect", "content", select_content->str, NULL));
 
 	zak_cgi_main_out (NULL, str->str);
 
