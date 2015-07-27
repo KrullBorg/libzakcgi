@@ -55,4 +55,5 @@ tests/env
 tests/querystring
 tests/redirect
 tests/session
+tests/tag
 tests/url

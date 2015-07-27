@@ -14,4 +14,5 @@ noinst_PROGRAMS = \
                     querystring \
                     redirect \
                     session \
+                    tag \
                     url

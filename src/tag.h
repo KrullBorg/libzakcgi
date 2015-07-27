@@ -16,12 +16,18 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __LIBZAKCGI_H__
-#define __LIBZAKCGI_H__
+#ifndef __ZAK_CGI_TAG_H__
+#define __ZAK_CGI_TAG_H__
 
-#include <libzakcgi/main.h>
-#include <libzakcgi/session.h>
-#include <libzakcgi/tag.h>
-#include <libzakcgi/url.h>
 
-#endif /* __LIBZAKCGI_H__ */
+#include <glib-object.h>
+
+#include "main.h"
+
+
+gchar *zak_cgi_tag_tag (const gchar *name,
+						const gchar *id,
+						...);
+
+
+#endif /* __ZAK_CGI_TAG_H__ */

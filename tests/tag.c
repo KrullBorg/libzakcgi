@@ -2,7 +2,7 @@
  * Copyright (C) 2015 Andrea Zagli <azagli@libero.it>
  *
  * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
+ * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
  *
@@ -11,17 +11,21 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public
+ * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __LIBZAKCGI_H__
-#define __LIBZAKCGI_H__
+#include <tag.h>
 
-#include <libzakcgi/main.h>
-#include <libzakcgi/session.h>
-#include <libzakcgi/tag.h>
-#include <libzakcgi/url.h>
+int
+main (int argc, char *argv[])
+{
+	g_message ("%s", zak_cgi_tag_tag ("input", "text",
+									  "type", "textarea",
+									  "name", "myname",
+									  "content", "the content of the text area",
+									  NULL));
 
-#endif /* __LIBZAKCGI_H__ */
+	return 0;
+}
