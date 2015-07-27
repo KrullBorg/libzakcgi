@@ -27,5 +27,7 @@ main (int argc, char *argv[])
 									  "content", "the content of the text area",
 									  NULL));
 
+	g_message ("%s", zak_cgi_tag_img ("theimage", "src", "pippo.png", NULL));
+
 	return 0;
 }

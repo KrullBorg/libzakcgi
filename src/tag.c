@@ -136,3 +136,21 @@ gchar
 
 	return zak_cgi_tag_tag_valist (name, id, ap);
 }
+
+/**
+ * zak_cgi_tag_img:
+ * @name:
+ * @id:
+ *
+ * Returns:
+ */
+gchar
+*zak_cgi_tag_img (const gchar *id,
+				  ...)
+{
+	va_list ap;
+
+	va_start (ap, id);
+
+	return zak_cgi_tag_tag_valist ("img", id, ap);
+}
