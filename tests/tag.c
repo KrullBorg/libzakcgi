@@ -21,15 +21,27 @@
 int
 main (int argc, char *argv[])
 {
-	g_message ("%s", zak_cgi_tag_tag ("input", "text",
-									  "type", "textarea",
+	GString *str;
+
+	str = g_string_new ("");
+
+	g_string_append_printf (str, "%s<br/>\n", zak_cgi_tag_tag ("input", "text",
+									  "type", "text",
 									  "name", "myname",
+									  "value", "the content of the text input",
+									  NULL));
+
+	g_string_append_printf (str, "%s<br/>\n", zak_cgi_tag_tag ("textarea", "textarea",
 									  "content", "the content of the text area",
 									  NULL));
 
-	g_message ("%s", zak_cgi_tag_img ("theimage", "src", "pippo.png", NULL));
+	g_string_append_printf (str, "%s<br/>\n", zak_cgi_tag_img ("theimage", "src", "pippo.png", NULL));
 
-	g_message ("%s", zak_cgi_tag_text ("thetext", NULL));
+	g_string_append_printf (str, "%s<br/>\n", zak_cgi_tag_text ("thetext", NULL));
+
+	g_string_append_printf (str, "%s<br/>\n", zak_cgi_tag_submit ("submit", NULL));
+
+	zak_cgi_main_out (NULL, str->str);
 
 	return 0;
 }

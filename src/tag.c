@@ -168,7 +168,6 @@ gchar
 
 /**
  * zak_cgi_tag_img:
- * @name:
  * @id:
  *
  * Returns:
@@ -186,7 +185,6 @@ gchar
 
 /**
  * zak_cgi_tag_text:
- * @name:
  * @id:
  *
  * Returns:
@@ -209,7 +207,6 @@ gchar
 
 /**
  * zak_cgi_tag_file:
- * @name:
  * @id:
  *
  * Returns:
@@ -226,6 +223,28 @@ gchar
 	ar = zak_cgi_tag_valist_to_gptrarray (ap);
 	g_ptr_array_add (ar, "type");
 	g_ptr_array_add (ar, "file");
+
+	return zak_cgi_tag_tag_attrs ("input", id, ar);
+}
+
+/**
+ * zak_cgi_tag_submit:
+ * @id:
+ *
+ * Returns:
+ */
+gchar
+*zak_cgi_tag_submit (const gchar *id,
+					 ...)
+{
+	GPtrArray *ar;
+	va_list ap;
+
+	va_start (ap, id);
+
+	ar = zak_cgi_tag_valist_to_gptrarray (ap);
+	g_ptr_array_add (ar, "type");
+	g_ptr_array_add (ar, "submit");
 
 	return zak_cgi_tag_tag_attrs ("input", id, ar);
 }
