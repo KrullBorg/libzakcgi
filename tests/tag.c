@@ -29,5 +29,7 @@ main (int argc, char *argv[])
 
 	g_message ("%s", zak_cgi_tag_img ("theimage", "src", "pippo.png", NULL));
 
+	g_message ("%s", zak_cgi_tag_text ("thetext", NULL));
+
 	return 0;
 }

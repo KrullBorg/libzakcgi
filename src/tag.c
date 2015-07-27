@@ -22,13 +22,42 @@
 
 #include "tag.h"
 
+static GPtrArray
+*zak_cgi_tag_valist_to_gptrarray (va_list ap)
+{
+	GPtrArray *ret;
+
+	gchar *attr;
+
+	ret = g_ptr_array_new ();
+
+	do
+		{
+			attr = va_arg (ap, gchar *);
+			if (attr != NULL)
+				{
+					g_ptr_array_add (ret, g_strdup (attr));
+				}
+			else
+				{
+					break;
+				}
+		} while (TRUE);
+	va_end (ap);
+
+	return ret;
+}
+
 static gchar
-*zak_cgi_tag_tag_valist (const gchar *name,
-						 const gchar *id,
-						 va_list ap)
+*zak_cgi_tag_tag_attrs (const gchar *name,
+						const gchar *id,
+						GPtrArray *ar_attrs)
 {
 	gchar *ret;
 	GString *str;
+
+	guint i;
+	guint l;
 
 	gboolean with_name;
 	gboolean with_content;
@@ -49,12 +78,13 @@ static gchar
 							name,
 							id);
 
-	do
+	l = ar_attrs->len;
+	for (i = 0; i < l; i++)
 		{
-			attr = va_arg (ap, gchar *);
+			attr = g_ptr_array_index (ar_attrs, i);
 			if (attr != NULL)
 				{
-					attr_val = va_arg (ap, gchar *);
+					attr_val = g_ptr_array_index (ar_attrs, ++i);
 					if (attr_val != NULL)
 						{
 							if (g_strcmp0 (attr, "content") == 0)
@@ -89,8 +119,7 @@ static gchar
 				{
 					break;
 				}
-		} while (TRUE);
-	va_end (ap);
+		}
 
 	if (!with_name)
 		{
@@ -134,7 +163,7 @@ gchar
 
 	va_start (ap, id);
 
-	return zak_cgi_tag_tag_valist (name, id, ap);
+	return zak_cgi_tag_tag_attrs (name, id, zak_cgi_tag_valist_to_gptrarray (ap));
 }
 
 /**
@@ -152,5 +181,51 @@ gchar
 
 	va_start (ap, id);
 
-	return zak_cgi_tag_tag_valist ("img", id, ap);
+	return zak_cgi_tag_tag_attrs ("img", id, zak_cgi_tag_valist_to_gptrarray (ap));
+}
+
+/**
+ * zak_cgi_tag_text:
+ * @name:
+ * @id:
+ *
+ * Returns:
+ */
+gchar
+*zak_cgi_tag_text (const gchar *id,
+				   ...)
+{
+	GPtrArray *ar;
+	va_list ap;
+
+	va_start (ap, id);
+
+	ar = zak_cgi_tag_valist_to_gptrarray (ap);
+	g_ptr_array_add (ar, "type");
+	g_ptr_array_add (ar, "text");
+
+	return zak_cgi_tag_tag_attrs ("input", id, ar);
+}
+
+/**
+ * zak_cgi_tag_file:
+ * @name:
+ * @id:
+ *
+ * Returns:
+ */
+gchar
+*zak_cgi_tag_file (const gchar *id,
+				   ...)
+{
+	GPtrArray *ar;
+	va_list ap;
+
+	va_start (ap, id);
+
+	ar = zak_cgi_tag_valist_to_gptrarray (ap);
+	g_ptr_array_add (ar, "type");
+	g_ptr_array_add (ar, "file");
+
+	return zak_cgi_tag_tag_attrs ("input", id, ar);
 }

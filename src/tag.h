@@ -32,5 +32,11 @@ gchar *zak_cgi_tag_tag (const gchar *name,
 gchar *zak_cgi_tag_img (const gchar *id,
 						...);
 
+gchar *zak_cgi_tag_text (const gchar *id,
+						 ...);
+
+gchar *zak_cgi_tag_file (const gchar *id,
+						 ...);
+
 
 #endif /* __ZAK_CGI_TAG_H__ */
