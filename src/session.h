@@ -52,7 +52,8 @@ GType zak_cgi_session_get_type (void);
 
 
 ZakCgiSession *zak_cgi_session_new (ZakCgiMain *zakcgimain,
-									const gchar *base_uri);
+									const gchar *base_uri,
+									const gchar *path);
 
 gchar *zak_cgi_session_get_header (ZakCgiSession *session);
 

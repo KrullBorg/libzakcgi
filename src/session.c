@@ -48,6 +48,7 @@ struct _ZakCgiSessionPrivate
 	{
 		ZakCgiMain *zakcgimain;
 		gchar *base_uri;
+		gchar *path;
 		gchar *sid;
 		GFile *gfile;
 		GKeyFile *kfile;
@@ -75,18 +76,21 @@ zak_cgi_session_init (ZakCgiSession *zak_cgi_session)
 
 	priv->zakcgimain = NULL;
 	priv->base_uri = NULL;
+	priv->path = NULL;
 }
 
 /**
  * zak_cgi_session_new:
  * @zakcgimain:
  * @base_uri:
+ * @path:
  *
  * Returns: the newly created #ZakCgiSession object.
  */
 ZakCgiSession
 *zak_cgi_session_new (ZakCgiMain *zakcgimain,
-					  const gchar *base_uri)
+					  const gchar *base_uri,
+					  const gchar *path)
 {
 	GHashTable *ht_cookies;
 
@@ -103,6 +107,10 @@ ZakCgiSession
 		{
 			priv->base_uri = g_strdup (base_uri);
 		}
+	if (path != NULL)
+		{
+			priv->path = g_strdup (path);
+		}
 
 	ht_cookies = zak_cgi_main_get_cookies (priv->zakcgimain);
 	priv->sid = g_hash_table_lookup (ht_cookies, "ZAKCGISID");
@@ -110,7 +118,7 @@ ZakCgiSession
 	if (priv->sid != NULL)
 		{
 			/* open the file */
-			priv->gfile = g_file_new_for_path (g_build_filename (g_get_tmp_dir (), priv->sid, NULL));
+			priv->gfile = g_file_new_for_path (g_build_filename (priv->path != NULL ? priv->path : g_get_tmp_dir (), priv->sid, NULL));
 
 			error = NULL;
 
@@ -166,7 +174,7 @@ gchar
 			g_free (tmp);
 
 			/* see if file already exists */
-			priv->gfile = g_file_new_for_path (g_build_filename (g_get_tmp_dir (), priv->sid, NULL));
+			priv->gfile = g_file_new_for_path (g_build_filename (priv->path != NULL ? priv->path : g_get_tmp_dir (), priv->sid, NULL));
 			error = NULL;
 			iostream = g_file_replace_readwrite (priv->gfile, NULL, FALSE, G_FILE_CREATE_PRIVATE, NULL, &error);
 			if (iostream == NULL
