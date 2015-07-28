@@ -47,6 +47,7 @@ typedef struct _ZakCgiSessionPrivate ZakCgiSessionPrivate;
 struct _ZakCgiSessionPrivate
 	{
 		ZakCgiMain *zakcgimain;
+		gchar *base_uri;
 		gchar *sid;
 		GFile *gfile;
 		GKeyFile *kfile;
@@ -72,17 +73,20 @@ zak_cgi_session_init (ZakCgiSession *zak_cgi_session)
 {
 	ZakCgiSessionPrivate *priv = ZAK_CGI_SESSION_GET_PRIVATE (zak_cgi_session);
 
-	priv->zakcgimain;
+	priv->zakcgimain = NULL;
+	priv->base_uri = NULL;
 }
 
 /**
  * zak_cgi_session_new:
  * @zakcgimain:
+ * @base_uri:
  *
  * Returns: the newly created #ZakCgiSession object.
  */
 ZakCgiSession
-*zak_cgi_session_new (ZakCgiMain *zakcgimain)
+*zak_cgi_session_new (ZakCgiMain *zakcgimain,
+					  const gchar *base_uri)
 {
 	GHashTable *ht_cookies;
 
@@ -95,6 +99,10 @@ ZakCgiSession
 
 	priv = ZAK_CGI_SESSION_GET_PRIVATE (zak_cgi_session);
 	priv->zakcgimain = zakcgimain;
+	if (base_uri != NULL)
+		{
+			priv->base_uri = g_strdup (base_uri);
+		}
 
 	ht_cookies = zak_cgi_main_get_cookies (priv->zakcgimain);
 	priv->sid = g_hash_table_lookup (ht_cookies, "ZAKCGISID");
@@ -136,18 +144,21 @@ gchar
 	GError *error;
 	GFileIOStream *iostream;
 
+	guint32 i;
+	gchar *tmp;
+
+	GHashTable *ht_env;
+
 	ZakCgiSessionPrivate *priv = ZAK_CGI_SESSION_GET_PRIVATE (session);
 
 	if (priv->sid == NULL)
 		{
 			/* create new random name */
-			guint32 i;
-			gchar *tmp;
 
 			i = g_random_int ();
 
 			tmp = g_strdup_printf ("%d", i);
-			
+
 			priv->sid = g_compute_checksum_for_string (G_CHECKSUM_MD5,
 			                                           tmp,
 			                                           strlen (tmp));
@@ -171,7 +182,11 @@ gchar
 					g_object_unref (iostream);
 				}
 
-			ret = zak_cgi_main_set_cookie ("ZAKCGISID", priv->sid, NULL, NULL, NULL, FALSE, FALSE);
+			ht_env = zak_cgi_main_get_env (priv->zakcgimain);
+
+			ret = zak_cgi_main_set_cookie ("ZAKCGISID", priv->sid, NULL, NULL,
+										   priv->base_uri != NULL ? priv->base_uri : g_value_get_string (g_hash_table_lookup (ht_env, "CONTEXT_PREFIX")),
+										   FALSE, FALSE);
 		}
 	else
 		{

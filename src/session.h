@@ -51,7 +51,8 @@ struct _ZakCgiSessionClass
 GType zak_cgi_session_get_type (void);
 
 
-ZakCgiSession *zak_cgi_session_new (ZakCgiMain *zakcgimain);
+ZakCgiSession *zak_cgi_session_new (ZakCgiMain *zakcgimain,
+									const gchar *base_uri);
 
 gchar *zak_cgi_session_get_header (ZakCgiSession *session);
 

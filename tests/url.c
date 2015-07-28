@@ -55,6 +55,7 @@ hook (GMatchInfo *minfo, gpointer user_data)
 int
 main (int argc, char *argv[])
 {
+	gchar *env;
 	ZakCgiUrl *url;
 	GString *str;
 
@@ -63,13 +64,15 @@ main (int argc, char *argv[])
 	                    "<body>\n"
 						"FROM INIT<br/><br/>\n");
 
+	env = zak_cgi_main_dump_env (NULL);
+
 	url = zak_cgi_url_new (NULL);
 
 	zak_cgi_url_connect (url, "/(?<controller>[a-zA-Z0-9_-]+)/([a-zA-Z0-9_-]+)", (ZakCgiUrlConnectedFunction)hook, str);
 
 	zak_cgi_url_dispatch (url);
 
-	g_string_append_printf (str, "</body>\n");
+	g_string_append_printf (str, "<hr/>%s</body>\n", env);
 
 	zak_cgi_main_out (NULL, str->str);
 	g_string_free (str, TRUE);

@@ -34,7 +34,7 @@ main (int argc, char *argv[])
 
 	gchar *method;
 
-	session = zak_cgi_session_new (NULL);
+	session = zak_cgi_session_new (NULL, NULL);
 
 	str = g_string_new ("<html>\n"
 	                    "<head><title>Session Cookie</title></head>\n"
@@ -110,4 +110,3 @@ main (int argc, char *argv[])
 
 	return 0;
 }
-
