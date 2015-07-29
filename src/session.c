@@ -193,7 +193,7 @@ gchar
 			ht_env = zak_cgi_main_get_env (priv->zakcgimain);
 
 			ret = zak_cgi_main_set_cookie ("ZAKCGISID", priv->sid, NULL, NULL,
-										   priv->base_uri != NULL ? priv->base_uri : g_value_get_string (g_hash_table_lookup (ht_env, "CONTEXT_PREFIX")),
+										   priv->base_uri != NULL ? priv->base_uri : (gchar *)g_hash_table_lookup (ht_env, "CONTEXT_PREFIX"),
 										   FALSE, FALSE);
 		}
 	else
