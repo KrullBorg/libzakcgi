@@ -327,23 +327,43 @@ gchar
                           gboolean secure,
                           gboolean http_only)
 {
-	char *ret;
+	gchar *ret;
+	GString *str;
 
 	char *cur = g_strdup (setlocale (LC_TIME, NULL));
 
 	setlocale (LC_NUMERIC, "C");
 
-	ret = g_strdup_printf ("Set-Cookie: %s=%s%s",
-	                       name,
-	                       value,
-	                       expires != NULL ? g_date_time_format (expires, "; expires=%a, %d-%b-%Y %H:%M:%S GMT") : "",
-	                       domain != NULL ? g_strdup_printf ("; domain=%s", domain) : "",
-	                       path != NULL  ? g_strdup_printf ("; path=%s", path) : "",
-	                       secure ? g_strdup ("; secure") : "",
-	                       http_only ? g_strdup ("; httponly") : "");
+	str = g_string_new ("Set-Cookie: ");
+	g_string_append_printf (str, "%s=%s",
+							name,
+							value);
+	if (expires != NULL)
+		{
+			g_string_append_printf (str, "%s", g_date_time_format (expires, "; expires=%a, %d-%b-%Y %H:%M:%S GMT"));
+		}
+	if (domain != NULL)
+		{
+			g_string_append_printf (str, "; domain=%s", domain);
+		}
+	if (path != NULL)
+		{
+			g_string_append_printf (str, "; path=%s", path);
+		}
+	if (secure)
+		{
+			g_string_append (str, "; secure");
+		}
+	if (http_only)
+		{
+			g_string_append (str, "; httponly");
+		}
 
 	setlocale (LC_TIME, cur);
 	g_free (cur);
+
+	ret = g_strdup (str->str);
+	g_string_free (str, TRUE);
 
 	return ret;
 }
