@@ -806,12 +806,62 @@ GHashTable
 }
 
 void
-zak_cgi_main_redirect (const gchar *url)
+zak_cgi_main_redirect (ZakCgiMain *zakcgimain, const gchar *url)
 {
+	GString *_url;
+	GHashTable *ht_env;
+	gchar *value;
+	GRegex *regex;
+
+	_url = g_string_new ("");
+	if (!g_str_has_prefix (url, "http://")
+		&& !g_str_has_prefix (url, "https://")
+		&& !g_str_has_prefix (url, "ftp://"))
+		{
+			ht_env = zak_cgi_main_get_env (zakcgimain);
+
+			value = (gchar *)g_hash_table_lookup (ht_env, "REQUEST_SCHEME");
+			if (value != NULL)
+				{
+					g_string_append_printf (_url, "%s://", value);
+				}
+
+			value = (gchar *)g_hash_table_lookup (ht_env, "SERVER_NAME");
+			if (value != NULL)
+				{
+					if (!g_str_has_prefix (url, value))
+						{
+							g_string_append_printf (_url, value);
+						}
+				}
+
+			if (!g_str_has_prefix (url, "/"))
+				{
+					/* TODO
+					 * test if it starts with a domain, ex: www.google.it */
+					value = (gchar *)g_hash_table_lookup (ht_env, "CONTEXT_PREFIX");
+					if (value != NULL)
+						{
+							if (!g_str_has_prefix (url, value))
+								{
+									g_string_append_printf (_url, value);
+								}
+						}
+				}
+
+			g_string_append_printf (_url, url);
+		}
+	else
+		{
+			g_string_assign (_url, url);
+		}
+
 	g_printf ("%s%s%c%c\n",
 	          "Location: ",
-	          url,
+	          _url->str,
 	          13, 10);
+
+	g_string_free (_url, TRUE);
 }
 
 gboolean

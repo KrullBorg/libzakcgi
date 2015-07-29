@@ -21,14 +21,13 @@
 int
 main (int argc, char *argv[])
 {
+	ZakCgiMain *zakcgi_main;
 	GHashTable *ht_env;
 
-	ht_env = zak_cgi_main_get_parameters (NULL, NULL);
+	zakcgi_main = zak_cgi_main_new ();
+	ht_env = zak_cgi_main_get_parameters (zakcgi_main, NULL);
 
-	zak_cgi_main_redirect ((gchar *)g_value_get_string ((GValue *)(const gchar *)g_hash_table_lookup (ht_env, "redirectto")));
-
-	g_hash_table_destroy (ht_env);
+	zak_cgi_main_redirect (zakcgi_main, (gchar *)g_value_get_string ((GValue *)(const gchar *)g_hash_table_lookup (ht_env, "redirectto")));
 
 	return 0;
 }
-
