@@ -99,6 +99,8 @@ ZakCgiSession
 	ZakCgiSession *zak_cgi_session;
 	ZakCgiSessionPrivate *priv;
 
+	gchar *val;
+
 	zak_cgi_session = ZAK_CGI_SESSION (g_object_new (zak_cgi_session_get_type (), NULL));
 
 	priv = ZAK_CGI_SESSION_GET_PRIVATE (zak_cgi_session);
@@ -122,7 +124,6 @@ ZakCgiSession
 
 			error = NULL;
 
-			/* TODO */
 			/* check the content */
 			priv->kfile = g_key_file_new ();
 			if (!g_key_file_load_from_file (priv->kfile,
@@ -132,6 +133,9 @@ ZakCgiSession
 			    || error != NULL)
 				{
 					/* TODO */
+				}
+			else
+				{
 				}
 		}
 
@@ -184,10 +188,31 @@ gchar
 				}
 			else
 				{
-					/* TODO */
-					/* insert some data (ex IP) */
 					g_io_stream_close (G_IO_STREAM (iostream), NULL, NULL);
 					g_object_unref (iostream);
+
+					priv->kfile = g_key_file_new ();
+					if (!g_key_file_load_from_file (priv->kfile,
+													g_file_get_path (priv->gfile),
+													G_KEY_FILE_NONE,
+													&error)
+						|| error != NULL)
+						{
+							/* TODO */
+						}
+					else
+						{
+							/* write REMOTE_ADDR and creation timestamp */
+							GDateTime *gdt;
+
+							gdt = g_date_time_new_now_local ();
+
+							g_key_file_set_value (priv->kfile, "ZAKCGI", "REMOTE_ADDR", g_getenv ("REMOTE_ADDR"));
+							g_key_file_set_value (priv->kfile, "ZAKCGI", "TIMESTAMP", g_date_time_format (gdt, "%F %T"));
+							g_key_file_save_to_file (priv->kfile, g_file_get_path (priv->gfile), NULL);
+
+							g_date_time_unref (gdt);
+						}
 				}
 
 			ht_env = zak_cgi_main_get_env (priv->zakcgimain);
@@ -244,6 +269,34 @@ gchar
 		}
 
 	return ret;
+}
+
+/**
+ * zak_cgi_session_close:
+ * @session:
+ *
+ */
+void
+zak_cgi_session_close (ZakCgiSession *session)
+{
+	ZakCgiSessionPrivate *priv = ZAK_CGI_SESSION_GET_PRIVATE (session);
+
+	if (priv->kfile != NULL)
+		{
+			g_key_file_free (priv->kfile);
+			priv->kfile = NULL;
+		}
+	if (priv->gfile != NULL)
+		{
+			g_file_delete (priv->gfile, NULL, NULL);
+			g_object_unref (priv->gfile);
+			priv->gfile = NULL;
+		}
+	if (priv->sid != NULL)
+		{
+			g_free (priv->sid);
+			priv->sid = NULL;
+		}
 }
 
 /* PRIVATE */

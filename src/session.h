@@ -60,6 +60,8 @@ gchar *zak_cgi_session_get_header (ZakCgiSession *session);
 void zak_cgi_session_set_value (ZakCgiSession *session, const gchar *name, const gchar *value);
 gchar *zak_cgi_session_get_value (ZakCgiSession *session, const gchar *name);
 
+void zak_cgi_session_close (ZakCgiSession *session);
+
 
 G_END_DECLS
 
