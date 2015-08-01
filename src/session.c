@@ -20,6 +20,8 @@
 	#include <config.h>
 #endif
 
+#include <syslog.h>
+
 #include <gio/gio.h>
 
 #include <string.h>
@@ -77,6 +79,8 @@ zak_cgi_session_init (ZakCgiSession *zak_cgi_session)
 	priv->zakcgimain = NULL;
 	priv->base_uri = NULL;
 	priv->path = NULL;
+	priv->gfile = NULL;
+	priv->kfile = NULL;
 }
 
 /**
@@ -136,6 +140,62 @@ ZakCgiSession
 				}
 			else
 				{
+					val = g_key_file_get_value (priv->kfile, "ZAKCGI", "REMOTE_ADDR", NULL);
+					if (val == NULL
+						|| g_strcmp0 (val, g_getenv ("REMOTE_ADDR")) != 0)
+						{
+							zak_cgi_session_close (zak_cgi_session);
+						}
+
+					val = g_key_file_get_value (priv->kfile, "ZAKCGI", "TIMESTAMP", NULL);
+					if (val == NULL)
+						{
+							zak_cgi_session_close (zak_cgi_session);
+						}
+					else
+						{
+							GTimeVal tval;
+
+							if (g_time_val_from_iso8601 (val, &tval))
+								{
+									GDateTime *gdt;
+									GDateTime *gdt_now;
+									GDateTime *gdt_plus;
+
+									gdt = g_date_time_new_from_timeval_local (&tval);
+									if (gdt == NULL)
+										{
+											zak_cgi_session_close (zak_cgi_session);
+										}
+									else
+										{
+											/* TODO
+											 * add a property for minutes number */
+											gdt_plus = g_date_time_add_minutes (gdt, 5);
+											gdt_now = g_date_time_new_now_local ();
+											if (g_date_time_compare (gdt_plus, gdt_now) == -1)
+												{
+													/* session expired */
+													zak_cgi_session_close (zak_cgi_session);
+												}
+											else
+												{
+													/* update timestamp */
+													g_key_file_set_value (priv->kfile, "ZAKCGI", "TIMESTAMP", g_date_time_format (gdt_now, "%FT%T"));
+													g_key_file_save_to_file (priv->kfile, g_file_get_path (priv->gfile), NULL);
+												}
+
+											g_date_time_unref (gdt_plus);
+											g_date_time_unref (gdt_now);
+										}
+
+									g_date_time_unref (gdt);
+								}
+							else
+								{
+									zak_cgi_session_close (zak_cgi_session);
+								}
+						}
 				}
 		}
 
@@ -208,7 +268,7 @@ gchar
 							gdt = g_date_time_new_now_local ();
 
 							g_key_file_set_value (priv->kfile, "ZAKCGI", "REMOTE_ADDR", g_getenv ("REMOTE_ADDR"));
-							g_key_file_set_value (priv->kfile, "ZAKCGI", "TIMESTAMP", g_date_time_format (gdt, "%F %T"));
+							g_key_file_set_value (priv->kfile, "ZAKCGI", "TIMESTAMP", g_date_time_format (gdt, "%FT%T"));
 							g_key_file_save_to_file (priv->kfile, g_file_get_path (priv->gfile), NULL);
 
 							g_date_time_unref (gdt);
