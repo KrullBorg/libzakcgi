@@ -368,6 +368,33 @@ gchar
 	return ret;
 }
 
+/* from libsoup */
+#define XDIGIT(c) ((c) <= '9' ? (c) - '0' : ((c) & 0x4F) - 'A' + 10)
+#define HEXCHAR(s) ((XDIGIT (s[1]) << 4) + XDIGIT (s[2]))
+
+static gboolean
+form_decode (char *part)
+{
+	unsigned char *s, *d;
+
+	s = d = (unsigned char *)part;
+	do {
+		if (*s == '%') {
+			if (!g_ascii_isxdigit (s[1]) ||
+			    !g_ascii_isxdigit (s[2]))
+				return FALSE;
+			*d++ = HEXCHAR (s);
+			s += 2;
+		} else if (*s == '+')
+			*d++ = ' ';
+		else
+			*d++ = *s;
+	} while (*s++);
+
+	return TRUE;
+}
+/* end from libsoup */
+
 /**
  * zak_cgi_main_get_parameters:
  * @zakcgimain:
@@ -387,6 +414,8 @@ GHashTable
 	gchar **parts;
 	guint i;
 	guint l;
+	gchar *name;
+	gchar *value;
 
 	GValue *gval;
 	GPtrArray *ar;
@@ -438,24 +467,51 @@ GHashTable
 
 							g_value_init (gval, G_TYPE_PTR_ARRAY);
 							g_value_take_boxed (gval, ar);
-							g_hash_table_replace (ht, g_strdup (parts[0]), gval);
+							name = g_strdup (parts[0]);
+							form_decode (name);
+							g_hash_table_replace (ht, g_strdup (name), gval);
+							g_free (name);
 						}
 					else
 						{
 							ar = (GPtrArray *)g_value_get_boxed (gval);
 						}
-					g_ptr_array_add (ar, g_strdup (parts[1] == NULL ? "" : parts[1]));
+					if (parts[1] == NULL)
+						{
+							g_ptr_array_add (ar, "");
+						}
+					else
+						{
+							value = g_strdup (parts[1]);
+							form_decode (value);
+							g_ptr_array_add (ar, g_strdup (value));
+							g_free (value);
+						}
 				}
 			else
 				{
 					gval = g_new0 (GValue, 1);
 
 					g_value_init (gval, G_TYPE_STRING);
-					g_value_set_string (gval, g_strdup (parts[1] == NULL ? "" : parts[1]));
 
-					g_hash_table_replace (ht, g_strdup (parts[0]), gval);
-					g_strfreev (parts);
+					if (parts[1] == NULL)
+						{
+							g_value_set_string (gval, "");
+						}
+					else
+						{
+							value = g_strdup (parts[1]);
+							form_decode (value);
+							g_value_set_string (gval, g_strdup (value));
+							g_free (value);
+						}
+
+					name = g_strdup (parts[0]);
+					form_decode (name);
+					g_hash_table_replace (ht, g_strdup (name), gval);
+					g_free (name);
 				}
+			g_strfreev (parts);
 		}
 	g_strfreev (params);
 
