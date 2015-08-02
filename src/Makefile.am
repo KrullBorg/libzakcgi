@@ -5,14 +5,20 @@ AM_CPPFLAGS = $(ZAKCGI_CFLAGS) \
 
 lib_LTLIBRARIES = libzakcgi.la
 
-libzakcgi_la_SOURCES = main.c \
+libzakcgi_la_SOURCES = \
+                       form.c \
+                       formelement.c \
+                       main.c \
                        session.c \
                        tag.c \
                        url.c
 
 libzakcgi_la_LDFLAGS = -no-undefined
 
-libzakcgi_include_HEADERS = libzakcgi.h \
+libzakcgi_include_HEADERS = \
+                            libzakcgi.h \
+                            form.h \
+                            formelement.h \
                             main.h \
                             session.h \
                             tag.h \

@@ -20,6 +20,7 @@
 #define __LIBZAKCGI_H__
 
 #include <libzakcgi/main.h>
+#include <libzakcgi/form.h>
 #include <libzakcgi/session.h>
 #include <libzakcgi/tag.h>
 #include <libzakcgi/url.h>
