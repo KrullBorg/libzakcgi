@@ -8,6 +8,7 @@ lib_LTLIBRARIES = libzakcgi.la
 libzakcgi_la_SOURCES = \
                        form.c \
                        formelement.c \
+                       formelementtext.c \
                        main.c \
                        session.c \
                        tag.c \
@@ -19,6 +20,7 @@ libzakcgi_include_HEADERS = \
                             libzakcgi.h \
                             form.h \
                             formelement.h \
+                            formelementtext.h \
                             main.h \
                             session.h \
                             tag.h \
