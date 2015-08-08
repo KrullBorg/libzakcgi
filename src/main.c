@@ -428,6 +428,7 @@ GHashTable
 			if (priv->ht_parameters != NULL)
 				{
 					ht = g_hash_table_ref (priv->ht_parameters);
+					return ht;
 				}
 		}
 

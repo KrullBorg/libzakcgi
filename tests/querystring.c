@@ -28,7 +28,14 @@ main (int argc, char *argv[])
 	gpointer key;
 	gpointer value;
 
-	ht_env = zak_cgi_main_get_parameters (NULL, NULL);
+	ZakCgiMain *main;
+
+	main = zak_cgi_main_new ();
+
+	ht_env = zak_cgi_main_get_parameters (main, NULL);
+
+	/* test #960 */
+	ht_env = zak_cgi_main_get_parameters (main, NULL);
 
 	str = g_string_new ("<html>\n"
 	                    "<head><title>Query string</title></head>\n"
