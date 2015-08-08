@@ -131,7 +131,7 @@ zak_cgi_main_out (const gchar *header, const gchar *body)
  * zak_cgi_main_get_env:
  * @zakcgimain:
  *
- * Returns: a #GHashTable with all the environment variables.
+ * Returns: a #GHashTable with all the environment variables as #GValue.
  */
 GHashTable
 *zak_cgi_main_get_env (ZakCgiMain *zakcgimain)
@@ -143,6 +143,8 @@ GHashTable
 	guint l;
 	guint i;
 	gchar **envs;
+
+	GValue *gval;
 
 	if (zakcgimain != NULL)
 		{
@@ -164,7 +166,11 @@ GHashTable
 	for (i = 0; i < l; i++)
 		{
 			envs = g_strsplit (environ[i], "=", 2);
-			g_hash_table_replace (ht, g_strdup (envs[0]), g_strdup (envs[1]));
+
+			gval = (GValue *)g_new0 (GValue, 1);
+			g_value_init (gval, G_TYPE_STRING);
+			g_value_take_string (gval, g_strdup (envs[1]));
+			g_hash_table_replace (ht, g_strdup (envs[0]), gval);
 			g_strfreev (envs);
 		}
 
@@ -201,7 +207,7 @@ gchar
 			while (g_hash_table_iter_next (&iter, &key, &value))
 				{
 					g_string_append_printf (str, "<tr><td>%s</td><td>%s</td></tr>\n",
-					                        (gchar *)key, (gchar *)value);
+					                        (gchar *)key, g_value_get_string ((GValue *)value));
 				}
 
 			g_string_append_printf (str, "</table>\n");
