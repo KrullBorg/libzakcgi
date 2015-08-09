@@ -75,6 +75,8 @@ gchar *zak_cgi_main_set_cookie (const gchar *name,
                                 gboolean http_only);
 
 GHashTable *zak_cgi_main_get_parameters (ZakCgiMain *zakcgimain, const gchar *query_string);
+gchar *zak_cgi_main_get_parameter (ZakCgiMain *zakcgimain, const gchar *param);
+void zak_cgi_main_parameters_foreach (ZakCgiMain *zakcgimain, GHFunc func, gpointer user_data);
 
 
 typedef struct _ZakCgiFile ZakCgiFile;

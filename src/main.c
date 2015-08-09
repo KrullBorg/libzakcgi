@@ -274,7 +274,7 @@ gchar
 	return ret;
 }
 
-GHashTable
+static GHashTable
 *_zak_cgi_main_get_cookies (ZakCgiMain *zakcgimain)
 {
 	ZakCgiMainPrivate *priv;
@@ -516,15 +516,8 @@ form_decode (char *part)
 }
 /* end from libsoup */
 
-/**
- * zak_cgi_main_get_parameters:
- * @zakcgimain:
- * @query_string:
- *
- * Returns:
- */
-GHashTable
-*zak_cgi_main_get_parameters (ZakCgiMain *zakcgimain, const gchar *query_string)
+static GHashTable
+*_zak_cgi_main_get_parameters (ZakCgiMain *zakcgimain, const gchar *query_string)
 {
 	ZakCgiMainPrivate *priv;
 	GHashTable *ht;
@@ -638,6 +631,67 @@ GHashTable
 	g_strfreev (params);
 
 	return ht;
+}
+
+/**
+ * zak_cgi_main_get_parameters:
+ * @zakcgimain:
+ * @query_string:
+ *
+ * Returns:
+ */
+G_DEPRECATED_FOR (zak_cgi_main_get_parameter)
+GHashTable
+*zak_cgi_main_get_parameters (ZakCgiMain *zakcgimain, const gchar *query_string)
+{
+	return _zak_cgi_main_get_parameters (zakcgimain, query_string);
+}
+
+/**
+ * zak_cgi_main_get_param:
+ * @zakcgimain:
+ * @param:
+ *
+ * Returns:
+ */
+GValue
+*zak_cgi_main_get_param  (ZakCgiMain *zakcgimain, const gchar *param)
+{
+	ZakCgiMainPrivate *priv;
+
+	GHashTable *ht;
+
+	GValue *ret;
+
+	g_return_val_if_fail (ZAK_CGI_IS_MAIN (zakcgimain), NULL);
+
+	ht = _zak_cgi_main_get_parameters (zakcgimain, NULL);
+
+	ret = g_hash_table_lookup (ht, param);
+
+	return ret;
+}
+
+/**
+ * zak_cgi_main_parameters_foreach:
+ * @zakcgimain:
+ * @func:
+ * @user_data:
+ *
+ */
+void
+zak_cgi_main_parameters_foreach (ZakCgiMain *zakcgimain, GHFunc func, gpointer user_data)
+{
+	ZakCgiMainPrivate *priv;
+
+	GHashTable *ht;
+
+	g_return_if_fail (ZAK_CGI_IS_MAIN (zakcgimain));
+	g_return_if_fail (func != NULL);
+
+	ht = _zak_cgi_main_get_parameters (zakcgimain, NULL);
+
+	g_hash_table_foreach (ht, func, user_data);
 }
 
 /**
@@ -811,7 +865,7 @@ GHashTable
 	if (g_strcmp0 (content_type, "") == 0
 		|| g_strcmp0 (splitted[0], "application/x-www-form-urlencoded") == 0)
 		{
-			return zak_cgi_main_get_parameters (NULL, buf);
+			return _zak_cgi_main_get_parameters (NULL, buf);
 		}
 	else if (g_strcmp0 (splitted[0], "multipart/form-data") == 0)
 		{

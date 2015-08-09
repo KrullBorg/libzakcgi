@@ -18,68 +18,61 @@
 
 #include <main.h>
 
+void
+ht_foreach (gpointer key,
+			gpointer value,
+			gpointer user_data)
+{
+	GString *str = (GString *)user_data;
+
+	if (G_VALUE_HOLDS ((GValue *)value, G_TYPE_BOXED))
+		{
+			guint i;
+			GPtrArray *ar = (GPtrArray *)g_value_get_boxed ((GValue *)value);
+			for (i = 0; i < ar->len; i++)
+				{
+					g_string_append_printf (str,
+											"<tr><td>%s[%d]</td><td>%s</td></tr>\n",
+											(gchar *)key,
+											i,
+											(gchar *)g_ptr_array_index (ar, i));
+				}
+		}
+	else
+		{
+			g_string_append_printf (str,
+									"<tr><td>%s</td><td>%s</td></tr>\n",
+									(gchar *)key,
+									(gchar *)g_value_get_string ((GValue *)value));
+		}
+}
+
 int
 main (int argc, char *argv[])
 {
-	GHashTable *ht_env;
 	GString *str;
-
-	GHashTableIter iter;
-	gpointer key;
-	gpointer value;
 
 	ZakCgiMain *main;
 
 	main = zak_cgi_main_new ();
 
-	ht_env = zak_cgi_main_get_parameters (main, NULL);
-
-	/* test #960 */
-	ht_env = zak_cgi_main_get_parameters (main, NULL);
-
 	str = g_string_new ("<html>\n"
 	                    "<head><title>Query string</title></head>\n"
 	                    "<body>\n");
 
-	if (g_hash_table_size (ht_env) > 0)
-		{
-			g_string_append_printf (str, "<table>\n");
+	g_string_append_printf (str, "<table>\n");
 
-			g_string_append_printf (str,
-									"<tr><td>IS GET?</td><td>%s</td></tr>\n",
-									zak_cgi_main_is_get (NULL) ? "TRUE" : "FALSE");
+	g_string_append_printf (str,
+							"<tr><td>IS GET?</td><td>%s</td></tr>\n",
+							zak_cgi_main_is_get (NULL) ? "TRUE" : "FALSE");
 
-			g_string_append_printf (str,
-									"<tr><td>IS POST?</td><td>%s</td></tr>\n",
-									zak_cgi_main_is_post (NULL) ? "TRUE" : "FALSE");
+	g_string_append_printf (str,
+							"<tr><td>IS POST?</td><td>%s</td></tr>\n",
+							zak_cgi_main_is_post (NULL) ? "TRUE" : "FALSE");
 
-			g_hash_table_iter_init (&iter, ht_env);
-			while (g_hash_table_iter_next (&iter, &key, &value))
-				{
-					if (G_VALUE_HOLDS ((GValue *)value, G_TYPE_BOXED))
-						{
-							guint i;
-							GPtrArray *ar = (GPtrArray *)g_value_get_boxed ((GValue *)value);
-							for (i = 0; i < ar->len; i++)
-								{
-									g_string_append_printf (str,
-															"<tr><td>%s[%d]</td><td>%s</td></tr>\n",
-															(gchar *)key,
-															i,
-															(gchar *)g_ptr_array_index (ar, i));
-								}
-						}
-					else
-						{
-							g_string_append_printf (str,
-													"<tr><td>%s</td><td>%s</td></tr>\n",
-													(gchar *)key,
-													(gchar *)g_value_get_string ((GValue *)value));
-						}
-				}
+	zak_cgi_main_parameters_foreach (main, ht_foreach, str);
 
-			g_string_append_printf (str, "</table>\n");
-		}
+	g_string_append_printf (str, "</table>\n");
 
 	g_string_append_printf (str, "</body>\n");
 
