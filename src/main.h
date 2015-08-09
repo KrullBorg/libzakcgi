@@ -57,6 +57,8 @@ ZakCgiMain *zak_cgi_main_new (void);
 void zak_cgi_main_out (const gchar *header, const gchar *body);
 
 GHashTable *zak_cgi_main_get_env (ZakCgiMain *zakcgimain);
+GValue *zak_cgi_main_get_env_field (ZakCgiMain *zakcgimain, const gchar *field);
+void zak_cgi_main_env_foreach (ZakCgiMain *zakcgimain, GHFunc func, gpointer user_data);
 gchar *zak_cgi_main_dump_env (ZakCgiMain *zakcgimain);
 
 GHashTable *zak_cgi_main_get_cookies (ZakCgiMain *zakcgimain);

@@ -127,14 +127,8 @@ zak_cgi_main_out (const gchar *header, const gchar *body)
 	g_free (_header);
 }
 
-/**
- * zak_cgi_main_get_env:
- * @zakcgimain:
- *
- * Returns: a #GHashTable with all the environment variables as #GValue.
- */
-GHashTable
-*zak_cgi_main_get_env (ZakCgiMain *zakcgimain)
+static GHashTable
+*_zak_cgi_main_get_env (ZakCgiMain *zakcgimain)
 {
 	ZakCgiMainPrivate *priv;
 	GHashTable *ht;
@@ -178,11 +172,72 @@ GHashTable
 }
 
 /**
+ * zak_cgi_main_get_env:
+ * @zakcgimain:
+ *
+ * Returns: a #GHashTable with all the environment variables as #GValue.
+ */
+G_DEPRECATED_FOR (zak_cgi_main_get_env_field)
+GHashTable
+*zak_cgi_main_get_env (ZakCgiMain *zakcgimain)
+{
+	return _zak_cgi_main_get_env (zakcgimain);
+}
+
+/**
+ * zak_cgi_main_get_env_field:
+ * @zakcgimain:
+ * @field:
+ *
+ * Returns:
+ */
+GValue
+*zak_cgi_main_get_env_field (ZakCgiMain *zakcgimain, const gchar *field)
+{
+	ZakCgiMainPrivate *priv;
+
+	GHashTable *ht;
+
+	GValue *ret;
+
+	g_return_val_if_fail (ZAK_CGI_IS_MAIN (zakcgimain), NULL);
+
+	ht = _zak_cgi_main_get_env (zakcgimain);
+
+	ret = g_hash_table_lookup (ht, field);
+
+	return ret;
+}
+
+/**
+ * zak_cgi_main_env_foreach:
+ * @zakcgimain:
+ * @func:
+ * @user_data:
+ *
+ */
+void
+zak_cgi_main_env_foreach (ZakCgiMain *zakcgimain, GHFunc func, gpointer user_data)
+{
+	ZakCgiMainPrivate *priv;
+
+	GHashTable *ht;
+
+	g_return_if_fail (ZAK_CGI_IS_MAIN (zakcgimain));
+	g_return_if_fail (func != NULL);
+
+	ht = _zak_cgi_main_get_env (zakcgimain);
+
+	g_hash_table_foreach (ht, func, user_data);
+}
+
+/**
  * zak_cgi_main_dump_env:
  * @zakcgimain:
  *
  * Returns: an html table with each environment variables.
  */
+G_DEPRECATED_FOR (zak_cgi_main_env_foreach)
 gchar
 *zak_cgi_main_dump_env (ZakCgiMain *zakcgimain)
 {
@@ -195,7 +250,7 @@ gchar
 	gpointer key;
 	gpointer value;
 
-	ht_env = zak_cgi_main_get_env (zakcgimain);
+	ht_env = _zak_cgi_main_get_env (zakcgimain);
 
 	str = g_string_new ("");
 
@@ -252,7 +307,7 @@ GHashTable
 			priv->ht_cookies = g_hash_table_ref (ht);
 		}
 
-	ht_env = zak_cgi_main_get_env (zakcgimain);
+	ht_env = _zak_cgi_main_get_env (zakcgimain);
 
 	cookies = g_hash_table_lookup (ht_env, "HTTP_COOKIE");
 	if (cookies != NULL)
@@ -901,7 +956,7 @@ zak_cgi_main_redirect (ZakCgiMain *zakcgimain, const gchar *url)
 		&& !g_str_has_prefix (url, "https://")
 		&& !g_str_has_prefix (url, "ftp://"))
 		{
-			ht_env = zak_cgi_main_get_env (zakcgimain);
+			ht_env = _zak_cgi_main_get_env (zakcgimain);
 
 			value = (gchar *)g_hash_table_lookup (ht_env, "REQUEST_SCHEME");
 			if (value != NULL)
@@ -958,7 +1013,7 @@ zak_cgi_main_is_request_method (ZakCgiMain *zakcgimain, const gchar *method)
 
 	ret = FALSE;
 
-	ht = zak_cgi_main_get_env (zakcgimain);
+	ht = _zak_cgi_main_get_env (zakcgimain);
 	param = (gchar *)g_hash_table_lookup (ht, "REQUEST_METHOD");
 	if (param != NULL)
 		{
