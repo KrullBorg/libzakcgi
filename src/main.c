@@ -127,14 +127,8 @@ zak_cgi_main_out (const gchar *header, const gchar *body)
 	g_free (_header);
 }
 
-/**
- * zak_cgi_main_get_env:
- * @zakcgimain:
- *
- * Returns: a #GHashTable with all the environment variables as #GValue.
- */
-GHashTable
-*zak_cgi_main_get_env (ZakCgiMain *zakcgimain)
+static GHashTable
+*_zak_cgi_main_get_env (ZakCgiMain *zakcgimain)
 {
 	ZakCgiMainPrivate *priv;
 	GHashTable *ht;
@@ -178,11 +172,72 @@ GHashTable
 }
 
 /**
+ * zak_cgi_main_get_env:
+ * @zakcgimain:
+ *
+ * Returns: a #GHashTable with all the environment variables as #GValue.
+ */
+G_DEPRECATED_FOR (zak_cgi_main_get_env_field)
+GHashTable
+*zak_cgi_main_get_env (ZakCgiMain *zakcgimain)
+{
+	return _zak_cgi_main_get_env (zakcgimain);
+}
+
+/**
+ * zak_cgi_main_get_env_field:
+ * @zakcgimain:
+ * @field:
+ *
+ * Returns:
+ */
+GValue
+*zak_cgi_main_get_env_field (ZakCgiMain *zakcgimain, const gchar *field)
+{
+	ZakCgiMainPrivate *priv;
+
+	GHashTable *ht;
+
+	GValue *ret;
+
+	g_return_val_if_fail (ZAK_CGI_IS_MAIN (zakcgimain), NULL);
+
+	ht = _zak_cgi_main_get_env (zakcgimain);
+
+	ret = g_hash_table_lookup (ht, field);
+
+	return ret;
+}
+
+/**
+ * zak_cgi_main_env_foreach:
+ * @zakcgimain:
+ * @func:
+ * @user_data:
+ *
+ */
+void
+zak_cgi_main_env_foreach (ZakCgiMain *zakcgimain, GHFunc func, gpointer user_data)
+{
+	ZakCgiMainPrivate *priv;
+
+	GHashTable *ht;
+
+	g_return_if_fail (ZAK_CGI_IS_MAIN (zakcgimain));
+	g_return_if_fail (func != NULL);
+
+	ht = _zak_cgi_main_get_env (zakcgimain);
+
+	g_hash_table_foreach (ht, func, user_data);
+}
+
+/**
  * zak_cgi_main_dump_env:
  * @zakcgimain:
  *
  * Returns: an html table with each environment variables.
  */
+G_DEPRECATED_FOR (zak_cgi_main_env_foreach)
 gchar
 *zak_cgi_main_dump_env (ZakCgiMain *zakcgimain)
 {
@@ -195,7 +250,7 @@ gchar
 	gpointer key;
 	gpointer value;
 
-	ht_env = zak_cgi_main_get_env (zakcgimain);
+	ht_env = _zak_cgi_main_get_env (zakcgimain);
 
 	str = g_string_new ("");
 
@@ -219,55 +274,114 @@ gchar
 	return ret;
 }
 
-/**
- * zak_cgi_main_get_cookies:
- * @zakcgimain:
- *
- * Returns: a #GHashTable with all the cookies.
- */
-GHashTable
-*zak_cgi_main_get_cookies (ZakCgiMain *zakcgimain)
+static GHashTable
+*_zak_cgi_main_get_cookies (ZakCgiMain *zakcgimain)
 {
 	ZakCgiMainPrivate *priv;
 	GHashTable *ht;
-	GHashTable *ht_env;
 
 	guint l;
 	guint i;
-	gchar *cookies;
+	const gchar *cookies;
 	gchar **strv_cookies;
 	gchar **parts;
+	GValue *gval;
 
 	if (zakcgimain != NULL)
 		{
 			priv = ZAK_CGI_MAIN_GET_PRIVATE (zakcgimain);
 			if (priv->ht_cookies != NULL)
 				{
-					return g_hash_table_ref (priv->ht_cookies);
+					return priv->ht_cookies;
 				}
 		}
 	ht = g_hash_table_new (g_str_hash, g_str_equal);
 	if (zakcgimain != NULL)
 		{
-			priv->ht_cookies = g_hash_table_ref (ht);
+			priv->ht_cookies = ht;
 		}
 
-	ht_env = zak_cgi_main_get_env (zakcgimain);
-
-	cookies = g_hash_table_lookup (ht_env, "HTTP_COOKIE");
-	if (cookies != NULL)
+	gval = zak_cgi_main_get_env_field (zakcgimain, "HTTP_COOKIE");
+	if (gval != NULL)
 		{
-			strv_cookies = g_strsplit (cookies, ";", -1);
-			l = g_strv_length (strv_cookies);
-			for (i = 0; i < l; i++)
+			cookies = g_value_get_string (gval);
+			if (cookies != NULL)
 				{
-					parts = g_strsplit (strv_cookies[i], "=", 2);
-					g_hash_table_replace (ht, g_strstrip (g_strdup (parts[0])), g_strstrip (g_strdup (parts[1])));
-					g_strfreev (parts);
+					strv_cookies = g_strsplit (cookies, ";", -1);
+					l = g_strv_length (strv_cookies);
+					for (i = 0; i < l; i++)
+						{
+							parts = g_strsplit (strv_cookies[i], "=", 2);
+							gval = (GValue *)g_new0 (GValue, 1);
+							g_value_init (gval, G_TYPE_STRING);
+							g_value_take_string (gval, g_strdup (parts[1]));
+							g_hash_table_replace (ht, g_strdup (parts[0]), gval);
+							g_strfreev (parts);
+						}
 				}
 		}
 
 	return ht;
+}
+
+/**
+ * zak_cgi_main_get_cookies:
+ * @zakcgimain:
+ *
+ * Returns: a #GHashTable with all the cookies.
+ */
+G_DEPRECATED_FOR (zak_cgi_main_get_cookie)
+GHashTable
+*zak_cgi_main_get_cookies (ZakCgiMain *zakcgimain)
+{
+	return _zak_cgi_main_get_cookies (zakcgimain);
+}
+
+/**
+ * zak_cgi_main_get_cookie:
+ * @zakcgimain:
+ * @cookie:
+ *
+ * Returns:
+ */
+GValue
+*zak_cgi_main_get_cookie (ZakCgiMain *zakcgimain, const gchar *cookie)
+{
+	ZakCgiMainPrivate *priv;
+
+	GHashTable *ht;
+
+	GValue *ret;
+
+	g_return_val_if_fail (ZAK_CGI_IS_MAIN (zakcgimain), NULL);
+
+	ht = _zak_cgi_main_get_cookies (zakcgimain);
+
+	ret = g_hash_table_lookup (ht, cookie);
+
+	return ret;
+}
+
+/**
+ * zak_cgi_main_cookies_foreach:
+ * @zakcgimain:
+ * @func:
+ * @user_data:
+ *
+ */
+void
+zak_cgi_main_cookies_foreach (ZakCgiMain *zakcgimain, GHFunc func, gpointer user_data)
+{
+	ZakCgiMainPrivate *priv;
+
+	GHashTable *ht;
+
+	g_return_if_fail (ZAK_CGI_IS_MAIN (zakcgimain));
+	g_return_if_fail (func != NULL);
+
+	ht = _zak_cgi_main_get_cookies (zakcgimain);
+
+	g_hash_table_foreach (ht, func, user_data);
 }
 
 /**
@@ -276,6 +390,7 @@ GHashTable
  *
  * Returns: an html table with each cookies.
  */
+G_DEPRECATED_FOR (zak_cgi_main_cookies_foreach)
 gchar
 *zak_cgi_main_dump_cookies (ZakCgiMain *zakcgimain)
 {
@@ -288,7 +403,7 @@ gchar
 	gpointer key;
 	gpointer value;
 
-	ht_env = zak_cgi_main_get_cookies (zakcgimain);
+	ht_env = _zak_cgi_main_get_cookies (zakcgimain);
 
 	str = g_string_new ("");
 
@@ -300,7 +415,7 @@ gchar
 			while (g_hash_table_iter_next (&iter, &key, &value))
 				{
 					g_string_append_printf (str, "<tr><td>%s</td><td>%s</td></tr>\n",
-					                        (gchar *)key, (gchar *)value);
+					                        (gchar *)key, g_value_get_string ((GValue *)value));
 				}
 
 			g_string_append_printf (str, "</table>\n");
@@ -401,15 +516,8 @@ form_decode (char *part)
 }
 /* end from libsoup */
 
-/**
- * zak_cgi_main_get_parameters:
- * @zakcgimain:
- * @query_string:
- *
- * Returns:
- */
-GHashTable
-*zak_cgi_main_get_parameters (ZakCgiMain *zakcgimain, const gchar *query_string)
+static GHashTable
+*_zak_cgi_main_get_parameters (ZakCgiMain *zakcgimain, const gchar *query_string)
 {
 	ZakCgiMainPrivate *priv;
 	GHashTable *ht;
@@ -526,6 +634,67 @@ GHashTable
 }
 
 /**
+ * zak_cgi_main_get_parameters:
+ * @zakcgimain:
+ * @query_string:
+ *
+ * Returns:
+ */
+G_DEPRECATED_FOR (zak_cgi_main_get_parameter)
+GHashTable
+*zak_cgi_main_get_parameters (ZakCgiMain *zakcgimain, const gchar *query_string)
+{
+	return _zak_cgi_main_get_parameters (zakcgimain, query_string);
+}
+
+/**
+ * zak_cgi_main_get_param:
+ * @zakcgimain:
+ * @param:
+ *
+ * Returns:
+ */
+GValue
+*zak_cgi_main_get_param  (ZakCgiMain *zakcgimain, const gchar *param)
+{
+	ZakCgiMainPrivate *priv;
+
+	GHashTable *ht;
+
+	GValue *ret;
+
+	g_return_val_if_fail (ZAK_CGI_IS_MAIN (zakcgimain), NULL);
+
+	ht = _zak_cgi_main_get_parameters (zakcgimain, NULL);
+
+	ret = g_hash_table_lookup (ht, param);
+
+	return ret;
+}
+
+/**
+ * zak_cgi_main_parameters_foreach:
+ * @zakcgimain:
+ * @func:
+ * @user_data:
+ *
+ */
+void
+zak_cgi_main_parameters_foreach (ZakCgiMain *zakcgimain, GHFunc func, gpointer user_data)
+{
+	ZakCgiMainPrivate *priv;
+
+	GHashTable *ht;
+
+	g_return_if_fail (ZAK_CGI_IS_MAIN (zakcgimain));
+	g_return_if_fail (func != NULL);
+
+	ht = _zak_cgi_main_get_parameters (zakcgimain, NULL);
+
+	g_hash_table_foreach (ht, func, user_data);
+}
+
+/**
  * zak_cgi_main_get_stdin:
  * @zakcgimain:
  *
@@ -551,7 +720,7 @@ gchar
 			priv = ZAK_CGI_MAIN_GET_PRIVATE (zakcgimain);
 			if (priv->stdin != NULL)
 				{
-					return g_strdup (priv->stdin);
+					return priv->stdin;
 				}
 		}
 
@@ -647,13 +816,8 @@ zak_cgi_file_free (ZakCgiFile *file)
 G_DEFINE_BOXED_TYPE (ZakCgiFile, zak_cgi_file, zak_cgi_file_copy, zak_cgi_file_free)
 
 
-/**
- * zak_cgi_main_parse_stdin:
- *
- * Returns:
- */
-GHashTable
-*zak_cgi_main_parse_stdin (const gchar *buf, const gchar *boundary)
+static GHashTable
+*_zak_cgi_main_parse_stdin (const gchar *buf, const gchar *boundary)
 {
 	GHashTable *ht;
 
@@ -696,7 +860,7 @@ GHashTable
 	if (g_strcmp0 (content_type, "") == 0
 		|| g_strcmp0 (splitted[0], "application/x-www-form-urlencoded") == 0)
 		{
-			return zak_cgi_main_get_parameters (NULL, buf);
+			return _zak_cgi_main_get_parameters (NULL, buf);
 		}
 	else if (g_strcmp0 (splitted[0], "multipart/form-data") == 0)
 		{
@@ -888,6 +1052,71 @@ GHashTable
 	return ht;
 }
 
+/**
+ * zak_cgi_main_parse_stdin:
+ *
+ * Returns:
+ */
+G_DEPRECATED_FOR (zak_cgi_main_get_stdin_field)
+GHashTable
+*zak_cgi_main_parse_stdin (const gchar *buf, const gchar *boundary)
+{
+	return _zak_cgi_main_parse_stdin (buf, boundary);
+}
+
+/**
+ * zak_cgi_main_get_stdin_field:
+ * @zakcgimain:
+ * @field:
+ *
+ * Returns:
+ */
+GValue
+*zak_cgi_main_get_stdin_field (ZakCgiMain *zakcgimain, const gchar *field)
+{
+	ZakCgiMainPrivate *priv;
+
+	GHashTable *ht;
+
+	GValue *ret;
+
+	g_return_val_if_fail (ZAK_CGI_IS_MAIN (zakcgimain), NULL);
+
+	ht = _zak_cgi_main_parse_stdin (zak_cgi_main_get_stdin (zakcgimain), NULL);
+
+	ret = g_hash_table_lookup (ht, field);
+
+	return ret;
+}
+
+/**
+ * zak_cgi_main_stdin_foreach:
+ * @zakcgimain:
+ * @func:
+ * @user_data:
+ *
+ */
+void
+zak_cgi_main_stdin_foreach (ZakCgiMain *zakcgimain, GHFunc func, gpointer user_data)
+{
+	ZakCgiMainPrivate *priv;
+
+	GHashTable *ht;
+
+	g_return_if_fail (ZAK_CGI_IS_MAIN (zakcgimain));
+	g_return_if_fail (func != NULL);
+
+	ht = _zak_cgi_main_parse_stdin (zak_cgi_main_get_stdin (zakcgimain), NULL);
+
+	g_hash_table_foreach (ht, func, user_data);
+}
+
+/**
+ * zak_cgi_main_redirect:
+ * @zakcgimain:
+ * @url:
+ *
+ */
 void
 zak_cgi_main_redirect (ZakCgiMain *zakcgimain, const gchar *url)
 {
@@ -901,7 +1130,7 @@ zak_cgi_main_redirect (ZakCgiMain *zakcgimain, const gchar *url)
 		&& !g_str_has_prefix (url, "https://")
 		&& !g_str_has_prefix (url, "ftp://"))
 		{
-			ht_env = zak_cgi_main_get_env (zakcgimain);
+			ht_env = _zak_cgi_main_get_env (zakcgimain);
 
 			value = (gchar *)g_hash_table_lookup (ht_env, "REQUEST_SCHEME");
 			if (value != NULL)
@@ -947,45 +1176,55 @@ zak_cgi_main_redirect (ZakCgiMain *zakcgimain, const gchar *url)
 	g_string_free (_url, TRUE);
 }
 
+/**
+ * zak_cgi_main_is_request_method:
+ * @zakcgimain:
+ * @method:
+ *
+ * Returns:
+ */
 gboolean
 zak_cgi_main_is_request_method (ZakCgiMain *zakcgimain, const gchar *method)
 {
 	gboolean ret;
 
-	GHashTable *ht;
-
-	gchar *param;
+	GValue *gval;
+	const gchar *param;
 
 	ret = FALSE;
 
-	ht = zak_cgi_main_get_env (zakcgimain);
-	param = (gchar *)g_hash_table_lookup (ht, "REQUEST_METHOD");
-	if (param != NULL)
+	gval = zak_cgi_main_get_env_field (zakcgimain, "REQUEST_METHOD");
+	if (gval != NULL)
 		{
+			param = g_value_get_string (gval);
 			ret = (g_strcmp0 (param, method) == 0);
 		}
 
 	return ret;
 }
 
+/**
+ * zak_cgi_main_is_get:
+ * @zakcgimain:
+ *
+ * Returns:
+ */
 gboolean
 zak_cgi_main_is_get (ZakCgiMain *zakcgimain)
 {
-	gboolean ret;
-
-	ret = zak_cgi_main_is_request_method (zakcgimain, "GET");
-
-	return ret;
+	return zak_cgi_main_is_request_method (zakcgimain, "GET");
 }
 
+/**
+ * zak_cgi_main_is_post:
+ * @zakcgimain:
+ *
+ * Returns:
+ */
 gboolean
 zak_cgi_main_is_post (ZakCgiMain *zakcgimain)
 {
-	gboolean ret;
-
-	ret = zak_cgi_main_is_request_method (zakcgimain, "POST");
-
-	return ret;
+	return zak_cgi_main_is_request_method (zakcgimain, "POST");
 }
 
 /* PRIVATE */

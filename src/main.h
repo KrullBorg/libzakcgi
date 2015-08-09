@@ -56,10 +56,18 @@ ZakCgiMain *zak_cgi_main_new (void);
 
 void zak_cgi_main_out (const gchar *header, const gchar *body);
 
+G_DEPRECATED_FOR (zak_cgi_main_get_env_field)
 GHashTable *zak_cgi_main_get_env (ZakCgiMain *zakcgimain);
+GValue *zak_cgi_main_get_env_field (ZakCgiMain *zakcgimain, const gchar *field);
+void zak_cgi_main_env_foreach (ZakCgiMain *zakcgimain, GHFunc func, gpointer user_data);
+G_DEPRECATED_FOR (zak_cgi_main_env_foreach)
 gchar *zak_cgi_main_dump_env (ZakCgiMain *zakcgimain);
 
+G_DEPRECATED_FOR (zak_cgi_main_get_cookie)
 GHashTable *zak_cgi_main_get_cookies (ZakCgiMain *zakcgimain);
+GValue *zak_cgi_main_get_cookie (ZakCgiMain *zakcgimain, const gchar *cookie);
+void zak_cgi_main_cookies_foreach (ZakCgiMain *zakcgimain, GHFunc func, gpointer user_data);
+G_DEPRECATED_FOR (zak_cgi_main_cookies_foreach)
 gchar *zak_cgi_main_dump_cookies (ZakCgiMain *zakcgimain);
 
 gchar *zak_cgi_main_set_cookie (const gchar *name,
@@ -70,7 +78,10 @@ gchar *zak_cgi_main_set_cookie (const gchar *name,
                                 gboolean secure,
                                 gboolean http_only);
 
+G_DEPRECATED_FOR (zak_cgi_main_get_parameter)
 GHashTable *zak_cgi_main_get_parameters (ZakCgiMain *zakcgimain, const gchar *query_string);
+gchar *zak_cgi_main_get_parameter (ZakCgiMain *zakcgimain, const gchar *param);
+void zak_cgi_main_parameters_foreach (ZakCgiMain *zakcgimain, GHFunc func, gpointer user_data);
 
 
 typedef struct _ZakCgiFile ZakCgiFile;
@@ -89,7 +100,10 @@ GType zak_cgi_file_get_type ();
 
 gchar *zak_cgi_main_get_stdin (ZakCgiMain *zakcgimain);
 
+G_DEPRECATED_FOR (zak_cgi_main_get_stdin_field)
 GHashTable *zak_cgi_main_parse_stdin (const gchar *buf, const gchar *boundary);
+GValue *zak_cgi_main_get_stdin_field (ZakCgiMain *zakcgimain, const gchar *field);
+void zak_cgi_main_stdin_foreach (ZakCgiMain *zakcgimain, GHFunc func, gpointer user_data);
 
 void zak_cgi_main_redirect (ZakCgiMain *zakcgimain, const gchar *url);
 

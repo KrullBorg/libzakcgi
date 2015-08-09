@@ -70,84 +70,94 @@ gchar
 	return ret;
 }
 
+void
+ht_foreach (gpointer key,
+			gpointer value,
+			gpointer user_data)
+{
+	GString *str = (GString *)user_data;
+
+	g_string_append_printf (str, "<tr><td>%s</td><td>%s</td></tr>\n",
+							(gchar *)key, g_value_get_string ((GValue *)value));
+}
+
+void
+ht_foreach_stdin (gpointer key,
+			gpointer value,
+			gpointer user_data)
+{
+	gchar *ret;
+
+	GString *str = (GString *)user_data;
+
+	if (G_VALUE_HOLDS (value, G_TYPE_PTR_ARRAY))
+		{
+			guint i;
+			GPtrArray *ar = (GPtrArray *)g_value_get_boxed (value);
+			for (i = 0; i < ar->len; i++)
+				{
+					ret = get_value (g_ptr_array_index (ar, i));
+					g_string_append_printf (str,
+											"<tr><td>%s[%d]</td><td>%s</td></tr>\n",
+											(gchar *)key, i, ret);
+					g_free (ret);
+				}
+		}
+	else
+		{
+			ret = get_value ((GValue *)value);
+			g_string_append_printf (str,
+									"<tr><td>%s</td><td>%s</td></tr>\n",
+									(gchar *)key, ret);
+			g_free (ret);
+		}
+}
+
 int
 main (int argc, char *argv[])
 {
 	ZakCgiMain *zakcgimain;
-	gchar *env;
 	GString *str;
 	GHashTable *ht;
+	gchar *env;
 	gchar *ret;
 
 	zakcgimain = zak_cgi_main_new ();
-	env = zak_cgi_main_dump_env (zakcgimain);
 
 	str = g_string_new ("<html>\n"
 						"<head><title>Environment variables</title></head>\n"
 						"<body>\n");
 
-	g_string_append_printf (str, "%s\n</body>", env);
-	g_free (env);
+	g_string_append_printf (str, "<table>\n");
+	zak_cgi_main_env_foreach (zakcgimain, ht_foreach, str);
+	g_string_append_printf (str, "</table>\n");
 
 	env = zak_cgi_main_get_stdin (zakcgimain);
+	zak_cgi_main_parse_stdin (env, NULL);
 	/*syslog (LOG_MAKEPRI(LOG_SYSLOG, LOG_DEBUG), "stdin: %s", env);*/
 	if (env != NULL)
 		{
-			GHashTableIter iter;
-
-			gpointer key;
-			gpointer value;
-
 			g_string_append_printf (str,
 									"<br/><hr/>\n"
 									"%s",
 									env);
 
-			ht = zak_cgi_main_parse_stdin (env, NULL);
+			g_string_append_printf (str, "<br/><hr/>\n<table>\n");
 
-			if (g_hash_table_size (ht) > 0)
-				{
-					g_string_append_printf (str, "<br/><hr/>\n<table>\n");
+			g_string_append_printf (str,
+									"<tr><td>IS GET?</td><td>%s</td></tr>\n",
+									zak_cgi_main_is_get (zakcgimain) ? "TRUE" : "FALSE");
 
-					g_string_append_printf (str,
-											"<tr><td>IS GET?</td><td>%s</td></tr>\n",
-											zak_cgi_main_is_get (NULL) ? "TRUE" : "FALSE");
+			g_string_append_printf (str,
+									"<tr><td>IS POST?</td><td>%s</td></tr>\n",
+									zak_cgi_main_is_post (zakcgimain) ? "TRUE" : "FALSE");
 
-					g_string_append_printf (str,
-											"<tr><td>IS POST?</td><td>%s</td></tr>\n",
-											zak_cgi_main_is_post (NULL) ? "TRUE" : "FALSE");
+			zak_cgi_main_stdin_foreach (zakcgimain, ht_foreach_stdin, str);
 
-					g_hash_table_iter_init (&iter, ht);
-					while (g_hash_table_iter_next (&iter, &key, &value))
-						{
-							if (G_VALUE_HOLDS (value, G_TYPE_PTR_ARRAY))
-								{
-									guint i;
-									GPtrArray *ar = (GPtrArray *)g_value_get_boxed (value);
-									for (i = 0; i < ar->len; i++)
-										{
-											ret = get_value (g_ptr_array_index (ar, i));
-											g_string_append_printf (str,
-																	"<tr><td>%s[%d]</td><td>%s</td></tr>\n",
-																	(gchar *)key, i, ret);
-											g_free (ret);
-										}
-								}
-							else
-								{
-									ret = get_value ((GValue *)value);
-									g_string_append_printf (str,
-															"<tr><td>%s</td><td>%s</td></tr>\n",
-															(gchar *)key, ret);
-									g_free (ret);
-								}
-						}
-
-					g_string_append_printf (str, "</table>\n");
-				}
-
-			g_free (env);
+			g_string_append_printf (str, "</table>\n");
 		}
+
+	g_string_append (str, "\n</body>");
 
 	zak_cgi_main_out (NULL, str->str);
 	g_string_free (str, TRUE);
