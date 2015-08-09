@@ -274,22 +274,15 @@ gchar
 	return ret;
 }
 
-/**
- * zak_cgi_main_get_cookies:
- * @zakcgimain:
- *
- * Returns: a #GHashTable with all the cookies.
- */
 GHashTable
-*zak_cgi_main_get_cookies (ZakCgiMain *zakcgimain)
+*_zak_cgi_main_get_cookies (ZakCgiMain *zakcgimain)
 {
 	ZakCgiMainPrivate *priv;
 	GHashTable *ht;
-	GHashTable *ht_env;
 
 	guint l;
 	guint i;
-	gchar *cookies;
+	const gchar *cookies;
 	gchar **strv_cookies;
 	gchar **parts;
 	GValue *gval;
@@ -299,34 +292,96 @@ GHashTable
 			priv = ZAK_CGI_MAIN_GET_PRIVATE (zakcgimain);
 			if (priv->ht_cookies != NULL)
 				{
-					return g_hash_table_ref (priv->ht_cookies);
+					return priv->ht_cookies;
 				}
 		}
 	ht = g_hash_table_new (g_str_hash, g_str_equal);
 	if (zakcgimain != NULL)
 		{
-			priv->ht_cookies = g_hash_table_ref (ht);
+			priv->ht_cookies = ht;
 		}
 
-	ht_env = _zak_cgi_main_get_env (zakcgimain);
-
-	cookies = g_hash_table_lookup (ht_env, "HTTP_COOKIE");
-	if (cookies != NULL)
+	gval = zak_cgi_main_get_env_field (zakcgimain, "HTTP_COOKIE");
+	if (gval != NULL)
 		{
-			strv_cookies = g_strsplit (cookies, ";", -1);
-			l = g_strv_length (strv_cookies);
-			for (i = 0; i < l; i++)
+			cookies = g_value_get_string (gval);
+			if (cookies != NULL)
 				{
-					parts = g_strsplit (strv_cookies[i], "=", 2);
-					gval = (GValue *)g_new0 (GValue, 1);
-					g_value_init (gval, G_TYPE_STRING);
-					g_value_take_string (gval, g_strstrip (g_strdup (parts[1])));
-					g_hash_table_replace (ht, g_strstrip (g_strdup (parts[0])), gval);
-					g_strfreev (parts);
+					strv_cookies = g_strsplit (cookies, ";", -1);
+					l = g_strv_length (strv_cookies);
+					for (i = 0; i < l; i++)
+						{
+							parts = g_strsplit (strv_cookies[i], "=", 2);
+							gval = (GValue *)g_new0 (GValue, 1);
+							g_value_init (gval, G_TYPE_STRING);
+							g_value_take_string (gval, g_strdup (parts[1]));
+							g_hash_table_replace (ht, g_strdup (parts[0]), gval);
+							g_strfreev (parts);
+						}
 				}
 		}
 
 	return ht;
+}
+
+/**
+ * zak_cgi_main_get_cookies:
+ * @zakcgimain:
+ *
+ * Returns: a #GHashTable with all the cookies.
+ */
+G_DEPRECATED_FOR (zak_cgi_main_get_cookie)
+GHashTable
+*zak_cgi_main_get_cookies (ZakCgiMain *zakcgimain)
+{
+	return _zak_cgi_main_get_cookies (zakcgimain);
+}
+
+/**
+ * zak_cgi_main_get_cookie:
+ * @zakcgimain:
+ * @cookie:
+ *
+ * Returns:
+ */
+GValue
+*zak_cgi_main_get_cookie (ZakCgiMain *zakcgimain, const gchar *cookie)
+{
+	ZakCgiMainPrivate *priv;
+
+	GHashTable *ht;
+
+	GValue *ret;
+
+	g_return_val_if_fail (ZAK_CGI_IS_MAIN (zakcgimain), NULL);
+
+	ht = _zak_cgi_main_get_cookies (zakcgimain);
+
+	ret = g_hash_table_lookup (ht, cookie);
+
+	return ret;
+}
+
+/**
+ * zak_cgi_main_cookies_foreach:
+ * @zakcgimain:
+ * @func:
+ * @user_data:
+ *
+ */
+void
+zak_cgi_main_cookies_foreach (ZakCgiMain *zakcgimain, GHFunc func, gpointer user_data)
+{
+	ZakCgiMainPrivate *priv;
+
+	GHashTable *ht;
+
+	g_return_if_fail (ZAK_CGI_IS_MAIN (zakcgimain));
+	g_return_if_fail (func != NULL);
+
+	ht = _zak_cgi_main_get_cookies (zakcgimain);
+
+	g_hash_table_foreach (ht, func, user_data);
 }
 
 /**
@@ -335,6 +390,7 @@ GHashTable
  *
  * Returns: an html table with each cookies.
  */
+G_DEPRECATED_FOR (zak_cgi_main_cookies_foreach)
 gchar
 *zak_cgi_main_dump_cookies (ZakCgiMain *zakcgimain)
 {
@@ -347,7 +403,7 @@ gchar
 	gpointer key;
 	gpointer value;
 
-	ht_env = zak_cgi_main_get_cookies (zakcgimain);
+	ht_env = _zak_cgi_main_get_cookies (zakcgimain);
 
 	str = g_string_new ("");
 

@@ -62,6 +62,8 @@ void zak_cgi_main_env_foreach (ZakCgiMain *zakcgimain, GHFunc func, gpointer use
 gchar *zak_cgi_main_dump_env (ZakCgiMain *zakcgimain);
 
 GHashTable *zak_cgi_main_get_cookies (ZakCgiMain *zakcgimain);
+GValue *zak_cgi_main_get_cookie (ZakCgiMain *zakcgimain, const gchar *cookie);
+void zak_cgi_main_cookies_foreach (ZakCgiMain *zakcgimain, GHFunc func, gpointer user_data);
 gchar *zak_cgi_main_dump_cookies (ZakCgiMain *zakcgimain);
 
 gchar *zak_cgi_main_set_cookie (const gchar *name,

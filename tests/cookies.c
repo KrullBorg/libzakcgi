@@ -23,24 +23,34 @@
 
 #include <main.h>
 
+void
+ht_foreach (gpointer key,
+			gpointer value,
+			gpointer user_data)
+{
+	GString *str = (GString *)user_data;
+
+	g_string_append_printf (str, "<tr><td>%s</td><td>%s</td></tr>\n",
+							(gchar *)key, g_value_get_string ((GValue *)value));
+}
+
 int
 main (int argc, char *argv[])
 {
 	ZakCgiMain *zakcgimain;
-	gchar *env;
 	GString *str;
 	GString *header;
 	GHashTable *ht;
 
 	zakcgimain = zak_cgi_main_new ();
-	env = zak_cgi_main_dump_cookies (zakcgimain);
 
 	str = g_string_new ("<html>\n"
 	                    "<head><title>Cookies</title></head>\n"
 	                    "<body>\n");
 
-	g_string_append_printf (str, "%s\n</body>", env);
-	g_free (env);
+	g_string_append_printf (str, "<table>\n");
+	zak_cgi_main_cookies_foreach (zakcgimain, ht_foreach, str);
+	g_string_append_printf (str, "</table>\n");
 
 	header = g_string_new (ZAK_CGI_STANDARD_HEADER_HTML);
 	g_string_append_printf (header,
