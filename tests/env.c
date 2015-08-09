@@ -133,6 +133,7 @@ main (int argc, char *argv[])
 	g_string_append_printf (str, "</table>\n");
 
 	env = zak_cgi_main_get_stdin (zakcgimain);
+	zak_cgi_main_parse_stdin (env, NULL);
 	/*syslog (LOG_MAKEPRI(LOG_SYSLOG, LOG_DEBUG), "stdin: %s", env);*/
 	if (env != NULL)
 		{

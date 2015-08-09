@@ -1057,6 +1057,7 @@ static GHashTable
  *
  * Returns:
  */
+G_DEPRECATED_FOR (zak_cgi_main_get_stdin_field)
 GHashTable
 *zak_cgi_main_parse_stdin (const gchar *buf, const gchar *boundary)
 {
@@ -1110,6 +1111,12 @@ zak_cgi_main_stdin_foreach (ZakCgiMain *zakcgimain, GHFunc func, gpointer user_d
 	g_hash_table_foreach (ht, func, user_data);
 }
 
+/**
+ * zak_cgi_main_redirect:
+ * @zakcgimain:
+ * @url:
+ *
+ */
 void
 zak_cgi_main_redirect (ZakCgiMain *zakcgimain, const gchar *url)
 {
