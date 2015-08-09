@@ -96,6 +96,8 @@ GType zak_cgi_file_get_type ();
 gchar *zak_cgi_main_get_stdin (ZakCgiMain *zakcgimain);
 
 GHashTable *zak_cgi_main_parse_stdin (const gchar *buf, const gchar *boundary);
+GValue *zak_cgi_main_get_stdin_field (ZakCgiMain *zakcgimain, const gchar *field);
+void zak_cgi_main_stdin_foreach (ZakCgiMain *zakcgimain, GHFunc func, gpointer user_data);
 
 void zak_cgi_main_redirect (ZakCgiMain *zakcgimain, const gchar *url);
 

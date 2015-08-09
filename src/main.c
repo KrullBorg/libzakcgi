@@ -720,7 +720,7 @@ gchar
 			priv = ZAK_CGI_MAIN_GET_PRIVATE (zakcgimain);
 			if (priv->stdin != NULL)
 				{
-					return g_strdup (priv->stdin);
+					return priv->stdin;
 				}
 		}
 
@@ -816,13 +816,8 @@ zak_cgi_file_free (ZakCgiFile *file)
 G_DEFINE_BOXED_TYPE (ZakCgiFile, zak_cgi_file, zak_cgi_file_copy, zak_cgi_file_free)
 
 
-/**
- * zak_cgi_main_parse_stdin:
- *
- * Returns:
- */
-GHashTable
-*zak_cgi_main_parse_stdin (const gchar *buf, const gchar *boundary)
+static GHashTable
+*_zak_cgi_main_parse_stdin (const gchar *buf, const gchar *boundary)
 {
 	GHashTable *ht;
 
@@ -1057,6 +1052,64 @@ GHashTable
 	return ht;
 }
 
+/**
+ * zak_cgi_main_parse_stdin:
+ *
+ * Returns:
+ */
+GHashTable
+*zak_cgi_main_parse_stdin (const gchar *buf, const gchar *boundary)
+{
+	return _zak_cgi_main_parse_stdin (buf, boundary);
+}
+
+/**
+ * zak_cgi_main_get_stdin_field:
+ * @zakcgimain:
+ * @field:
+ *
+ * Returns:
+ */
+GValue
+*zak_cgi_main_get_stdin_field (ZakCgiMain *zakcgimain, const gchar *field)
+{
+	ZakCgiMainPrivate *priv;
+
+	GHashTable *ht;
+
+	GValue *ret;
+
+	g_return_val_if_fail (ZAK_CGI_IS_MAIN (zakcgimain), NULL);
+
+	ht = _zak_cgi_main_parse_stdin (zak_cgi_main_get_stdin (zakcgimain), NULL);
+
+	ret = g_hash_table_lookup (ht, field);
+
+	return ret;
+}
+
+/**
+ * zak_cgi_main_stdin_foreach:
+ * @zakcgimain:
+ * @func:
+ * @user_data:
+ *
+ */
+void
+zak_cgi_main_stdin_foreach (ZakCgiMain *zakcgimain, GHFunc func, gpointer user_data)
+{
+	ZakCgiMainPrivate *priv;
+
+	GHashTable *ht;
+
+	g_return_if_fail (ZAK_CGI_IS_MAIN (zakcgimain));
+	g_return_if_fail (func != NULL);
+
+	ht = _zak_cgi_main_parse_stdin (zak_cgi_main_get_stdin (zakcgimain), NULL);
+
+	g_hash_table_foreach (ht, func, user_data);
+}
+
 void
 zak_cgi_main_redirect (ZakCgiMain *zakcgimain, const gchar *url)
 {
@@ -1116,45 +1169,55 @@ zak_cgi_main_redirect (ZakCgiMain *zakcgimain, const gchar *url)
 	g_string_free (_url, TRUE);
 }
 
+/**
+ * zak_cgi_main_is_request_method:
+ * @zakcgimain:
+ * @method:
+ *
+ * Returns:
+ */
 gboolean
 zak_cgi_main_is_request_method (ZakCgiMain *zakcgimain, const gchar *method)
 {
 	gboolean ret;
 
-	GHashTable *ht;
-
-	gchar *param;
+	GValue *gval;
+	const gchar *param;
 
 	ret = FALSE;
 
-	ht = _zak_cgi_main_get_env (zakcgimain);
-	param = (gchar *)g_hash_table_lookup (ht, "REQUEST_METHOD");
-	if (param != NULL)
+	gval = zak_cgi_main_get_env_field (zakcgimain, "REQUEST_METHOD");
+	if (gval != NULL)
 		{
+			param = g_value_get_string (gval);
 			ret = (g_strcmp0 (param, method) == 0);
 		}
 
 	return ret;
 }
 
+/**
+ * zak_cgi_main_is_get:
+ * @zakcgimain:
+ *
+ * Returns:
+ */
 gboolean
 zak_cgi_main_is_get (ZakCgiMain *zakcgimain)
 {
-	gboolean ret;
-
-	ret = zak_cgi_main_is_request_method (zakcgimain, "GET");
-
-	return ret;
+	return zak_cgi_main_is_request_method (zakcgimain, "GET");
 }
 
+/**
+ * zak_cgi_main_is_post:
+ * @zakcgimain:
+ *
+ * Returns:
+ */
 gboolean
 zak_cgi_main_is_post (ZakCgiMain *zakcgimain)
 {
-	gboolean ret;
-
-	ret = zak_cgi_main_is_request_method (zakcgimain, "POST");
-
-	return ret;
+	return zak_cgi_main_is_request_method (zakcgimain, "POST");
 }
 
 /* PRIVATE */
