@@ -292,6 +292,7 @@ GHashTable
 	gchar *cookies;
 	gchar **strv_cookies;
 	gchar **parts;
+	GValue *gval;
 
 	if (zakcgimain != NULL)
 		{
@@ -317,7 +318,10 @@ GHashTable
 			for (i = 0; i < l; i++)
 				{
 					parts = g_strsplit (strv_cookies[i], "=", 2);
-					g_hash_table_replace (ht, g_strstrip (g_strdup (parts[0])), g_strstrip (g_strdup (parts[1])));
+					gval = (GValue *)g_new0 (GValue, 1);
+					g_value_init (gval, G_TYPE_STRING);
+					g_value_take_string (gval, g_strstrip (g_strdup (parts[1])));
+					g_hash_table_replace (ht, g_strstrip (g_strdup (parts[0])), gval);
 					g_strfreev (parts);
 				}
 		}
@@ -355,7 +359,7 @@ gchar
 			while (g_hash_table_iter_next (&iter, &key, &value))
 				{
 					g_string_append_printf (str, "<tr><td>%s</td><td>%s</td></tr>\n",
-					                        (gchar *)key, (gchar *)value);
+					                        (gchar *)key, g_value_get_string ((GValue *)value));
 				}
 
 			g_string_append_printf (str, "</table>\n");

@@ -26,12 +26,14 @@
 int
 main (int argc, char *argv[])
 {
+	ZakCgiMain *zakcgimain;
 	gchar *env;
 	GString *str;
 	GString *header;
 	GHashTable *ht;
 
-	env = zak_cgi_main_dump_cookies (NULL);
+	zakcgimain = zak_cgi_main_new ();
+	env = zak_cgi_main_dump_cookies (zakcgimain);
 
 	str = g_string_new ("<html>\n"
 	                    "<head><title>Cookies</title></head>\n"
