@@ -20,50 +20,24 @@
 	#include <config.h>
 #endif
 
+#include "commons.h"
 #include "tag.h"
-
-static GPtrArray
-*zak_cgi_tag_valist_to_gptrarray (va_list ap)
-{
-	GPtrArray *ret;
-
-	gchar *attr;
-
-	ret = g_ptr_array_new ();
-
-	do
-		{
-			attr = va_arg (ap, gchar *);
-			if (attr != NULL)
-				{
-					g_ptr_array_add (ret, g_strdup (attr));
-				}
-			else
-				{
-					break;
-				}
-		} while (TRUE);
-	va_end (ap);
-
-	return ret;
-}
 
 static gchar
 *zak_cgi_tag_tag_attrs (const gchar *name,
 						const gchar *id,
-						GPtrArray *ar_attrs)
+						GHashTable *ht_attrs)
 {
 	gchar *ret;
 	GString *str;
 
-	guint i;
-	guint l;
+	GHashTableIter iter;
 
 	gboolean with_name;
 	gboolean with_content;
 
-	gchar *attr;
-	gchar *attr_val;
+	gpointer key;
+	gpointer val;
 
 	gchar *content;
 
@@ -84,46 +58,29 @@ static gchar
 									id);
 		}
 
-	l = ar_attrs->len;
-	for (i = 0; i < l; i++)
+	g_hash_table_iter_init (&iter, ht_attrs);
+	while (g_hash_table_iter_next (&iter, &key, &val))
 		{
-			attr = g_ptr_array_index (ar_attrs, i);
-			if (attr != NULL)
+			if (g_strcmp0 ((gchar *)key, "content") == 0)
 				{
-					attr_val = g_ptr_array_index (ar_attrs, ++i);
-					if (attr_val != NULL)
+					with_content = TRUE;
+					if (content != NULL)
 						{
-							if (g_strcmp0 (attr, "content") == 0)
-								{
-									with_content = TRUE;
-									if (content != NULL)
-										{
-											g_free (content);
-										}
-									content = g_strdup (attr_val);
-								}
-							else
-								{
-									if (g_strcmp0 (attr, "name") == 0)
-										{
-											with_name = TRUE;
-										}
-
-									g_string_append_printf (str,
-															" %s=\"%s\"",
-															attr,
-															attr_val);
-								}
+							g_free (content);
 						}
-					else
-						{
-							g_free (attr);
-							break;
-						}
+					content = g_strdup ((gchar *)val);
 				}
 			else
 				{
-					break;
+					if (g_strcmp0 ((gchar *)key, "name") == 0)
+						{
+							with_name = TRUE;
+						}
+
+					g_string_append_printf (str,
+											" %s=\"%s\"",
+											(gchar *)key,
+											(gchar *)val);
 				}
 		}
 
@@ -170,7 +127,7 @@ gchar
 
 	va_start (ap, id);
 
-	return zak_cgi_tag_tag_attrs (name, id, zak_cgi_tag_valist_to_gptrarray (ap));
+	return zak_cgi_tag_tag_attrs (name, id, zak_cgi_commons_valist_to_ghashtable (ap));
 }
 
 /**
@@ -187,7 +144,7 @@ gchar
 
 	va_start (ap, id);
 
-	return zak_cgi_tag_tag_attrs ("img", id, zak_cgi_tag_valist_to_gptrarray (ap));
+	return zak_cgi_tag_tag_attrs ("img", id, zak_cgi_commons_valist_to_ghashtable (ap));
 }
 
 /**
@@ -200,16 +157,15 @@ gchar
 *zak_cgi_tag_text (const gchar *id,
 				   ...)
 {
-	GPtrArray *ar;
+	GHashTable *ht;
 	va_list ap;
 
 	va_start (ap, id);
 
-	ar = zak_cgi_tag_valist_to_gptrarray (ap);
-	g_ptr_array_add (ar, "type");
-	g_ptr_array_add (ar, "text");
+	ht = zak_cgi_commons_valist_to_ghashtable (ap);
+	g_hash_table_insert (ht, "type", "text");
 
-	return zak_cgi_tag_tag_attrs ("input", id, ar);
+	return zak_cgi_tag_tag_attrs ("input", id, ht);
 }
 
 /**
@@ -222,16 +178,15 @@ gchar
 *zak_cgi_tag_file (const gchar *id,
 				   ...)
 {
-	GPtrArray *ar;
+	GHashTable *ht;
 	va_list ap;
 
 	va_start (ap, id);
 
-	ar = zak_cgi_tag_valist_to_gptrarray (ap);
-	g_ptr_array_add (ar, "type");
-	g_ptr_array_add (ar, "file");
+	ht = zak_cgi_commons_valist_to_ghashtable (ap);
+	g_hash_table_insert (ht, "type", "file");
 
-	return zak_cgi_tag_tag_attrs ("input", id, ar);
+	return zak_cgi_tag_tag_attrs ("input", id, ht);
 }
 
 /**
@@ -244,14 +199,13 @@ gchar
 *zak_cgi_tag_submit (const gchar *id,
 					 ...)
 {
-	GPtrArray *ar;
+	GHashTable *ht;
 	va_list ap;
 
 	va_start (ap, id);
 
-	ar = zak_cgi_tag_valist_to_gptrarray (ap);
-	g_ptr_array_add (ar, "type");
-	g_ptr_array_add (ar, "submit");
+	ht = zak_cgi_commons_valist_to_ghashtable (ap);
+	g_hash_table_insert (ht, "type", "submit");
 
-	return zak_cgi_tag_tag_attrs ("input", id, ar);
+	return zak_cgi_tag_tag_attrs ("input", id, ht);
 }

@@ -5,7 +5,8 @@ AM_CPPFLAGS = $(ZAKCGI_CFLAGS) \
 
 lib_LTLIBRARIES = libzakcgi.la
 
-libzakcgi_la_SOURCES = \
+libzakcgi_la_SOURCES = commons.c \
+                       commons.h \
                        form.c \
                        formelement.c \
                        formelementtext.c \
