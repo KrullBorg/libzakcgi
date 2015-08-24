@@ -115,6 +115,7 @@ static gchar
  * zak_cgi_tag_tag:
  * @name:
  * @id:
+ * @...:
  *
  * Returns:
  */
@@ -131,8 +132,25 @@ gchar
 }
 
 /**
+ * zak_cgi_tag_tag_ht:
+ * @name:
+ * @id:
+ * @ht:
+ *
+ * Returns:
+ */
+gchar
+*zak_cgi_tag_tag_ht (const gchar *name,
+					 const gchar *id,
+					 GHashTable *ht)
+{
+	return zak_cgi_tag_tag_attrs (name, id, ht);
+}
+
+/**
  * zak_cgi_tag_img:
  * @id:
+ * @...:
  *
  * Returns:
  */
@@ -148,8 +166,23 @@ gchar
 }
 
 /**
+ * zak_cgi_tag_img_ht:
+ * @id:
+ * @ht:
+ *
+ * Returns:
+ */
+gchar
+*zak_cgi_tag_img_ht (const gchar *id,
+					 GHashTable *ht)
+{
+	return zak_cgi_tag_tag_attrs ("img", id, ht);
+}
+
+/**
  * zak_cgi_tag_text:
  * @id:
+ * @...:
  *
  * Returns:
  */
@@ -169,8 +202,25 @@ gchar
 }
 
 /**
+ * zak_cgi_tag_text_ht:
+ * @id:
+ * @ht:
+ *
+ * Returns:
+ */
+gchar
+*zak_cgi_tag_text_ht (const gchar *id,
+					  GHashTable *ht)
+{
+	g_hash_table_insert (ht, "type", "text");
+
+	return zak_cgi_tag_tag_attrs ("input", id, ht);
+}
+
+/**
  * zak_cgi_tag_file:
  * @id:
+ * @...:
  *
  * Returns:
  */
@@ -190,8 +240,25 @@ gchar
 }
 
 /**
+ * zak_cgi_tag_file_ht:
+ * @id:
+ * @ht:
+ *
+ * Returns:
+ */
+gchar
+*zak_cgi_tag_file_ht (const gchar *id,
+				   GHashTable *ht)
+{
+	g_hash_table_insert (ht, "type", "file");
+
+	return zak_cgi_tag_tag_attrs ("input", id, ht);
+}
+
+/**
  * zak_cgi_tag_submit:
  * @id:
+ * @...:
  *
  * Returns:
  */
@@ -205,6 +272,23 @@ gchar
 	va_start (ap, id);
 
 	ht = zak_cgi_commons_valist_to_ghashtable (ap);
+	g_hash_table_insert (ht, "type", "submit");
+
+	return zak_cgi_tag_tag_attrs ("input", id, ht);
+}
+
+
+/**
+ * zak_cgi_tag_submit_ht:
+ * @id:
+ * @ht:
+ *
+ * Returns:
+ */
+gchar
+*zak_cgi_tag_submit_ht (const gchar *id,
+						GHashTable *ht)
+{
 	g_hash_table_insert (ht, "type", "submit");
 
 	return zak_cgi_tag_tag_attrs ("input", id, ht);
