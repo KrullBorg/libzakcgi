@@ -54,7 +54,7 @@ struct _ZakCgiFormElementClass
 
 GType zak_cgi_form_element_get_type (void);
 
-ZakCgiFormElement *zak_cgi_form_element_new (const gchar *validation_regex);
+ZakCgiFormElement *zak_cgi_form_element_new (const  gchar *id, const gchar *validation_regex, ...);
 
 void zak_cgi_form_element_set_validation_regex (ZakCgiFormElement *element, const gchar *validation_regex);
 gchar *zak_cgi_form_element_get_validation_regex (ZakCgiFormElement *element);

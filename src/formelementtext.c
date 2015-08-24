@@ -46,7 +46,7 @@ struct _ZakCgiFormElementTextPrivate
 	{
 	};
 
-G_DEFINE_TYPE (ZakCgiFormElementText, zak_cgi_form_element_text, G_TYPE_OBJECT)
+G_DEFINE_TYPE (ZakCgiFormElementText, zak_cgi_form_element_text, ZAK_CGI_TYPE_FORM_ELEMENT)
 
 static void
 zak_cgi_form_element_text_class_init (ZakCgiFormElementTextClass *class)

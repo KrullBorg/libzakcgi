@@ -21,11 +21,13 @@
 #endif
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <locale.h>
 
 #include <syslog.h>
 
+#include <glib/gprintf.h>
 #include <gio/gunixinputstream.h>
 
 #include "main.h"
