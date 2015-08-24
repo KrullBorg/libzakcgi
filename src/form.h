@@ -23,6 +23,7 @@
 #include <glib-object.h>
 
 #include "main.h"
+#include "formelement.h"
 
 
 G_BEGIN_DECLS
@@ -52,6 +53,8 @@ GType zak_cgi_form_get_type (void);
 
 
 ZakCgiForm *zak_cgi_form_new (ZakCgiMain *zakcgimain);
+
+gboolean zak_cgi_form_add_element (ZakCgiForm *zakcgiform, ZakCgiFormElement *element);
 
 
 G_END_DECLS

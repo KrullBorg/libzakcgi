@@ -147,6 +147,16 @@ ZakCgiFormElement
 	return zak_cgi_form_element;
 }
 
+gchar
+*zak_cgi_form_element_get_id (ZakCgiFormElement *element)
+{
+	ZakCgiFormElementPrivate *priv;
+
+	priv = ZAK_CGI_FORM_ELEMENT_GET_PRIVATE (element);
+
+	return g_strdup (priv->id);
+}
+
 void
 zak_cgi_form_element_set_validation_regex (ZakCgiFormElement *element, const gchar *validation_regex)
 {
