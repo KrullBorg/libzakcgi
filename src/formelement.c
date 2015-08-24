@@ -22,6 +22,7 @@
 
 #include <syslog.h>
 
+#include "commons.h"
 #include "formelement.h"
 
 enum
@@ -83,7 +84,7 @@ zak_cgi_form_element_init (ZakCgiFormElement *zak_cgi_form_element)
 	ZakCgiFormElementPrivate *priv = ZAK_CGI_FORM_ELEMENT_GET_PRIVATE (zak_cgi_form_element);
 
 	priv->validation_regex = NULL;
-	priv->ht_attrs = g_hash_table_new (g_str_hash, g_str_equal);
+	priv->ht_attrs = NULL;
 }
 
 /**
@@ -118,26 +119,9 @@ ZakCgiFormElement
 	zak_cgi_form_element_set_validation_regex (zak_cgi_form_element, validation_regex);
 
 	va_start (ap, validation_regex);
-	do
-		{
-			attr = va_arg (ap, gchar *);
-			if (attr != NULL)
-				{
-					attr_value = va_arg (ap, gchar *);
-					if (attr_value != NULL)
-						{
-							g_hash_table_insert (priv->ht_attrs, g_strdup (attr), g_strdup (attr_value));
-						}
-					else
-						{
-							break;
-						}
-				}
-			else
-				{
-					break;
-				}
-		} while (TRUE);
+	priv->ht_attrs = zak_cgi_commons_valist_to_ghashtable (ap);
+
+	g_hash_table_insert (priv->ht_attrs, "id", g_strdup (id));
 
 	if (g_hash_table_lookup (priv->ht_attrs, "name") == NULL)
 		{
