@@ -5,7 +5,9 @@ AM_CPPFLAGS = $(ZAKCGI_CFLAGS) \
 
 lib_LTLIBRARIES = libzakcgi.la
 
-libzakcgi_la_SOURCES = main.c \
+libzakcgi_la_SOURCES = commons.c \
+                       commons.h \
+                       main.c \
                        session.c \
                        tag.c \
                        url.c

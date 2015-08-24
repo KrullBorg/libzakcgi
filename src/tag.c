@@ -20,43 +20,8 @@
 	#include <config.h>
 #endif
 
+#include "commons.h"
 #include "tag.h"
-
-static GHashTable
-*zak_cgi_tag_valist_to_ghashtable (va_list ap)
-{
-	GHashTable *ret;
-
-	gchar *attr;
-	gchar *attr_val;
-
-	ret = g_hash_table_new (g_str_hash, g_str_equal);
-
-	do
-		{
-			attr = va_arg (ap, gchar *);
-			if (attr != NULL)
-				{
-					attr_val = va_arg (ap, gchar *);
-					if (attr_val != NULL)
-						{
-							g_hash_table_insert (ret, g_strdup (attr), g_strdup (attr_val));
-						}
-					else
-						{
-							break;
-						}
-				}
-			else
-				{
-					break;
-				}
-		} while (TRUE);
-
-	va_end (ap);
-
-	return ret;
-}
 
 static gchar
 *zak_cgi_tag_tag_attrs (const gchar *name,
@@ -162,7 +127,7 @@ gchar
 
 	va_start (ap, id);
 
-	return zak_cgi_tag_tag_attrs (name, id, zak_cgi_tag_valist_to_ghashtable (ap));
+	return zak_cgi_tag_tag_attrs (name, id, zak_cgi_commons_valist_to_ghashtable (ap));
 }
 
 /**
@@ -179,7 +144,7 @@ gchar
 
 	va_start (ap, id);
 
-	return zak_cgi_tag_tag_attrs ("img", id, zak_cgi_tag_valist_to_ghashtable (ap));
+	return zak_cgi_tag_tag_attrs ("img", id, zak_cgi_commons_valist_to_ghashtable (ap));
 }
 
 /**
@@ -197,7 +162,7 @@ gchar
 
 	va_start (ap, id);
 
-	ht = zak_cgi_tag_valist_to_ghashtable (ap);
+	ht = zak_cgi_commons_valist_to_ghashtable (ap);
 	g_hash_table_insert (ht, "type", "text");
 
 	return zak_cgi_tag_tag_attrs ("input", id, ht);
@@ -218,7 +183,7 @@ gchar
 
 	va_start (ap, id);
 
-	ht = zak_cgi_tag_valist_to_ghashtable (ap);
+	ht = zak_cgi_commons_valist_to_ghashtable (ap);
 	g_hash_table_insert (ht, "type", "file");
 
 	return zak_cgi_tag_tag_attrs ("input", id, ht);
@@ -239,7 +204,7 @@ gchar
 
 	va_start (ap, id);
 
-	ht = zak_cgi_tag_valist_to_ghashtable (ap);
+	ht = zak_cgi_commons_valist_to_ghashtable (ap);
 	g_hash_table_insert (ht, "type", "submit");
 
 	return zak_cgi_tag_tag_attrs ("input", id, ht);
