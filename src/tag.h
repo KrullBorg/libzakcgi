@@ -29,17 +29,29 @@ gchar *zak_cgi_tag_tag (const gchar *name,
 						const gchar *id,
 						...);
 
+gchar *zak_cgi_tag_tag_ht (const gchar *name,
+						   const gchar *id,
+						   GHashTable *ht);
+
 gchar *zak_cgi_tag_img (const gchar *id,
 						...);
+gchar *zak_cgi_tag_img_ht (const gchar *id,
+						   GHashTable *ht);
 
 gchar *zak_cgi_tag_text (const gchar *id,
 						 ...);
+gchar *zak_cgi_tag_text_ht (const gchar *id,
+							GHashTable *ht);
 
 gchar *zak_cgi_tag_file (const gchar *id,
 						 ...);
+gchar *zak_cgi_tag_file_ht (const gchar *id,
+							GHashTable *ht);
 
 gchar *zak_cgi_tag_submit (const gchar *id,
 						   ...);
+gchar *zak_cgi_tag_submit_ht (const gchar *id,
+							  GHashTable *ht);
 
 
 #endif /* __ZAK_CGI_TAG_H__ */
