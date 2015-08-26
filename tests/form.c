@@ -19,6 +19,7 @@
 #include <form.h>
 #include <formelement.h>
 #include <formelementtext.h>
+#include <formelementsubmit.h>
 
 int
 main (int argc, char *argv[])
@@ -35,6 +36,9 @@ main (int argc, char *argv[])
 	str = g_string_new ("");
 
 	element = zak_cgi_form_element_text_new ("first", "aaa", NULL);
+	zak_cgi_form_add_element (form, element);
+
+	element = zak_cgi_form_element_submit_new ("submit", "aaa", NULL);
 	zak_cgi_form_add_element (form, element);
 
 	g_string_append (str, zak_cgi_form_render (form));
