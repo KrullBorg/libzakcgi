@@ -102,7 +102,8 @@ ZakCgiFormElement
 
 	ZAK_CGI_FORM_ELEMENT_CLASS (zak_cgi_form_element_text_parent_class)->construct (ZAK_CGI_FORM_ELEMENT (zak_cgi_form_element_text),
 																					id,
-																					validation_regex, zak_cgi_commons_valist_to_ghashtable (ap));
+																					validation_regex,
+																					zak_cgi_commons_valist_to_ghashtable (ap));
 
 	return ZAK_CGI_FORM_ELEMENT (zak_cgi_form_element_text);
 }

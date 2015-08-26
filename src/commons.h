@@ -27,5 +27,7 @@
 
 GHashTable *zak_cgi_commons_valist_to_ghashtable (va_list ap);
 
+gchar *zak_cgi_commons_ghashtable_to_str_attrs (GHashTable *ht);
+
 
 #endif /* __ZAK_CGI_COMMONS_H__ */

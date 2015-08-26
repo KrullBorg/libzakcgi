@@ -52,7 +52,7 @@ struct _ZakCgiFormClass
 GType zak_cgi_form_get_type (void);
 
 
-ZakCgiForm *zak_cgi_form_new (ZakCgiMain *zakcgimain);
+ZakCgiForm *zak_cgi_form_new (ZakCgiMain *zakcgimain, ...);
 
 gboolean zak_cgi_form_add_element (ZakCgiForm *zakcgiform, ZakCgiFormElement *element);
 

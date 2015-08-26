@@ -22,6 +22,7 @@
 
 #include <syslog.h>
 
+#include "commons.h"
 #include "form.h"
 
 static void zak_cgi_form_class_init (ZakCgiFormClass *class);
@@ -45,6 +46,7 @@ typedef struct _ZakCgiFormPrivate ZakCgiFormPrivate;
 struct _ZakCgiFormPrivate
 	{
 		ZakCgiMain *zakcgimain;
+		GHashTable *ht_attrs;
 		GHashTable *ht_elems;
 	};
 
@@ -69,25 +71,32 @@ zak_cgi_form_init (ZakCgiForm *zak_cgi_form)
 	ZakCgiFormPrivate *priv = ZAK_CGI_FORM_GET_PRIVATE (zak_cgi_form);
 
 	priv->zakcgimain = NULL;
+	priv->ht_attrs = NULL;
 	priv->ht_elems = g_hash_table_new (g_str_hash, g_str_equal);
 }
 
 /**
  * zak_cgi_form_new:
  * @zakcgimain:
+ * @...:
  *
  * Returns: the newly created #ZakCgiForm object.
  */
 ZakCgiForm
-*zak_cgi_form_new (ZakCgiMain *zakcgimain)
+*zak_cgi_form_new (ZakCgiMain *zakcgimain, ...)
 {
 	ZakCgiForm *zak_cgi_form;
 	ZakCgiFormPrivate *priv;
+
+	va_list ap;
 
 	zak_cgi_form = ZAK_CGI_FORM (g_object_new (zak_cgi_form_get_type (), NULL));
 
 	priv = ZAK_CGI_FORM_GET_PRIVATE (zak_cgi_form);
 	priv->zakcgimain = zakcgimain;
+
+	va_start (ap, zakcgimain);
+	priv->ht_attrs = zak_cgi_commons_valist_to_ghashtable (ap);
 
 	return zak_cgi_form;
 }
@@ -142,19 +151,27 @@ gchar
 	gpointer key;
 	gpointer value;
 
+	gchar *tmp;
+
 	ZakCgiFormPrivate *priv;
 
 	priv = ZAK_CGI_FORM_GET_PRIVATE (zakcgiform);
 
-	str = g_string_new ("<form>");
+	str = g_string_new ("<form");
+
+	tmp = zak_cgi_commons_ghashtable_to_str_attrs (priv->ht_attrs);
+	g_string_append_printf (str, "%s>", tmp);
+	g_free (tmp);
 
 	g_hash_table_iter_init (&iter, priv->ht_elems);
 	while (g_hash_table_iter_next (&iter, &key, &value))
 		{
-			g_string_append_printf (str, "\n%s", zak_cgi_form_element_render ((ZakCgiFormElement *)value));
+			tmp = zak_cgi_form_element_render ((ZakCgiFormElement *)value);
+			g_string_append_printf (str, "\n%s", tmp);
+			g_free (tmp);
 		}
 
-	g_string_append (str, "</form>");
+	g_string_append (str, "\n</form>");
 
 	return g_strdup (str->str);
 }

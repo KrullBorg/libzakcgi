@@ -57,3 +57,31 @@ GHashTable
 
 	return ret;
 }
+
+gchar
+*zak_cgi_commons_ghashtable_to_str_attrs (GHashTable *ht)
+{
+	GHashTableIter iter;
+	gpointer key;
+	gpointer value;
+
+	GString *str;
+	gchar *ret;
+
+	g_return_val_if_fail (ht != NULL, "");
+
+	str = g_string_new ("");
+
+	g_hash_table_iter_init (&iter, ht);
+	while (g_hash_table_iter_next (&iter, &key, &value))
+		{
+			g_string_append_printf (str,
+									" \"%s\"=\"%s\"",
+									(gchar *)key,
+									(gchar *)value);
+		}
+
+	ret = g_strdup (str->str);
+
+	return ret;
+}

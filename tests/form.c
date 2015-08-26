@@ -28,7 +28,9 @@ main (int argc, char *argv[])
 	ZakCgiForm *form;
 	ZakCgiFormElement *element;
 
-	form = zak_cgi_form_new (NULL);
+	form = zak_cgi_form_new (NULL,
+							 "method", "post",
+							 NULL);
 
 	str = g_string_new ("");
 
