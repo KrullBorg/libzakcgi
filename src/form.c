@@ -137,6 +137,34 @@ zak_cgi_form_add_element (ZakCgiForm *zakcgiform, ZakCgiFormElement *element)
 }
 
 /**
+ * zak_cgi_form_render_start:
+ * @zakcgiform:
+ *
+ * Returns:
+ */
+gchar
+*zak_cgi_form_render_start (ZakCgiForm *zakcgiform)
+{
+	gchar *ret;
+
+	GString *str;
+
+	ZakCgiFormPrivate *priv;
+
+	priv = ZAK_CGI_FORM_GET_PRIVATE (zakcgiform);
+
+	str = g_string_new ("<form");
+
+	ret = zak_cgi_commons_ghashtable_to_str_attrs (priv->ht_attrs);
+	g_string_append_printf (str, "%s>", ret);
+	g_free (ret);
+
+	ret = g_strdup (str->str);
+
+	return ret;
+}
+
+/**
  * zak_cgi_form_render:
  * @zakcgiform:
  *
@@ -157,10 +185,10 @@ gchar
 
 	priv = ZAK_CGI_FORM_GET_PRIVATE (zakcgiform);
 
-	str = g_string_new ("<form");
+	str = g_string_new ("");
 
-	tmp = zak_cgi_commons_ghashtable_to_str_attrs (priv->ht_attrs);
-	g_string_append_printf (str, "%s>", tmp);
+	tmp = zak_cgi_form_render_start (zakcgiform);
+	g_string_append (str, tmp);
 	g_free (tmp);
 
 	g_hash_table_iter_init (&iter, priv->ht_elems);
