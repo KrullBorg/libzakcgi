@@ -11,6 +11,7 @@ LDADD = $(top_builddir)/src/libzakcgi.la
 noinst_PROGRAMS = \
                     cookies \
                     env \
+                    form \
                     querystring \
                     redirect \
                     session \

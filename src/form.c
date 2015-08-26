@@ -118,13 +118,45 @@ zak_cgi_form_add_element (ZakCgiForm *zakcgiform, ZakCgiFormElement *element)
 		}
 	else
 		{
-			g_hash_table_insert (priv->ht_elems, g_strdup (id), element);
+			g_hash_table_insert (priv->ht_elems, g_strdup (id), g_object_ref (element));
 			ret = TRUE;
 		}
 
 	g_free (id);
 
 	return ret;
+}
+
+/**
+ * zak_cgi_form_render:
+ * @zakcgiform:
+ *
+ * Returns:
+ */
+gchar
+*zak_cgi_form_render (ZakCgiForm *zakcgiform)
+{
+	GString *str;
+
+	GHashTableIter iter;
+	gpointer key;
+	gpointer value;
+
+	ZakCgiFormPrivate *priv;
+
+	priv = ZAK_CGI_FORM_GET_PRIVATE (zakcgiform);
+
+	str = g_string_new ("<form>");
+
+	g_hash_table_iter_init (&iter, priv->ht_elems);
+	while (g_hash_table_iter_next (&iter, &key, &value))
+		{
+			g_string_append_printf (str, "\n%s", zak_cgi_form_element_render ((ZakCgiFormElement *)value));
+		}
+
+	g_string_append (str, "</form>");
+
+	return g_strdup (str->str);
 }
 
 /* PRIVATE */

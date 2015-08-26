@@ -34,6 +34,13 @@ enum
 static void zak_cgi_form_element_class_init (ZakCgiFormElementClass *class);
 static void zak_cgi_form_element_init (ZakCgiFormElement *zak_cgi_form_element);
 
+static void zak_cgi_form_element_construct (ZakCgiFormElement *element,
+											const gchar *id,
+											const gchar *validation_regex,
+											GHashTable *ht_attrs);
+
+static GHashTable *zak_cgi_form_element_get_ht_attrs (ZakCgiFormElement *element);
+
 static void zak_cgi_form_element_set_property (GObject *object,
                                guint property_id,
                                const GValue *value,
@@ -76,6 +83,9 @@ zak_cgi_form_element_class_init (ZakCgiFormElementClass *class)
 	                                                      "Validation regex",
 	                                                      "",
 	                                                      G_PARAM_READWRITE));
+
+	class->construct = zak_cgi_form_element_construct;
+	class->get_ht_attrs = zak_cgi_form_element_get_ht_attrs;
 }
 
 static void
@@ -85,50 +95,6 @@ zak_cgi_form_element_init (ZakCgiFormElement *zak_cgi_form_element)
 
 	priv->validation_regex = NULL;
 	priv->ht_attrs = NULL;
-}
-
-/**
- * zak_cgi_form_element_new:
- * @id:
- * @validation_regex:
- * @...:
- *
- * Returns: the newly created #ZakCgiFormElement object.
- */
-ZakCgiFormElement
-*zak_cgi_form_element_new (const gchar *id,
-						   const gchar *validation_regex,
-						   ...)
-{
-	va_list ap;
-
-	ZakCgiFormElement *zak_cgi_form_element;
-	ZakCgiFormElementPrivate *priv;
-
-	gchar *attr;
-	gchar *attr_value;
-
-	g_return_val_if_fail (id != NULL, NULL);
-
-	zak_cgi_form_element = ZAK_CGI_FORM_ELEMENT (g_object_new (zak_cgi_form_element_get_type (), NULL));
-
-	priv = ZAK_CGI_FORM_ELEMENT_GET_PRIVATE (zak_cgi_form_element);
-
-	priv->id = g_strdup (id);
-
-	zak_cgi_form_element_set_validation_regex (zak_cgi_form_element, validation_regex);
-
-	va_start (ap, validation_regex);
-	priv->ht_attrs = zak_cgi_commons_valist_to_ghashtable (ap);
-
-	g_hash_table_insert (priv->ht_attrs, "id", g_strdup (id));
-
-	if (g_hash_table_lookup (priv->ht_attrs, "name") == NULL)
-		{
-			g_hash_table_insert (priv->ht_attrs, "name", g_strdup (id));
-		}
-
-	return zak_cgi_form_element;
 }
 
 gchar
@@ -197,7 +163,7 @@ gchar
 
 	if (ZAK_CGI_IS_FORM_ELEMENT (element) && ZAK_CGI_FORM_ELEMENT_GET_CLASS (element)->render != NULL)
 		{
-			ret = ZAK_CGI_FORM_ELEMENT_CLASS (element)->render (element);
+			ret = ZAK_CGI_FORM_ELEMENT_GET_CLASS (element)->render (element);
 		}
 
 	return ret;
@@ -217,13 +183,49 @@ zak_cgi_form_element_is_valid (ZakCgiFormElement *element)
 
 	if (ZAK_CGI_IS_FORM_ELEMENT (element) && ZAK_CGI_FORM_ELEMENT_GET_CLASS (element)->is_valid != NULL)
 		{
-			ret = ZAK_CGI_FORM_ELEMENT_CLASS (element)->is_valid (element);
+			ret = ZAK_CGI_FORM_ELEMENT_GET_CLASS (element)->is_valid (element);
 		}
 
 	return ret;
 }
 
 /* PRIVATE */
+static void
+zak_cgi_form_element_construct (ZakCgiFormElement *element,
+								const gchar *id,
+								const gchar *validation_regex,
+								GHashTable *ht_attrs)
+{
+	ZakCgiFormElementPrivate *priv;
+
+	g_return_val_if_fail (id != NULL, NULL);
+
+	priv = ZAK_CGI_FORM_ELEMENT_GET_PRIVATE (element);
+
+	priv->id = g_strdup (id);
+
+	zak_cgi_form_element_set_validation_regex (element, validation_regex);
+
+	priv->ht_attrs = ht_attrs;
+
+	if (g_hash_table_lookup (priv->ht_attrs, "name") == NULL)
+		{
+			g_hash_table_insert (priv->ht_attrs, "name", g_strdup (id));
+		}
+
+	return;
+}
+
+static GHashTable
+*zak_cgi_form_element_get_ht_attrs (ZakCgiFormElement *element)
+{
+	ZakCgiFormElementPrivate *priv;
+
+	priv = ZAK_CGI_FORM_ELEMENT_GET_PRIVATE (element);
+
+	return priv->ht_attrs;
+}
+
 static void
 zak_cgi_form_element_set_property (GObject *object,
                    guint property_id,

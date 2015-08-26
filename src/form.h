@@ -56,6 +56,8 @@ ZakCgiForm *zak_cgi_form_new (ZakCgiMain *zakcgimain);
 
 gboolean zak_cgi_form_add_element (ZakCgiForm *zakcgiform, ZakCgiFormElement *element);
 
+gchar *zak_cgi_form_render (ZakCgiForm *zakcgiform);
+
 
 G_END_DECLS
 

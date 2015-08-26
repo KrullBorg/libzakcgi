@@ -47,14 +47,15 @@ struct _ZakCgiFormElementClass
 	{
 		GObjectClass parent_class;
 
+		void (*construct) (ZakCgiFormElement *element, const gchar *id, const gchar *validation_regex, GHashTable *ht_attrs);
+		GHashTable *(*get_ht_attrs) (ZakCgiFormElement *element);
+
 		gchar *(*render) (ZakCgiFormElement *element);
 		gboolean (*is_valid) (ZakCgiFormElement *element);
 	};
 
 
 GType zak_cgi_form_element_get_type (void);
-
-ZakCgiFormElement *zak_cgi_form_element_new (const  gchar *id, const gchar *validation_regex, ...);
 
 gchar *zak_cgi_form_element_get_id (ZakCgiFormElement *element);
 
