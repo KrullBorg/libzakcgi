@@ -38,6 +38,8 @@ main (int argc, char *argv[])
 	element = zak_cgi_form_element_text_new ("first", "aaa", NULL);
 	zak_cgi_form_add_element (form, element);
 
+	zak_cgi_form_add_str (form, "<h1>big big big</h1>");
+
 	element = zak_cgi_form_element_submit_new ("submit", "aaa", NULL);
 	zak_cgi_form_add_element (form, element);
 

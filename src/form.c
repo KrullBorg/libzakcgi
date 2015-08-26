@@ -47,6 +47,7 @@ struct _ZakCgiFormPrivate
 	{
 		ZakCgiMain *zakcgimain;
 		GHashTable *ht_attrs;
+		guint elems;
 		GHashTable *ht_elems;
 	};
 
@@ -72,6 +73,7 @@ zak_cgi_form_init (ZakCgiForm *zak_cgi_form)
 
 	priv->zakcgimain = NULL;
 	priv->ht_attrs = NULL;
+	priv->elems = 0;
 	priv->ht_elems = g_hash_table_new (g_str_hash, g_str_equal);
 }
 
@@ -127,7 +129,44 @@ zak_cgi_form_add_element (ZakCgiForm *zakcgiform, ZakCgiFormElement *element)
 		}
 	else
 		{
+			priv->elems++;
 			g_hash_table_insert (priv->ht_elems, g_strdup (id), g_object_ref (element));
+			ret = TRUE;
+		}
+
+	g_free (id);
+
+	return ret;
+}
+
+/**
+ * zak_cgi_form_add_str:
+ * @zakcgiform:
+ * @str:
+ *
+ * Returns: #TRUE if @str is added; FALSE otherwise.
+ */
+gboolean
+zak_cgi_form_add_str (ZakCgiForm *zakcgiform, const gchar *str)
+{
+	gboolean ret;
+	gchar *id;
+
+	ZakCgiFormPrivate *priv;
+
+	priv = ZAK_CGI_FORM_GET_PRIVATE (zakcgiform);
+
+	id = g_strdup_printf ("{id_%d}", priv->elems++);
+
+	if (g_hash_table_lookup (priv->ht_elems, id))
+		{
+			priv->elems--;
+			g_warning ("You cannot add an element with id already present in the form.");
+			ret = FALSE;
+		}
+	else
+		{
+			g_hash_table_insert (priv->ht_elems, g_strdup (id), g_strdup (str));
 			ret = TRUE;
 		}
 
@@ -194,9 +233,16 @@ gchar
 	g_hash_table_iter_init (&iter, priv->ht_elems);
 	while (g_hash_table_iter_next (&iter, &key, &value))
 		{
-			tmp = zak_cgi_form_element_render ((ZakCgiFormElement *)value);
-			g_string_append_printf (str, "\n%s", tmp);
-			g_free (tmp);
+			if (g_str_has_prefix ((gchar *)key, "{id_"))
+				{
+					g_string_append_printf (str, "\n%s", (gchar *)value);
+				}
+			else
+				{
+					tmp = zak_cgi_form_element_render ((ZakCgiFormElement *)value);
+					g_string_append_printf (str, "\n%s", tmp);
+					g_free (tmp);
+				}
 		}
 
 	g_string_append (str, "\n</form>");

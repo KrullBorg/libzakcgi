@@ -55,6 +55,7 @@ GType zak_cgi_form_get_type (void);
 ZakCgiForm *zak_cgi_form_new (ZakCgiMain *zakcgimain, ...);
 
 gboolean zak_cgi_form_add_element (ZakCgiForm *zakcgiform, ZakCgiFormElement *element);
+gboolean zak_cgi_form_add_str (ZakCgiForm *zakcgiform, const gchar *str);
 
 gchar *zak_cgi_form_render_start (ZakCgiForm *zakcgiform);
 gchar *zak_cgi_form_render (ZakCgiForm *zakcgiform);
