@@ -176,6 +176,40 @@ zak_cgi_form_add_str (ZakCgiForm *zakcgiform, const gchar *str)
 }
 
 /**
+ * zak_cgi_form_bind:
+ * @zakcgiform:
+ *
+ */
+void
+zak_cgi_form_bind (ZakCgiForm *zakcgiform)
+{
+	GHashTableIter iter;
+	gpointer key;
+	gpointer value;
+
+	GValue *gval;
+
+	ZakCgiFormPrivate *priv;
+
+	g_return_if_fail (ZAK_CGI_IS_FORM (zakcgiform));
+
+	priv = ZAK_CGI_FORM_GET_PRIVATE (zakcgiform);
+
+	g_hash_table_iter_init (&iter, priv->ht_elems);
+	while (g_hash_table_iter_next (&iter, &key, &value))
+		{
+			if (!g_str_has_prefix ((gchar *)key, "{id_"))
+				{
+					gval = zak_cgi_main_get_stdin_field (priv->zakcgimain, (gchar *)key);
+					if (gval != NULL)
+						{
+							zak_cgi_form_element_set_value ((ZakCgiFormElement *)value, gval);
+						}
+				}
+		}
+}
+
+/**
  * zak_cgi_form_render_start:
  * @zakcgiform:
  *
@@ -189,6 +223,8 @@ gchar
 	GString *str;
 
 	ZakCgiFormPrivate *priv;
+
+	g_return_if_fail (ZAK_CGI_IS_FORM (zakcgiform));
 
 	priv = ZAK_CGI_FORM_GET_PRIVATE (zakcgiform);
 

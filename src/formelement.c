@@ -61,6 +61,7 @@ struct _ZakCgiFormElementPrivate
 		gchar *id;
 		gchar *validation_regex;
 		GHashTable *ht_attrs;
+		GValue *value;
 	};
 
 G_DEFINE_TYPE (ZakCgiFormElement, zak_cgi_form_element, G_TYPE_OBJECT)
@@ -147,6 +148,37 @@ gchar
 		}
 
 	return ret;
+}
+
+/**
+ * zak_cgi_form_element_set_value:
+ * @element:
+ * @value:
+ *
+ */
+void
+zak_cgi_form_element_set_value (ZakCgiFormElement *element, GValue *value)
+{
+	ZakCgiFormElementPrivate *priv;
+
+	priv = ZAK_CGI_FORM_ELEMENT_GET_PRIVATE (element);
+
+	priv->value = value;
+}
+
+/**
+ * zak_cgi_form_element_get_value:
+ * @element:
+ *
+ */
+GValue
+*zak_cgi_form_element_get_value (ZakCgiFormElement *element)
+{
+	ZakCgiFormElementPrivate *priv;
+
+	priv = ZAK_CGI_FORM_ELEMENT_GET_PRIVATE (element);
+
+	return priv->value;
 }
 
 /**

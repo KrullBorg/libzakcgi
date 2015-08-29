@@ -76,7 +76,7 @@ gchar
 	while (g_hash_table_iter_next (&iter, &key, &value))
 		{
 			g_string_append_printf (str,
-									" \"%s\"=\"%s\"",
+									" %s=\"%s\"",
 									(gchar *)key,
 									(gchar *)value);
 		}

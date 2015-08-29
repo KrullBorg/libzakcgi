@@ -24,16 +24,23 @@
 int
 main (int argc, char *argv[])
 {
+	ZakCgiMain *zakcgimain;
+
 	GString *str;
 
 	ZakCgiForm *form;
 	ZakCgiFormElement *element;
 
-	form = zak_cgi_form_new (NULL,
-							 "method", "post",
-							 NULL);
+	zakcgimain = zak_cgi_main_new ();
 
-	str = g_string_new ("");
+	str = g_string_new ("<html>\n"
+						"<head><title>Form test</title></head>\n"
+						"<body>\n");
+
+	form = zak_cgi_form_new (zakcgimain,
+							 "method", "post",
+							 "action", "form",
+							 NULL);
 
 	element = zak_cgi_form_element_text_new ("first", "aaa", NULL);
 	zak_cgi_form_add_element (form, element);
@@ -43,7 +50,16 @@ main (int argc, char *argv[])
 	element = zak_cgi_form_element_submit_new ("submit", "aaa", NULL);
 	zak_cgi_form_add_element (form, element);
 
-	g_string_append (str, zak_cgi_form_render (form));
+	if (zak_cgi_main_is_post (zakcgimain))
+		{
+			/* validating the form */
+		}
+	else
+		{
+			g_string_append (str, zak_cgi_form_render (form));
+		}
+
+	g_string_append (str, "\n</body>");
 
 	zak_cgi_main_out (NULL, str->str);
 
