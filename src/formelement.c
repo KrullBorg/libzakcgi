@@ -96,6 +96,7 @@ zak_cgi_form_element_init (ZakCgiFormElement *zak_cgi_form_element)
 
 	priv->validation_regex = NULL;
 	priv->ht_attrs = NULL;
+	priv->value = NULL;
 }
 
 gchar

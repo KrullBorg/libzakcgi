@@ -58,6 +58,7 @@ gboolean zak_cgi_form_add_element (ZakCgiForm *zakcgiform, ZakCgiFormElement *el
 gboolean zak_cgi_form_add_str (ZakCgiForm *zakcgiform, const gchar *str);
 
 void zak_cgi_form_bind (ZakCgiForm *zakcgiform);
+gboolean zak_cgi_form_is_valid (ZakCgiForm *zakcgiform);
 
 gchar *zak_cgi_form_render_start (ZakCgiForm *zakcgiform);
 gchar *zak_cgi_form_render (ZakCgiForm *zakcgiform);

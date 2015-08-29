@@ -129,10 +129,7 @@ static gchar
 static gboolean
 zak_cgi_form_element_submit_is_valid (ZakCgiFormElement *element)
 {
-	gboolean ret;
-
-
-	return ret;
+	return TRUE;
 }
 
 /* PRIVATE */

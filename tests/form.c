@@ -53,6 +53,16 @@ main (int argc, char *argv[])
 	if (zak_cgi_main_is_post (zakcgimain))
 		{
 			/* validating the form */
+			zak_cgi_form_bind (form);
+			if (zak_cgi_form_is_valid (form))
+				{
+					g_string_append (str, "Form is valid!!!");
+				}
+			else
+				{
+					g_string_append (str, zak_cgi_form_render (form));
+					g_string_append (str, "Form is not valid!!!");
+				}
 		}
 	else
 		{

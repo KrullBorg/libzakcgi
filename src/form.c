@@ -210,6 +210,43 @@ zak_cgi_form_bind (ZakCgiForm *zakcgiform)
 }
 
 /**
+ * zak_cgi_form_is_valid:
+ * @zakcgiform:
+ *
+ * Returns:
+ */
+gboolean
+zak_cgi_form_is_valid (ZakCgiForm *zakcgiform)
+{
+	GHashTableIter iter;
+	gpointer key;
+	gpointer value;
+
+	gboolean ret;
+
+	ZakCgiFormPrivate *priv;
+
+	priv = ZAK_CGI_FORM_GET_PRIVATE (zakcgiform);
+
+	ret = TRUE;
+
+	g_hash_table_iter_init (&iter, priv->ht_elems);
+	while (g_hash_table_iter_next (&iter, &key, &value))
+		{
+			if (!g_str_has_prefix ((gchar *)key, "{id_"))
+				{
+					if (!zak_cgi_form_element_is_valid ((ZakCgiFormElement *)value))
+						{
+							ret = FALSE;
+							break;
+						};
+				}
+		}
+
+	return ret;
+}
+
+/**
  * zak_cgi_form_render_start:
  * @zakcgiform:
  *
