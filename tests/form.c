@@ -43,6 +43,7 @@ main (int argc, char *argv[])
 							 NULL);
 
 	element = zak_cgi_form_element_text_new ("first", "aaa", NULL);
+	zak_cgi_form_element_set_label (element, "The Label for first", NULL);
 	zak_cgi_form_add_element (form, element);
 
 	zak_cgi_form_add_str (form, "<h1>big big big</h1>");

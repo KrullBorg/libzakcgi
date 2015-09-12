@@ -24,6 +24,7 @@
 
 #include "commons.h"
 #include "formelement.h"
+#include "tag.h"
 
 enum
 {
@@ -62,6 +63,7 @@ struct _ZakCgiFormElementPrivate
 		gchar *validation_regex;
 		GHashTable *ht_attrs;
 		GValue *value;
+		GHashTable *ht_label_attrs;
 	};
 
 G_DEFINE_TYPE (ZakCgiFormElement, zak_cgi_form_element, G_TYPE_OBJECT)
@@ -97,6 +99,7 @@ zak_cgi_form_element_init (ZakCgiFormElement *zak_cgi_form_element)
 	priv->validation_regex = NULL;
 	priv->ht_attrs = NULL;
 	priv->value = NULL;
+	priv->ht_label_attrs = NULL;
 }
 
 gchar
@@ -183,6 +186,34 @@ GValue
 }
 
 /**
+ * zak_cgi_form_element_set_label:
+ * @element:
+ * @label:
+ * @...:
+ *
+ */
+void
+zak_cgi_form_element_set_label (ZakCgiFormElement *element, const gchar *label, ...)
+{
+	va_list ap;
+
+	ZakCgiFormElementPrivate *priv;
+
+	priv = ZAK_CGI_FORM_ELEMENT_GET_PRIVATE (element);
+
+	if (priv->ht_label_attrs != NULL)
+		{
+			g_hash_table_destroy (priv->ht_label_attrs);
+		}
+
+	va_start (ap, label);
+	priv->ht_label_attrs = zak_cgi_commons_valist_to_ghashtable (ap);
+
+	g_hash_table_replace (priv->ht_label_attrs, "zak-cgi-content", g_strdup (label));
+	g_hash_table_replace (priv->ht_label_attrs, "for", g_hash_table_lookup (priv->ht_attrs, "name"));
+}
+
+/**
  * zak_cgi_form_element_render:
  * @element:
  *
@@ -190,14 +221,31 @@ GValue
 gchar
 *zak_cgi_form_element_render (ZakCgiFormElement *element)
 {
+	GString *str;
 	gchar *ret;
 
-	ret = g_strdup ("");
+	ZakCgiFormElementPrivate *priv;
+
+	priv = ZAK_CGI_FORM_ELEMENT_GET_PRIVATE (element);
+
+	str = g_string_new ("");
+
+	if (priv->ht_label_attrs != NULL)
+		{
+			gchar *lbl_id;
+
+			lbl_id = g_strdup_printf ("lbl_%s", priv->id);
+			g_string_append (str, zak_cgi_tag_tag_ht ("label", lbl_id, priv->ht_label_attrs));
+			g_free (lbl_id);
+		}
 
 	if (ZAK_CGI_IS_FORM_ELEMENT (element) && ZAK_CGI_FORM_ELEMENT_GET_CLASS (element)->render != NULL)
 		{
-			ret = ZAK_CGI_FORM_ELEMENT_GET_CLASS (element)->render (element);
+			g_string_append (str, ZAK_CGI_FORM_ELEMENT_GET_CLASS (element)->render (element));
 		}
+
+	ret = g_strdup (str->str);
+	g_string_free (str, TRUE);
 
 	return ret;
 }

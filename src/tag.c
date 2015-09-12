@@ -61,7 +61,7 @@ static gchar
 	g_hash_table_iter_init (&iter, ht_attrs);
 	while (g_hash_table_iter_next (&iter, &key, &val))
 		{
-			if (g_strcmp0 ((gchar *)key, "content") == 0)
+			if (g_strcmp0 ((gchar *)key, "zak-cgi-content") == 0)
 				{
 					with_content = TRUE;
 					if (content != NULL)

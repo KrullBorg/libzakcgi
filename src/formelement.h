@@ -65,6 +65,8 @@ gchar *zak_cgi_form_element_get_validation_regex (ZakCgiFormElement *element);
 void zak_cgi_form_element_set_value (ZakCgiFormElement *element, GValue *value);
 GValue *zak_cgi_form_element_get_value (ZakCgiFormElement *element);
 
+void zak_cgi_form_element_set_label (ZakCgiFormElement *element, const gchar *label, ...);
+
 gchar *zak_cgi_form_element_render (ZakCgiFormElement *element);
 
 gboolean zak_cgi_form_element_is_valid (ZakCgiFormElement *element);
