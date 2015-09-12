@@ -18,6 +18,8 @@
 
 #include <form.h>
 #include <formelement.h>
+#include <formelementcheck.h>
+#include <formelementpassword.h>
 #include <formelementtext.h>
 #include <formelementsubmit.h>
 
@@ -44,6 +46,10 @@ main (int argc, char *argv[])
 
 	element = zak_cgi_form_element_text_new ("first", "aaa", NULL);
 	zak_cgi_form_element_set_label (element, "The Label for first", NULL);
+	zak_cgi_form_add_element (form, element);
+
+	element = zak_cgi_form_element_check_new ("chk", NULL, NULL);
+	zak_cgi_form_element_set_label (element, "The checkbox", NULL);
 	zak_cgi_form_add_element (form, element);
 
 	zak_cgi_form_add_str (form, "<h1>big big big</h1>");

@@ -9,6 +9,7 @@ libzakcgi_la_SOURCES = commons.c \
                        commons.h \
                        form.c \
                        formelement.c \
+                       formelementcheck.c \
                        formelementpassword.c \
                        formelementtext.c \
                        formelementsubmit.c \
@@ -23,6 +24,7 @@ libzakcgi_include_HEADERS = \
                             libzakcgi.h \
                             form.h \
                             formelement.h \
+                            formelementcheck.h \
                             formelementpassword.h \
                             formelementtext.h \
                             formelementsubmit.h \
