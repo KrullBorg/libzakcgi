@@ -36,6 +36,9 @@ main (int argc, char *argv[])
 									  "zak-cgi-content", "the content of the text area",
 									  NULL));
 
+	g_string_append_printf (str, "%s<br/>\n", zak_cgi_tag_tag ("textarea", "textarea-nocont",
+									  NULL));
+
 	g_string_append_printf (str, "%s<br/>\n", zak_cgi_tag_img ("theimage", "src", "pippo.png", NULL));
 
 	g_string_append_printf (str, "%s<br/>\n", zak_cgi_tag_text ("thetext", NULL));

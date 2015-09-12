@@ -22,6 +22,7 @@
 #include <formelementhidden.h>
 #include <formelementpassword.h>
 #include <formelementtext.h>
+#include <formelementtextarea.h>
 #include <formelementsubmit.h>
 
 int
@@ -57,6 +58,10 @@ main (int argc, char *argv[])
 
 	element = zak_cgi_form_element_password_new ("pws", "aaa", NULL);
 	zak_cgi_form_element_set_label (element, "The password", NULL);
+	zak_cgi_form_add_element (form, element);
+
+	element = zak_cgi_form_element_text_area_new ("txtarea", "aaa", NULL);
+	zak_cgi_form_element_set_label (element, "The text area", NULL);
 	zak_cgi_form_add_element (form, element);
 
 	element = zak_cgi_form_element_hidden_new ("hdn", "aaa", NULL);

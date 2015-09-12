@@ -92,7 +92,14 @@ static gchar
 									id);
 		}
 
-	if (!with_content)
+	if (!with_content
+			 && g_strcmp0 (name, "textarea") == 0)
+		{
+			g_string_append_printf (str,
+									"></%s>",
+									name);
+		}
+	else if (!with_content)
 		{
 			g_string_append (str,
 							 " />");
