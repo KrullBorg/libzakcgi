@@ -114,12 +114,39 @@ static gchar
 	gchar *ret;
 
 	GHashTable *ht_attrs;
+	gchar *attr_class;
+	GString *str_attr_class;
+	gchar *form_control;
 
 	ZakCgiFormElementClass *klass;
 
 	klass = (ZakCgiFormElementClass *)g_type_class_peek_parent (ZAK_CGI_FORM_ELEMENT_SUBMIT_GET_CLASS (ZAK_CGI_FORM_ELEMENT_SUBMIT (element)));
 
 	ht_attrs = klass->get_ht_attrs (element);
+
+	attr_class = g_hash_table_lookup (ht_attrs, "class");
+	if (attr_class != NULL)
+		{
+			str_attr_class = g_string_new (attr_class);
+			form_control = g_strstr_len (str_attr_class->str, -1, "form-control");
+			if (form_control != NULL)
+				{
+					/* no form-control for submit button */
+					g_string_erase (str_attr_class, form_control - str_attr_class->str, 12);
+				}
+			g_string_free (str_attr_class, TRUE);
+
+			if (g_strstr_len (attr_class, -1, "btn btn-default") == NULL)
+				{
+					g_hash_table_insert (ht_attrs, "class", g_strdup_printf ("%s btn btn-default", str_attr_class->str));
+				}
+
+			g_free (attr_class);
+		}
+	else
+		{
+			g_hash_table_replace (ht_attrs, g_strdup ("class"), g_strdup ("btn btn-default"));
+		}
 
 	ret = zak_cgi_tag_submit_ht (zak_cgi_form_element_get_id (element), ht_attrs);
 

@@ -255,7 +255,7 @@ gchar
  */
 gchar
 *zak_cgi_tag_file_ht (const gchar *id,
-				   GHashTable *ht)
+					  GHashTable *ht)
 {
 	g_hash_table_insert (ht, "type", "file");
 
@@ -281,7 +281,7 @@ gchar
 	ht = zak_cgi_commons_valist_to_ghashtable (ap);
 	g_hash_table_insert (ht, "type", "submit");
 
-	return zak_cgi_tag_tag_attrs ("input", id, ht);
+	return zak_cgi_tag_tag_attrs ("button", id, ht);
 }
 
 
@@ -298,5 +298,5 @@ gchar
 {
 	g_hash_table_insert (ht, "type", "submit");
 
-	return zak_cgi_tag_tag_attrs ("input", id, ht);
+	return zak_cgi_tag_tag_attrs ("button", id, ht);
 }

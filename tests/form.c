@@ -38,9 +38,19 @@ main (int argc, char *argv[])
 
 	zakcgimain = zak_cgi_main_new ();
 
-	str = g_string_new ("<html>\n"
-						"<head><title>Form test</title></head>\n"
-						"<body>\n");
+	str = g_string_new ("<!DOCTYPE html>\n"
+						"<html lang=\"it\">\n"
+						"<head>\n"
+						"<meta charset=\"utf-8\">\n"
+						"<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n"
+						"<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n"
+						"<title>Form test</title>\n"
+						"<!-- Bootstrap -->\n"
+						"<!-- Latest compiled and minified CSS -->\n"
+						"<link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css\">\n"
+						"</head>\n"
+						"<body>\n"
+						"<div class=\"container\">\n");
 
 	form = zak_cgi_form_new (zakcgimain,
 							 "method", "post",
@@ -74,7 +84,7 @@ main (int argc, char *argv[])
 	element = zak_cgi_form_element_hidden_new ("hdn", "aaa", NULL);
 	zak_cgi_form_add_element (form, element);
 
-	element = zak_cgi_form_element_submit_new ("submit", "aaa", NULL);
+	element = zak_cgi_form_element_submit_new ("submit", NULL, "zak-cgi-content", "Submit", NULL);
 	zak_cgi_form_add_element (form, element);
 
 	if (zak_cgi_main_is_post (zakcgimain))
@@ -96,7 +106,15 @@ main (int argc, char *argv[])
 			g_string_append (str, zak_cgi_form_render (form));
 		}
 
-	g_string_append (str, "\n</body>");
+	g_string_append (str,
+					 "\n</div>\n"
+					 "<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->\n"
+					 "<script src=\"http://code.jquery.com/jquery-1.11.3.min.js\"></script>\n"
+					 "<!-- Include all compiled plugins (below), or include individual files as needed -->\n"
+					 "<!-- Latest compiled and minified JavaScript -->\n"
+					 "<script src=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js\"></script>\n"
+					 "</body>\n"
+					 "</html>");
 
 	zak_cgi_main_out (NULL, str->str);
 

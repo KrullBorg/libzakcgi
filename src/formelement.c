@@ -228,7 +228,7 @@ gchar
 
 	priv = ZAK_CGI_FORM_ELEMENT_GET_PRIVATE (element);
 
-	str = g_string_new ("");
+	str = g_string_new ("<div class=\"form-group\">\n");
 
 	if (priv->ht_label_attrs != NULL)
 		{
@@ -241,8 +241,26 @@ gchar
 
 	if (ZAK_CGI_IS_FORM_ELEMENT (element) && ZAK_CGI_FORM_ELEMENT_GET_CLASS (element)->render != NULL)
 		{
+			gchar *attr_class;
+
+			attr_class = g_hash_table_lookup (priv->ht_attrs, "class");
+			if (attr_class != NULL)
+				{
+					if (g_strstr_len (attr_class, -1, "form-control") == NULL)
+						{
+							g_hash_table_insert (priv->ht_attrs, "class", g_strdup_printf ("%s form-control", attr_class));
+						}
+					g_free (attr_class);
+				}
+			else
+				{
+					g_hash_table_replace (priv->ht_attrs, g_strdup ("class"), g_strdup ("form-control"));
+				}
+
 			g_string_append (str, ZAK_CGI_FORM_ELEMENT_GET_CLASS (element)->render (element));
 		}
+
+	g_string_append (str, "\n</div>\n");
 
 	ret = g_strdup (str->str);
 	g_string_free (str, TRUE);
