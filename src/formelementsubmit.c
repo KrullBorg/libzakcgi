@@ -134,7 +134,6 @@ static gchar
 					/* no form-control for submit button */
 					g_string_erase (str_attr_class, form_control - str_attr_class->str, 12);
 				}
-			g_string_free (str_attr_class, TRUE);
 
 			if (g_strstr_len (attr_class, -1, "btn btn-default") == NULL)
 				{
@@ -142,6 +141,7 @@ static gchar
 				}
 
 			g_free (attr_class);
+			g_string_free (str_attr_class, TRUE);
 		}
 	else
 		{

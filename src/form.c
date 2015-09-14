@@ -24,6 +24,7 @@
 
 #include "commons.h"
 #include "form.h"
+#include "formelementstring.h"
 
 static void zak_cgi_form_class_init (ZakCgiFormClass *class);
 static void zak_cgi_form_init (ZakCgiForm *zak_cgi_form);
@@ -47,8 +48,7 @@ struct _ZakCgiFormPrivate
 	{
 		ZakCgiMain *zakcgimain;
 		GHashTable *ht_attrs;
-		guint elems;
-		GHashTable *ht_elems;
+		GPtrArray *ar_elems;
 	};
 
 G_DEFINE_TYPE (ZakCgiForm, zak_cgi_form, G_TYPE_OBJECT)
@@ -73,8 +73,7 @@ zak_cgi_form_init (ZakCgiForm *zak_cgi_form)
 
 	priv->zakcgimain = NULL;
 	priv->ht_attrs = NULL;
-	priv->elems = 0;
-	priv->ht_elems = g_hash_table_new (g_str_hash, g_str_equal);
+	priv->ar_elems = g_ptr_array_new ();
 }
 
 /**
@@ -103,6 +102,33 @@ ZakCgiForm
 	return zak_cgi_form;
 }
 
+static guint
+get_idx (ZakCgiForm *zakcgiform, const gchar *id)
+{
+	guint idx;
+	gchar *element_id;
+
+	ZakCgiFormPrivate *priv;
+
+	priv = ZAK_CGI_FORM_GET_PRIVATE (zakcgiform);
+
+	for (idx = 0; idx < priv->ar_elems->len; idx++)
+		{
+			element_id = zak_cgi_form_element_get_id ((ZakCgiFormElement *)g_ptr_array_index (priv->ar_elems, idx));
+			if (g_strcmp0 (element_id, id) == 0)
+				{
+					break;
+				}
+			g_free (element_id);
+		}
+	if (idx == priv->ar_elems->len)
+		{
+			idx = -1;
+		}
+
+	return idx;
+}
+
 /**
  * zak_cgi_form_add_element:
  * @zakcgiform:
@@ -122,15 +148,14 @@ zak_cgi_form_add_element (ZakCgiForm *zakcgiform, ZakCgiFormElement *element)
 
 	id = zak_cgi_form_element_get_id (element);
 
-	if (g_hash_table_lookup (priv->ht_elems, id))
+	if (get_idx (zakcgiform, id) > -1)
 		{
 			g_warning ("You cannot add an element with id already present in the form.");
 			ret = FALSE;
 		}
 	else
 		{
-			priv->elems++;
-			g_hash_table_insert (priv->ht_elems, g_strdup (id), g_object_ref (element));
+			g_ptr_array_add (priv->ar_elems, g_object_ref (element));
 			ret = TRUE;
 		}
 
@@ -150,27 +175,11 @@ gboolean
 zak_cgi_form_add_str (ZakCgiForm *zakcgiform, const gchar *str)
 {
 	gboolean ret;
-	gchar *id;
 
-	ZakCgiFormPrivate *priv;
+	ZakCgiFormElement *element;
 
-	priv = ZAK_CGI_FORM_GET_PRIVATE (zakcgiform);
-
-	id = g_strdup_printf ("{id_%d}", priv->elems++);
-
-	if (g_hash_table_lookup (priv->ht_elems, id))
-		{
-			priv->elems--;
-			g_warning ("You cannot add an element with id already present in the form.");
-			ret = FALSE;
-		}
-	else
-		{
-			g_hash_table_insert (priv->ht_elems, g_strdup (id), g_strdup (str));
-			ret = TRUE;
-		}
-
-	g_free (id);
+	element = zak_cgi_form_element_string_new (str);
+	ret = zak_cgi_form_add_element (zakcgiform, element);
 
 	return ret;
 }
@@ -183,9 +192,7 @@ zak_cgi_form_add_str (ZakCgiForm *zakcgiform, const gchar *str)
 void
 zak_cgi_form_bind (ZakCgiForm *zakcgiform)
 {
-	GHashTableIter iter;
-	gpointer key;
-	gpointer value;
+	guint i;
 
 	GValue *gval;
 
@@ -195,15 +202,15 @@ zak_cgi_form_bind (ZakCgiForm *zakcgiform)
 
 	priv = ZAK_CGI_FORM_GET_PRIVATE (zakcgiform);
 
-	g_hash_table_iter_init (&iter, priv->ht_elems);
-	while (g_hash_table_iter_next (&iter, &key, &value))
+	for (i == 0; i < priv->ar_elems->len; i++)
 		{
-			if (!g_str_has_prefix ((gchar *)key, "{id_"))
+			ZakCgiFormElement *element = (ZakCgiFormElement *)g_ptr_array_index (priv->ar_elems, i);
+			if (!ZAK_CGI_IS_FORM_ELEMENT_STRING (element))
 				{
-					gval = zak_cgi_main_get_stdin_field (priv->zakcgimain, (gchar *)key);
+					gval = zak_cgi_main_get_stdin_field (priv->zakcgimain, zak_cgi_form_element_get_id (element));
 					if (gval != NULL)
 						{
-							zak_cgi_form_element_set_value ((ZakCgiFormElement *)value, gval);
+							zak_cgi_form_element_set_value (element, gval);
 						}
 				}
 		}
@@ -218,9 +225,7 @@ zak_cgi_form_bind (ZakCgiForm *zakcgiform)
 gboolean
 zak_cgi_form_is_valid (ZakCgiForm *zakcgiform)
 {
-	GHashTableIter iter;
-	gpointer key;
-	gpointer value;
+	guint i;
 
 	gboolean ret;
 
@@ -230,16 +235,16 @@ zak_cgi_form_is_valid (ZakCgiForm *zakcgiform)
 
 	ret = TRUE;
 
-	g_hash_table_iter_init (&iter, priv->ht_elems);
-	while (g_hash_table_iter_next (&iter, &key, &value))
+	for (i == 0; i < priv->ar_elems->len; i++)
 		{
-			if (!g_str_has_prefix ((gchar *)key, "{id_"))
+			ZakCgiFormElement *element = (ZakCgiFormElement *)g_ptr_array_index (priv->ar_elems, i);
+			if (!ZAK_CGI_IS_FORM_ELEMENT_STRING (element))
 				{
-					if (!zak_cgi_form_element_is_valid ((ZakCgiFormElement *)value))
+					if (!zak_cgi_form_element_is_valid (element))
 						{
 							ret = FALSE;
 							break;
-						};
+						}
 				}
 		}
 
@@ -287,9 +292,7 @@ gchar
 {
 	GString *str;
 
-	GHashTableIter iter;
-	gpointer key;
-	gpointer value;
+	guint i;
 
 	gchar *tmp;
 
@@ -303,19 +306,12 @@ gchar
 	g_string_append (str, tmp);
 	g_free (tmp);
 
-	g_hash_table_iter_init (&iter, priv->ht_elems);
-	while (g_hash_table_iter_next (&iter, &key, &value))
+	for (i == 0; i < priv->ar_elems->len; i++)
 		{
-			if (g_str_has_prefix ((gchar *)key, "{id_"))
-				{
-					g_string_append_printf (str, "\n%s", (gchar *)value);
-				}
-			else
-				{
-					tmp = zak_cgi_form_element_render ((ZakCgiFormElement *)value);
-					g_string_append_printf (str, "\n%s", tmp);
-					g_free (tmp);
-				}
+			ZakCgiFormElement *element = (ZakCgiFormElement *)g_ptr_array_index (priv->ar_elems, i);
+			tmp = zak_cgi_form_element_render (element);
+			g_string_append_printf (str, "\n%s", tmp);
+			g_free (tmp);
 		}
 
 	g_string_append (str, "\n</form>");
