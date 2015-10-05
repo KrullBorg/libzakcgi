@@ -297,7 +297,7 @@ zak_cgi_form_element_construct (ZakCgiFormElement *element,
 {
 	ZakCgiFormElementPrivate *priv;
 
-	g_return_val_if_fail (id != NULL, NULL);
+	g_return_if_fail (id != NULL);
 
 	priv = ZAK_CGI_FORM_ELEMENT_GET_PRIVATE (element);
 
