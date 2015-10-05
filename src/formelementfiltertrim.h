@@ -16,20 +16,29 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include "formelementifilter.h"
+#ifndef __ZAK_CGI_FORM_ELEMENT_FILTER_TRIM_H__
+#define __ZAK_CGI_FORM_ELEMENT_FILTER_TRIM_H__
 
-G_DEFINE_INTERFACE (ZakCgiFormElementIFilter, zak_cgi_form_element_ifilter, G_TYPE_OBJECT);
 
-static void
-zak_cgi_form_element_ifilter_default_init (ZakCgiFormElementIFilterInterface *iface)
-{
-    /* add properties and signals to the interface here */
-}
+#include <glib-object.h>
 
-gchar
-*zak_cgi_form_element_ifilter_filter (ZakCgiFormElementIFilter *self, const gchar *value)
-{
-	g_return_if_fail (ZAK_CGI_IS_FORM_ELEMENT_IFILTER (self));
 
-	return ZAK_CGI_FORM_ELEMENT_IFILTER_GET_IFACE (self)->filter (self, value);
-}
+G_BEGIN_DECLS
+
+
+/*
+ * Type declaration.
+ */
+#define ZAK_CGI_TYPE_FORM_ELEMENT_FILTER_TRIM zak_cgi_form_element_filter_trim_get_type ()
+G_DECLARE_FINAL_TYPE (ZakCgiFormElementFilterTrim, zak_cgi_form_element_filter_trim, ZAK_CGI, FORM_ELEMENT_FILTER_TRIM, GObject)
+
+/*
+ * Method definitions.
+ */
+ZakCgiFormElementFilterTrim *zak_cgi_form_element_filter_trim_new (void);
+
+
+G_END_DECLS
+
+
+#endif /* __ZAK_CGI_FORM_ELEMENT_FILTER_TRIM_H__ */
