@@ -31,8 +31,6 @@ static void zak_cgi_form_element_submit_init (ZakCgiFormElementSubmit *zak_cgi_f
 
 static gchar *zak_cgi_form_element_submit_render (ZakCgiFormElement *element);
 
-static gboolean zak_cgi_form_element_submit_is_valid (ZakCgiFormElement *element);
-
 static void zak_cgi_form_element_submit_set_property (GObject *object,
                                guint property_id,
                                const GValue *value,
@@ -67,7 +65,6 @@ zak_cgi_form_element_submit_class_init (ZakCgiFormElementSubmitClass *klass)
 	object_class->finalize = zak_cgi_form_element_submit_finalize;
 
 	elem_class->render = zak_cgi_form_element_submit_render;
-	elem_class->is_valid = zak_cgi_form_element_submit_is_valid;
 
 	g_type_class_add_private (object_class, sizeof (ZakCgiFormElementSubmitPrivate));
 }
@@ -82,15 +79,13 @@ zak_cgi_form_element_submit_init (ZakCgiFormElementSubmit *zak_cgi_form_element_
 /**
  * zak_cgi_form_element_submit_new:
  * @id:
- * @validation_regex:
  * @...:
  *
  * Returns: the newly created #ZakCgiFormElementSubmit object.
  */
 ZakCgiFormElement
 *zak_cgi_form_element_submit_new (const gchar *id,
-								const gchar *validation_regex,
-								...)
+								  ...)
 {
 	va_list ap;
 
@@ -98,12 +93,11 @@ ZakCgiFormElement
 
 	zak_cgi_form_element_submit = ZAK_CGI_FORM_ELEMENT_SUBMIT (g_object_new (zak_cgi_form_element_submit_get_type (), NULL));
 
-	va_start (ap, validation_regex);
+	va_start (ap, id);
 
 	ZAK_CGI_FORM_ELEMENT_CLASS (zak_cgi_form_element_submit_parent_class)->construct (ZAK_CGI_FORM_ELEMENT (zak_cgi_form_element_submit),
-																					id,
-																					validation_regex,
-																					zak_cgi_commons_valist_to_ghashtable (ap));
+																					  id,
+																					  zak_cgi_commons_valist_to_ghashtable (ap));
 
 	return ZAK_CGI_FORM_ELEMENT (zak_cgi_form_element_submit);
 }
@@ -151,12 +145,6 @@ static gchar
 	ret = zak_cgi_tag_submit_ht (zak_cgi_form_element_get_id (element), ht_attrs);
 
 	return ret;
-}
-
-static gboolean
-zak_cgi_form_element_submit_is_valid (ZakCgiFormElement *element)
-{
-	return TRUE;
 }
 
 /* PRIVATE */

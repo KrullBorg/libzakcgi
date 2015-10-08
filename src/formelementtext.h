@@ -51,7 +51,7 @@ struct _ZakCgiFormElementTextClass
 
 GType zak_cgi_form_element_text_get_type (void);
 
-ZakCgiFormElement *zak_cgi_form_element_text_new (const gchar *id, const gchar *validation_regex, ...);
+ZakCgiFormElement *zak_cgi_form_element_text_new (const gchar *id, ...);
 
 
 G_END_DECLS

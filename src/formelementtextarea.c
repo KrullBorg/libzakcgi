@@ -31,8 +31,6 @@ static void zak_cgi_form_element_text_area_init (ZakCgiFormElementTextArea *zak_
 
 static gchar *zak_cgi_form_element_text_area_render (ZakCgiFormElement *element);
 
-static gboolean zak_cgi_form_element_text_area_is_valid (ZakCgiFormElement *element);
-
 static void zak_cgi_form_element_text_area_set_property (GObject *object,
                                guint property_id,
                                const GValue *value,
@@ -67,7 +65,6 @@ zak_cgi_form_element_text_area_class_init (ZakCgiFormElementTextAreaClass *klass
 	object_class->finalize = zak_cgi_form_element_text_area_finalize;
 
 	elem_class->render = zak_cgi_form_element_text_area_render;
-	elem_class->is_valid = zak_cgi_form_element_text_area_is_valid;
 
 	g_type_class_add_private (object_class, sizeof (ZakCgiFormElementTextAreaPrivate));
 }
@@ -82,15 +79,13 @@ zak_cgi_form_element_text_area_init (ZakCgiFormElementTextArea *zak_cgi_form_ele
 /**
  * zak_cgi_form_element_text_area_new:
  * @id:
- * @validation_regex:
  * @...:
  *
  * Returns: the newly created #ZakCgiFormElementTextArea object.
  */
 ZakCgiFormElement
 *zak_cgi_form_element_text_area_new (const gchar *id,
-							const gchar *validation_regex,
-								...)
+									 ...)
 {
 	va_list ap;
 
@@ -98,12 +93,11 @@ ZakCgiFormElement
 
 	zak_cgi_form_element_text_area = ZAK_CGI_FORM_ELEMENT_TEXT_AREA (g_object_new (zak_cgi_form_element_text_area_get_type (), NULL));
 
-	va_start (ap, validation_regex);
+	va_start (ap, id);
 
 	ZAK_CGI_FORM_ELEMENT_CLASS (zak_cgi_form_element_text_area_parent_class)->construct (ZAK_CGI_FORM_ELEMENT (zak_cgi_form_element_text_area),
-																					id,
-																					validation_regex,
-																					zak_cgi_commons_valist_to_ghashtable (ap));
+																						 id,
+																						 zak_cgi_commons_valist_to_ghashtable (ap));
 
 	return ZAK_CGI_FORM_ELEMENT (zak_cgi_form_element_text_area);
 }
@@ -130,72 +124,6 @@ static gchar
 		}
 
 	ret = zak_cgi_tag_tag_ht ("textarea", zak_cgi_form_element_get_id (element), ht_attrs);
-
-	return ret;
-}
-
-static gboolean
-zak_cgi_form_element_text_area_check_value (const gchar *validation_regex, GValue *value)
-{
-	gboolean ret;
-
-	GRegex *regex;
-	GError *error;
-
-	if (G_VALUE_HOLDS (value, G_TYPE_STRING))
-		{
-			error = NULL;
-			regex = g_regex_new (validation_regex, 0, 0, &error);
-			if (regex == NULL
-				|| error != NULL)
-				{
-					syslog (LOG_MAKEPRI(LOG_SYSLOG, LOG_DEBUG), "Error on creating regex: %s.",
-							error->message != NULL ? error->message : "no details");
-					return FALSE;
-				}
-
-			ret = g_regex_match ((const GRegex *)regex, g_value_get_string (value), 0, NULL);
-		}
-	else
-		{
-			ret = FALSE;
-		}
-
-	return ret;
-}
-
-static gboolean
-zak_cgi_form_element_text_area_is_valid (ZakCgiFormElement *element)
-{
-	gboolean ret;
-
-	GValue *gval;
-
-	gchar *str_regex;
-
-	gval = zak_cgi_form_element_get_value (element);
-
-	g_object_get (G_OBJECT (element),
-				  "validation-regex", &str_regex,
-				  NULL);
-
-	if (G_VALUE_HOLDS (gval, G_TYPE_PTR_ARRAY))
-		{
-			guint i;
-			GPtrArray *ar = (GPtrArray *)g_value_get_boxed (gval);
-			for (i = 0; i < ar->len; i++)
-				{
-					if (!zak_cgi_form_element_text_area_check_value (str_regex, (GValue *)g_ptr_array_index (ar, i)))
-						{
-							ret = FALSE;
-							break;
-						}
-				}
-		}
-	else
-		{
-			ret = zak_cgi_form_element_text_area_check_value (str_regex, gval);
-		}
 
 	return ret;
 }

@@ -67,7 +67,7 @@ zak_cgi_form_element_text_class_init (ZakCgiFormElementTextClass *klass)
 	object_class->finalize = zak_cgi_form_element_text_finalize;
 
 	elem_class->render = zak_cgi_form_element_text_render;
-	elem_class->is_valid = zak_cgi_form_element_text_is_valid;
+	//elem_class->is_valid = zak_cgi_form_element_text_is_valid;
 
 	g_type_class_add_private (object_class, sizeof (ZakCgiFormElementTextPrivate));
 }
@@ -82,14 +82,12 @@ zak_cgi_form_element_text_init (ZakCgiFormElementText *zak_cgi_form_element_text
 /**
  * zak_cgi_form_element_text_new:
  * @id:
- * @validation_regex:
  * @...:
  *
  * Returns: the newly created #ZakCgiFormElementText object.
  */
 ZakCgiFormElement
 *zak_cgi_form_element_text_new (const gchar *id,
-								const gchar *validation_regex,
 								...)
 {
 	va_list ap;
@@ -98,11 +96,10 @@ ZakCgiFormElement
 
 	zak_cgi_form_element_text = ZAK_CGI_FORM_ELEMENT_TEXT (g_object_new (zak_cgi_form_element_text_get_type (), NULL));
 
-	va_start (ap, validation_regex);
+	va_start (ap, id);
 
 	ZAK_CGI_FORM_ELEMENT_CLASS (zak_cgi_form_element_text_parent_class)->construct (ZAK_CGI_FORM_ELEMENT (zak_cgi_form_element_text),
 																					id,
-																					validation_regex,
 																					zak_cgi_commons_valist_to_ghashtable (ap));
 
 	return ZAK_CGI_FORM_ELEMENT (zak_cgi_form_element_text);

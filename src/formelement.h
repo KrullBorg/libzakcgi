@@ -24,6 +24,7 @@
 
 #include "main.h"
 #include "formelementifilter.h"
+#include "formelementivalidator.h"
 
 
 G_BEGIN_DECLS
@@ -48,7 +49,7 @@ struct _ZakCgiFormElementClass
 	{
 		GObjectClass parent_class;
 
-		void (*construct) (ZakCgiFormElement *element, const gchar *id, const gchar *validation_regex, GHashTable *ht_attrs);
+		void (*construct) (ZakCgiFormElement *element, const gchar *id, GHashTable *ht_attrs);
 		GHashTable *(*get_ht_attrs) (ZakCgiFormElement *element);
 
 		gchar *(*render) (ZakCgiFormElement *element);
@@ -60,9 +61,6 @@ GType zak_cgi_form_element_get_type (void);
 
 gchar *zak_cgi_form_element_get_id (ZakCgiFormElement *element);
 
-void zak_cgi_form_element_set_validation_regex (ZakCgiFormElement *element, const gchar *validation_regex);
-gchar *zak_cgi_form_element_get_validation_regex (ZakCgiFormElement *element);
-
 void zak_cgi_form_element_add_filter (ZakCgiFormElement *element, ZakCgiFormElementIFilter *filter);
 void zak_cgi_form_element_filter (ZakCgiFormElement *element);
 
@@ -73,6 +71,7 @@ void zak_cgi_form_element_set_label (ZakCgiFormElement *element, const gchar *la
 
 gchar *zak_cgi_form_element_render (ZakCgiFormElement *element);
 
+void zak_cgi_form_element_add_validator (ZakCgiFormElement *element, ZakCgiFormElementIValidator *validator);
 gboolean zak_cgi_form_element_is_valid (ZakCgiFormElement *element);
 
 

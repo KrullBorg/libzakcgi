@@ -31,8 +31,6 @@ static void zak_cgi_form_element_select_init (ZakCgiFormElementSelect *zak_cgi_f
 
 static gchar *zak_cgi_form_element_select_render (ZakCgiFormElement *element);
 
-static gboolean zak_cgi_form_element_select_is_valid (ZakCgiFormElement *element);
-
 static void zak_cgi_form_element_select_set_property (GObject *object,
                                guint property_id,
                                const GValue *value,
@@ -67,7 +65,6 @@ zak_cgi_form_element_select_class_init (ZakCgiFormElementSelectClass *klass)
 	object_class->finalize = zak_cgi_form_element_select_finalize;
 
 	elem_class->render = zak_cgi_form_element_select_render;
-	elem_class->is_valid = zak_cgi_form_element_select_is_valid;
 
 	g_type_class_add_private (object_class, sizeof (ZakCgiFormElementSelectPrivate));
 }
@@ -83,14 +80,12 @@ zak_cgi_form_element_select_init (ZakCgiFormElementSelect *zak_cgi_form_element_
 /**
  * zak_cgi_form_element_select_new:
  * @id:
- * @validation_regex:
  * @...:
  *
  * Returns: the newly created #ZakCgiFormElementSelect object.
  */
 ZakCgiFormElement
 *zak_cgi_form_element_select_new (const gchar *id,
-								  const gchar *validation_regex,
 								  ...)
 {
 	va_list ap;
@@ -99,11 +94,10 @@ ZakCgiFormElement
 
 	zak_cgi_form_element_select = ZAK_CGI_FORM_ELEMENT_SELECT (g_object_new (zak_cgi_form_element_select_get_type (), NULL));
 
-	va_start (ap, validation_regex);
+	va_start (ap, id);
 
 	ZAK_CGI_FORM_ELEMENT_CLASS (zak_cgi_form_element_select_parent_class)->construct (ZAK_CGI_FORM_ELEMENT (zak_cgi_form_element_select),
 																					id,
-																					validation_regex,
 																					zak_cgi_commons_valist_to_ghashtable (ap));
 
 	return ZAK_CGI_FORM_ELEMENT (zak_cgi_form_element_select);
@@ -189,72 +183,6 @@ static gchar
 	ret = zak_cgi_tag_tag_ht ("select", zak_cgi_form_element_get_id (element), ht_attrs);
 
 	g_string_free (options, TRUE);
-
-	return ret;
-}
-
-static gboolean
-zak_cgi_form_element_select_check_value (const gchar *validation_regex, GValue *value)
-{
-	gboolean ret;
-
-	GRegex *regex;
-	GError *error;
-
-	if (G_VALUE_HOLDS (value, G_TYPE_STRING))
-		{
-			error = NULL;
-			regex = g_regex_new (validation_regex, 0, 0, &error);
-			if (regex == NULL
-				|| error != NULL)
-				{
-					syslog (LOG_MAKEPRI(LOG_SYSLOG, LOG_DEBUG), "Error on creating regex: %s.",
-							error != NULL && error->message != NULL ? error->message : "no details");
-					return FALSE;
-				}
-
-			ret = g_regex_match ((const GRegex *)regex, g_value_get_string (value), 0, NULL);
-		}
-	else
-		{
-			ret = FALSE;
-		}
-
-	return ret;
-}
-
-static gboolean
-zak_cgi_form_element_select_is_valid (ZakCgiFormElement *element)
-{
-	gboolean ret;
-
-	GValue *gval;
-
-	gchar *str_regex;
-
-	gval = zak_cgi_form_element_get_value (element);
-
-	g_object_get (G_OBJECT (element),
-				  "validation-regex", &str_regex,
-				  NULL);
-
-	if (G_VALUE_HOLDS (gval, G_TYPE_PTR_ARRAY))
-		{
-			guint i;
-			GPtrArray *ar = (GPtrArray *)g_value_get_boxed (gval);
-			for (i = 0; i < ar->len; i++)
-				{
-					if (!zak_cgi_form_element_select_check_value (str_regex, (GValue *)g_ptr_array_index (ar, i)))
-						{
-							ret = FALSE;
-							break;
-						}
-				}
-		}
-	else
-		{
-			ret = zak_cgi_form_element_select_check_value (str_regex, gval);
-		}
 
 	return ret;
 }

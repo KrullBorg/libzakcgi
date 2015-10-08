@@ -29,6 +29,8 @@
 #include <formelementsubmit.h>
 #include <formelementifilter.h>
 #include <formelementfiltertrim.h>
+#include <formelementivalidator.h>
+#include <formelementvalidatornotempty.h>
 
 int
 main (int argc, char *argv[])
@@ -61,41 +63,42 @@ main (int argc, char *argv[])
 							 "action", "form",
 							 NULL);
 
-	element = zak_cgi_form_element_text_new ("first", "aaa", NULL);
+	element = zak_cgi_form_element_text_new ("first", NULL);
 	zak_cgi_form_element_set_label (element, "The Label for first", NULL);
 	zak_cgi_form_element_add_filter (element,
 									 ZAK_CGI_FORM_ELEMENT_IFILTER (zak_cgi_form_element_filter_trim_new ()));
+	zak_cgi_form_element_add_validator (element,
+										ZAK_CGI_FORM_ELEMENT_IVALIDATOR (zak_cgi_form_element_validator_notempty_new ()));
 	zak_cgi_form_add_element (form, element);
 
-	element = zak_cgi_form_element_check_new ("chk", NULL, NULL);
+	element = zak_cgi_form_element_check_new ("chk", NULL);
 	zak_cgi_form_element_set_label (element, "The checkbox", NULL);
 	zak_cgi_form_add_element (form, element);
 
 	zak_cgi_form_add_str (form, "<h1>big big big</h1>");
 
-	element = zak_cgi_form_element_password_new ("pws", "aaa", NULL);
+	element = zak_cgi_form_element_password_new ("pws", NULL);
 	zak_cgi_form_element_set_label (element, "The password", NULL);
 	zak_cgi_form_add_element (form, element);
 
-	element = zak_cgi_form_element_text_area_new ("txtarea", "aaa", NULL);
+	element = zak_cgi_form_element_text_area_new ("txtarea", NULL);
 	zak_cgi_form_element_set_label (element, "The text area", NULL);
 	zak_cgi_form_add_element (form, element);
 
-	element = zak_cgi_form_element_select_new ("slc", NULL, NULL);
+	element = zak_cgi_form_element_select_new ("slc", NULL);
 	zak_cgi_form_element_select_add_option (ZAK_CGI_FORM_ELEMENT_SELECT (element), "1", "first", NULL);
 	zak_cgi_form_element_select_add_option (ZAK_CGI_FORM_ELEMENT_SELECT (element), "2", "second", NULL);
 	zak_cgi_form_element_select_add_option (ZAK_CGI_FORM_ELEMENT_SELECT (element), "3", "third", NULL);
 	zak_cgi_form_add_element (form, element);
 
-	element = zak_cgi_form_element_hidden_new ("hdn", "aaa", NULL);
+	element = zak_cgi_form_element_hidden_new ("hdn", NULL);
 	zak_cgi_form_add_element (form, element);
 
-	element = zak_cgi_form_element_submit_new ("submit", NULL, "zak-cgi-content", "Submit", NULL);
+	element = zak_cgi_form_element_submit_new ("submit", "zak-cgi-content", "Submit", NULL);
 	zak_cgi_form_add_element (form, element);
 
 	if (zak_cgi_main_is_post (zakcgimain))
 		{
-			sleep(10);
 			/* validating the form */
 			zak_cgi_form_bind (form);
 			if (zak_cgi_form_is_valid (form))
