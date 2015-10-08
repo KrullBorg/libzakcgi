@@ -31,6 +31,7 @@
 #include <formelementfiltertrim.h>
 #include <formelementivalidator.h>
 #include <formelementvalidatornotempty.h>
+#include <formelementvalidatorregex.h>
 
 int
 main (int argc, char *argv[])
@@ -68,7 +69,7 @@ main (int argc, char *argv[])
 	zak_cgi_form_element_add_filter (element,
 									 ZAK_CGI_FORM_ELEMENT_IFILTER (zak_cgi_form_element_filter_trim_new ()));
 	zak_cgi_form_element_add_validator (element,
-										ZAK_CGI_FORM_ELEMENT_IVALIDATOR (zak_cgi_form_element_validator_notempty_new ()));
+										ZAK_CGI_FORM_ELEMENT_IVALIDATOR (zak_cgi_form_element_validator_regex_new ("aaa")));
 	zak_cgi_form_add_element (form, element);
 
 	element = zak_cgi_form_element_check_new ("chk", NULL);
