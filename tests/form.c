@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include <unistd.h>
+
 #include <form.h>
 #include <formelement.h>
 #include <formelementcheck.h>
@@ -25,6 +27,8 @@
 #include <formelementtext.h>
 #include <formelementtextarea.h>
 #include <formelementsubmit.h>
+#include <formelementifilter.h>
+#include <formelementfiltertrim.h>
 
 int
 main (int argc, char *argv[])
@@ -59,6 +63,8 @@ main (int argc, char *argv[])
 
 	element = zak_cgi_form_element_text_new ("first", "aaa", NULL);
 	zak_cgi_form_element_set_label (element, "The Label for first", NULL);
+	zak_cgi_form_element_add_filter (element,
+									 ZAK_CGI_FORM_ELEMENT_IFILTER (zak_cgi_form_element_filter_trim_new ()));
 	zak_cgi_form_add_element (form, element);
 
 	element = zak_cgi_form_element_check_new ("chk", NULL, NULL);
@@ -89,6 +95,7 @@ main (int argc, char *argv[])
 
 	if (zak_cgi_main_is_post (zakcgimain))
 		{
+			sleep(10);
 			/* validating the form */
 			zak_cgi_form_bind (form);
 			if (zak_cgi_form_is_valid (form))

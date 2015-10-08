@@ -23,6 +23,7 @@
 #include <glib-object.h>
 
 #include "main.h"
+#include "formelementifilter.h"
 
 
 G_BEGIN_DECLS
@@ -61,6 +62,9 @@ gchar *zak_cgi_form_element_get_id (ZakCgiFormElement *element);
 
 void zak_cgi_form_element_set_validation_regex (ZakCgiFormElement *element, const gchar *validation_regex);
 gchar *zak_cgi_form_element_get_validation_regex (ZakCgiFormElement *element);
+
+void zak_cgi_form_element_add_filter (ZakCgiFormElement *element, ZakCgiFormElementIFilter *filter);
+void zak_cgi_form_element_filter (ZakCgiFormElement *element);
 
 void zak_cgi_form_element_set_value (ZakCgiFormElement *element, GValue *value);
 GValue *zak_cgi_form_element_get_value (ZakCgiFormElement *element);

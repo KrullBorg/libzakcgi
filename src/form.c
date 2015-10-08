@@ -235,7 +235,7 @@ zak_cgi_form_is_valid (ZakCgiForm *zakcgiform)
 
 	ret = TRUE;
 
-	for (i == 0; i < priv->ar_elems->len; i++)
+	for (i = 0; i < priv->ar_elems->len; i++)
 		{
 			ZakCgiFormElement *element = (ZakCgiFormElement *)g_ptr_array_index (priv->ar_elems, i);
 			if (!ZAK_CGI_IS_FORM_ELEMENT_STRING (element))
@@ -243,7 +243,6 @@ zak_cgi_form_is_valid (ZakCgiForm *zakcgiform)
 					if (!zak_cgi_form_element_is_valid (element))
 						{
 							ret = FALSE;
-							break;
 						}
 				}
 		}

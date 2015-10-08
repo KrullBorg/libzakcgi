@@ -39,7 +39,7 @@ static void zak_cgi_form_element_filter_trim_get_property (GObject *object,
 static void zak_cgi_form_element_filter_trim_dispose (GObject *gobject);
 static void zak_cgi_form_element_filter_trim_finalize (GObject *gobject);
 
-static gchar *zak_cgi_form_element_filter_trim_filter (ZakCgiFormElementFilterTrim *filter_trim, const gchar *value);
+static GValue *zak_cgi_form_element_filter_trim_filter (ZakCgiFormElementIFilter *filter_trim, GValue *value);
 
 struct _ZakCgiFormElementFilterTrim
 {
@@ -83,6 +83,21 @@ static void
 zak_cgi_form_element_filter_trim_init (ZakCgiFormElementFilterTrim *zak_cgi_form_element)
 {
 	ZakCgiFormElementFilterTrimPrivate *priv = ZAK_CGI_FORM_ELEMENT_FILTER_TRIM_GET_PRIVATE (zak_cgi_form_element);
+}
+
+/**
+ * zak_cgi_form_element_filter_trim_new:
+ *
+ * Returns: the newly created #ZakCgiFormElementFilterTrim object.
+ */
+ZakCgiFormElementFilterTrim
+*zak_cgi_form_element_filter_trim_new ()
+{
+	ZakCgiFormElementFilterTrim *zak_cgi_form_element_filter_trim;
+
+	zak_cgi_form_element_filter_trim = ZAK_CGI_FORM_ELEMENT_FILTER_TRIM (g_object_new (zak_cgi_form_element_filter_trim_get_type (), NULL));
+
+	return zak_cgi_form_element_filter_trim;
 }
 
 /* PRIVATE */
@@ -144,16 +159,20 @@ zak_cgi_form_element_filter_trim_finalize (GObject *gobject)
 	parent_class->finalize (gobject);
 }
 
-static gchar
-*zak_cgi_form_element_filter_trim_filter (ZakCgiFormElementFilterTrim *filter_trim,
-										  const gchar *value)
+static GValue
+*zak_cgi_form_element_filter_trim_filter (ZakCgiFormElementIFilter *filter_trim,
+										  GValue *value)
 {
-	gchar *ret;
+	GValue *ret;
+	gchar *_value;
 
 	g_return_val_if_fail (value != NULL, g_strdup (""));
 
-	ret = g_strdup (value);
-	g_strstrip (ret);
+	_value = g_strdup (g_value_get_string (value));
 
-	return ret;;
+	ret = g_new0 (GValue, 1);
+	g_value_init (ret, G_TYPE_STRING);
+	g_value_set_string (ret, g_strdup (g_strstrip (_value)));
+
+	return ret;
 }

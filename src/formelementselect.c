@@ -209,7 +209,7 @@ zak_cgi_form_element_select_check_value (const gchar *validation_regex, GValue *
 				|| error != NULL)
 				{
 					syslog (LOG_MAKEPRI(LOG_SYSLOG, LOG_DEBUG), "Error on creating regex: %s.",
-							error->message != NULL ? error->message : "no details");
+							error != NULL && error->message != NULL ? error->message : "no details");
 					return FALSE;
 				}
 

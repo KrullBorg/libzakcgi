@@ -26,8 +26,8 @@ zak_cgi_form_element_ifilter_default_init (ZakCgiFormElementIFilterInterface *if
     /* add properties and signals to the interface here */
 }
 
-gchar
-*zak_cgi_form_element_ifilter_filter (ZakCgiFormElementIFilter *self, const gchar *value)
+GValue
+*zak_cgi_form_element_ifilter_filter (ZakCgiFormElementIFilter *self, GValue *value)
 {
 	g_return_if_fail (ZAK_CGI_IS_FORM_ELEMENT_IFILTER (self));
 

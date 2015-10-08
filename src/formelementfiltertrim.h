@@ -26,15 +26,9 @@
 G_BEGIN_DECLS
 
 
-/*
- * Type declaration.
- */
 #define ZAK_CGI_TYPE_FORM_ELEMENT_FILTER_TRIM zak_cgi_form_element_filter_trim_get_type ()
 G_DECLARE_FINAL_TYPE (ZakCgiFormElementFilterTrim, zak_cgi_form_element_filter_trim, ZAK_CGI, FORM_ELEMENT_FILTER_TRIM, GObject)
 
-/*
- * Method definitions.
- */
 ZakCgiFormElementFilterTrim *zak_cgi_form_element_filter_trim_new (void);
 
 

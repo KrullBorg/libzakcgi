@@ -32,10 +32,10 @@ struct _ZakCgiFormElementIFilterInterface
 {
 	GTypeInterface parent_iface;
 
-	gchar *(*filter) (ZakCgiFormElementIFilter *self, const gchar *value);
+	GValue *(*filter) (ZakCgiFormElementIFilter *self, GValue *value);
 };
 
-gchar *zak_cgi_form_element_ifilter_filter (ZakCgiFormElementIFilter *self, const gchar *value);
+GValue *zak_cgi_form_element_ifilter_filter (ZakCgiFormElementIFilter *self, GValue *value);
 
 
 G_END_DECLS
