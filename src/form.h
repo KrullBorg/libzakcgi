@@ -22,6 +22,8 @@
 
 #include <glib-object.h>
 
+#include <libzakform/libzakform.h>
+
 #include "main.h"
 #include "formelement.h"
 
@@ -29,36 +31,18 @@
 G_BEGIN_DECLS
 
 
-#define ZAK_CGI_TYPE_FORM                 (zak_cgi_form_get_type ())
-#define ZAK_CGI_FORM(obj)                 (G_TYPE_CHECK_INSTANCE_CAST ((obj), ZAK_CGI_TYPE_FORM, ZakCgiForm))
-#define ZAK_CGI_FORM_CLASS(klass)         (G_TYPE_CHECK_CLASS_CAST ((klass), ZAK_CGI_TYPE_FORM, ZakCgiFormClass))
-#define ZAK_CGI_IS_FORM(obj)              (G_TYPE_CHECK_INSTANCE_TYPE ((obj), ZAK_CGI_TYPE_FORM))
-#define ZAK_CGI_IS_FORM_CLASS(klass)      (G_TYPE_CHECK_CLASS_TYPE ((klass), ZAK_CGI_TYPE_FORM))
-#define ZAK_CGI_FORM_GET_CLASS(obj)       (G_TYPE_INSTANCE_GET_CLASS ((obj), ZAK_CGI_TYPE_FORM, ZakCgiFormClass))
-
-typedef struct _ZakCgiForm ZakCgiForm;
-typedef struct _ZakCgiFormClass ZakCgiFormClass;
-
-struct _ZakCgiForm
-	{
-		GObject parent_instance;
-	};
+#define ZAK_CGI_TYPE_FORM zak_cgi_form_get_type ()
+G_DECLARE_DERIVABLE_TYPE (ZakCgiForm, zak_cgi_form, ZAK_CGI, FORM, ZakFormForm)
 
 struct _ZakCgiFormClass
-	{
-		GObjectClass parent_class;
-	};
-
-GType zak_cgi_form_get_type (void);
+{
+	ZakFormFormClass parent_class;
+};
 
 
 ZakCgiForm *zak_cgi_form_new (ZakCgiMain *zakcgimain, ...);
 
-gboolean zak_cgi_form_add_element (ZakCgiForm *zakcgiform, ZakCgiFormElement *element);
-gboolean zak_cgi_form_add_str (ZakCgiForm *zakcgiform, const gchar *str);
-
 void zak_cgi_form_bind (ZakCgiForm *zakcgiform);
-gboolean zak_cgi_form_is_valid (ZakCgiForm *zakcgiform);
 
 gchar *zak_cgi_form_render_start (ZakCgiForm *zakcgiform);
 gchar *zak_cgi_form_render (ZakCgiForm *zakcgiform);

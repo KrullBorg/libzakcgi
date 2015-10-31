@@ -51,7 +51,7 @@ struct _ZakCgiFormPrivate
 		GPtrArray *ar_elems;
 	};
 
-G_DEFINE_TYPE (ZakCgiForm, zak_cgi_form, G_TYPE_OBJECT)
+G_DEFINE_TYPE (ZakCgiForm, zak_cgi_form, ZAK_FORM_TYPE_FORM)
 
 static void
 zak_cgi_form_class_init (ZakCgiFormClass *class)
@@ -73,7 +73,7 @@ zak_cgi_form_init (ZakCgiForm *zak_cgi_form)
 
 	priv->zakcgimain = NULL;
 	priv->ht_attrs = NULL;
-	priv->ar_elems = g_ptr_array_new ();
+	priv->ar_elems = ZAK_FORM_FORM_CLASS (zak_cgi_form_parent_class)->get_elements (ZAK_FORM_FORM (zak_cgi_form));
 }
 
 /**
@@ -130,61 +130,6 @@ get_idx (ZakCgiForm *zakcgiform, const gchar *id)
 }
 
 /**
- * zak_cgi_form_add_element:
- * @zakcgiform:
- * @element:
- *
- * Returns: #TRUE if @element is added; FALSE otherwise.
- */
-gboolean
-zak_cgi_form_add_element (ZakCgiForm *zakcgiform, ZakCgiFormElement *element)
-{
-	gboolean ret;
-	gchar *id;
-
-	ZakCgiFormPrivate *priv;
-
-	priv = ZAK_CGI_FORM_GET_PRIVATE (zakcgiform);
-
-	id = zak_cgi_form_element_get_id (element);
-
-	if (get_idx (zakcgiform, id) > -1)
-		{
-			g_warning ("You cannot add an element with id already present in the form.");
-			ret = FALSE;
-		}
-	else
-		{
-			g_ptr_array_add (priv->ar_elems, g_object_ref (element));
-			ret = TRUE;
-		}
-
-	g_free (id);
-
-	return ret;
-}
-
-/**
- * zak_cgi_form_add_str:
- * @zakcgiform:
- * @str:
- *
- * Returns: #TRUE if @str is added; FALSE otherwise.
- */
-gboolean
-zak_cgi_form_add_str (ZakCgiForm *zakcgiform, const gchar *str)
-{
-	gboolean ret;
-
-	ZakCgiFormElement *element;
-
-	element = zak_cgi_form_element_string_new (str);
-	ret = zak_cgi_form_add_element (zakcgiform, element);
-
-	return ret;
-}
-
-/**
  * zak_cgi_form_bind:
  * @zakcgiform:
  *
@@ -210,44 +155,10 @@ zak_cgi_form_bind (ZakCgiForm *zakcgiform)
 					gval = zak_cgi_main_get_stdin_field (priv->zakcgimain, zak_cgi_form_element_get_id (element));
 					if (gval != NULL)
 						{
-							zak_cgi_form_element_set_value (element, gval);
+							zak_form_element_set_value (ZAK_FORM_ELEMENT (element), g_value_get_string (gval));
 						}
 				}
 		}
-}
-
-/**
- * zak_cgi_form_is_valid:
- * @zakcgiform:
- *
- * Returns:
- */
-gboolean
-zak_cgi_form_is_valid (ZakCgiForm *zakcgiform)
-{
-	guint i;
-
-	gboolean ret;
-
-	ZakCgiFormPrivate *priv;
-
-	priv = ZAK_CGI_FORM_GET_PRIVATE (zakcgiform);
-
-	ret = TRUE;
-
-	for (i = 0; i < priv->ar_elems->len; i++)
-		{
-			ZakCgiFormElement *element = (ZakCgiFormElement *)g_ptr_array_index (priv->ar_elems, i);
-			if (!ZAK_CGI_IS_FORM_ELEMENT_STRING (element))
-				{
-					if (!zak_cgi_form_element_is_valid (element))
-						{
-							ret = FALSE;
-						}
-				}
-		}
-
-	return ret;
 }
 
 /**
@@ -265,7 +176,7 @@ gchar
 
 	ZakCgiFormPrivate *priv;
 
-	g_return_if_fail (ZAK_CGI_IS_FORM (zakcgiform));
+	g_return_val_if_fail (ZAK_CGI_IS_FORM (zakcgiform), g_strdup (""));
 
 	priv = ZAK_CGI_FORM_GET_PRIVATE (zakcgiform);
 

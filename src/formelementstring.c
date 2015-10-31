@@ -67,7 +67,7 @@ zak_cgi_form_element_string_class_init (ZakCgiFormElementStringClass *klass)
 	object_class->finalize = zak_cgi_form_element_string_finalize;
 
 	elem_class->render = zak_cgi_form_element_string_render;
-	elem_class->is_valid = zak_cgi_form_element_string_is_valid;
+	//elem_class->is_valid = zak_cgi_form_element_string_is_valid;
 
 	g_type_class_add_private (object_class, sizeof (ZakCgiFormElementStringPrivate));
 }

@@ -17,11 +17,6 @@ libzakcgi_la_SOURCES = commons.c \
                        formelementtext.c \
                        formelementtextarea.c \
                        formelementsubmit.c \
-                       formelementifilter.c \
-                       formelementfiltertrim.c \
-                       formelementivalidator.c \
-                       formelementvalidatornotempty.c \
-                       formelementvalidatorregex.c \
                        main.c \
                        session.c \
                        tag.c \
@@ -41,11 +36,6 @@ libzakcgi_include_HEADERS = \
                             formelementtext.h \
                             formelementtextarea.h \
                             formelementsubmit.h \
-                            formelementifilter.h \
-                            formelementfiltertrim.h \
-                            formelementivalidator.h \
-                            formelementvalidatornotempty.h \
-                            formelementvalidatorregex.h \
                             main.h \
                             session.h \
                             tag.h \

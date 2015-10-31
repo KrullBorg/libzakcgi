@@ -109,7 +109,7 @@ static gchar
 
 	GHashTable *ht_attrs;
 
-	GValue *value;
+	gchar *value;
 
 	ZakCgiFormElementClass *klass;
 
@@ -117,10 +117,10 @@ static gchar
 
 	ht_attrs = klass->get_ht_attrs (element);
 
-	value = zak_cgi_form_element_get_value (element);
+	value = zak_form_element_get_value (ZAK_FORM_ELEMENT (element));
 	if (value != NULL)
 		{
-			g_hash_table_insert (ht_attrs, (gpointer)"zak-cgi-content", (gpointer)g_value_get_string (value));
+			g_hash_table_insert (ht_attrs, (gpointer)"zak-cgi-content", (gpointer)g_strdup (value));
 		}
 
 	ret = zak_cgi_tag_tag_ht ("textarea", zak_cgi_form_element_get_id (element), ht_attrs);

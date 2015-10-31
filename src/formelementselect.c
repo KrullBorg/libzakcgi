@@ -146,7 +146,7 @@ static gchar
 
 	GHashTable *ht_attrs;
 
-	GValue *gval;
+	gchar *gval;
 
 	ZakCgiFormElementClass *klass;
 
@@ -154,7 +154,7 @@ static gchar
 
 	klass = (ZakCgiFormElementClass *)g_type_class_peek_parent (ZAK_CGI_FORM_ELEMENT_SELECT_GET_CLASS (ZAK_CGI_FORM_ELEMENT_SELECT (element)));
 
-	gval = zak_cgi_form_element_get_value (element);
+	gval = zak_form_element_get_value (ZAK_FORM_ELEMENT (element));
 
 	/* list options */
 	options = g_string_new ("\n");
@@ -166,7 +166,7 @@ static gchar
 
 			if (gval != NULL)
 				{
-					if (g_strcmp0 (g_value_get_string (gval), (gchar *)key) == 0)
+					if (g_strcmp0 (gval, (gchar *)key) == 0)
 						{
 							g_hash_table_replace (ht_options_attrs, "selected", g_strdup ("selected"));
 						}

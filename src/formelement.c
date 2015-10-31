@@ -59,13 +59,10 @@ struct _ZakCgiFormElementPrivate
 	{
 		gchar *id;
 		GHashTable *ht_attrs;
-		GPtrArray *pa_filters;
-		GPtrArray *pa_validators;
-		GValue *value;
 		GHashTable *ht_label_attrs;
 	};
 
-G_DEFINE_TYPE (ZakCgiFormElement, zak_cgi_form_element, G_TYPE_OBJECT)
+G_DEFINE_TYPE (ZakCgiFormElement, zak_cgi_form_element, ZAK_FORM_TYPE_ELEMENT)
 
 static void
 zak_cgi_form_element_class_init (ZakCgiFormElementClass *class)
@@ -89,9 +86,6 @@ zak_cgi_form_element_init (ZakCgiFormElement *zak_cgi_form_element)
 	ZakCgiFormElementPrivate *priv = ZAK_CGI_FORM_ELEMENT_GET_PRIVATE (zak_cgi_form_element);
 
 	priv->ht_attrs = NULL;
-	priv->pa_filters = NULL;
-	priv->pa_validators = NULL;
-	priv->value = NULL;
 	priv->ht_label_attrs = NULL;
 }
 
@@ -103,90 +97,6 @@ gchar
 	priv = ZAK_CGI_FORM_ELEMENT_GET_PRIVATE (element);
 
 	return g_strdup (priv->id);
-}
-
-/**
- * zak_cgi_form_element_add_filter:
- * @element:
- * @filter:
- *
- */
-void
-zak_cgi_form_element_add_filter (ZakCgiFormElement *element, ZakCgiFormElementIFilter *filter)
-{
-	ZakCgiFormElementPrivate *priv;
-
-	priv = ZAK_CGI_FORM_ELEMENT_GET_PRIVATE (element);
-
-	if (priv->pa_filters == NULL)
-		{
-			priv->pa_filters = g_ptr_array_new ();
-		}
-
-	g_ptr_array_add (priv->pa_filters, filter);
-}
-
-/**
- * zak_cgi_form_element_filter:
- * @element:
- *
- */
-void
-zak_cgi_form_element_filter (ZakCgiFormElement *element)
-{
-	guint i;
-
-	ZakCgiFormElementPrivate *priv;
-
-	priv = ZAK_CGI_FORM_ELEMENT_GET_PRIVATE (element);
-
-	if (priv->pa_filters == NULL)
-		{
-			return;
-		}
-
-	for (i = 0; i < priv->pa_filters->len; i++)
-		{
-			GValue *value;
-			GValue *val;
-
-			value = zak_cgi_form_element_get_value (element);
-
-			val = zak_cgi_form_element_ifilter_filter ((ZakCgiFormElementIFilter *)g_ptr_array_index (priv->pa_filters, i),
-													   value);
-			zak_cgi_form_element_set_value (element, val);
-		}
-}
-
-/**
- * zak_cgi_form_element_set_value:
- * @element:
- * @value:
- *
- */
-void
-zak_cgi_form_element_set_value (ZakCgiFormElement *element, GValue *value)
-{
-	ZakCgiFormElementPrivate *priv;
-
-	priv = ZAK_CGI_FORM_ELEMENT_GET_PRIVATE (element);
-
-	priv->value = value;
-}
-
-/**
- * zak_cgi_form_element_get_value:
- * @element:
- *
- */
-GValue
-*zak_cgi_form_element_get_value (ZakCgiFormElement *element)
-{
-	ZakCgiFormElementPrivate *priv;
-
-	priv = ZAK_CGI_FORM_ELEMENT_GET_PRIVATE (element);
-
-	return priv->value;
 }
 
 /**
@@ -269,72 +179,6 @@ gchar
 	ret = g_strdup (str->str);
 	g_string_free (str, TRUE);
 
-	return ret;
-}
-
-/**
- * zak_cgi_form_element_add_validator:
- * @element:
- * @validator:
- *
- */
-void
-zak_cgi_form_element_add_validator (ZakCgiFormElement *element, ZakCgiFormElementIValidator *validator)
-{
-	ZakCgiFormElementPrivate *priv;
-
-	priv = ZAK_CGI_FORM_ELEMENT_GET_PRIVATE (element);
-
-	if (priv->pa_validators == NULL)
-		{
-			priv->pa_validators = g_ptr_array_new ();
-		}
-
-	g_ptr_array_add (priv->pa_validators, validator);
-}
-
-/**
- * zak_cgi_form_element_is_valid:
- * @element:
- *
- */
-gboolean
-zak_cgi_form_element_is_valid (ZakCgiFormElement *element)
-{
-	gboolean ret;
-
-	GValue *value;
-	guint i;
-
-	ZakCgiFormElementPrivate *priv;
-
-	priv = ZAK_CGI_FORM_ELEMENT_GET_PRIVATE (element);
-
-	ret = TRUE;
-
-	zak_cgi_form_element_filter (element);
-
-	if (priv->pa_validators != NULL)
-		{
-			value = zak_cgi_form_element_get_value (element);
-
-			for (i = 0; i < priv->pa_validators->len; i++)
-				{
-					if (!zak_cgi_form_element_ivalidator_validate ((ZakCgiFormElementIValidator *)g_ptr_array_index (priv->pa_validators, i),
-																   value))
-						{
-							ret = FALSE;
-						}
-				}
-		}
-
-	if (ZAK_CGI_IS_FORM_ELEMENT (element) && ZAK_CGI_FORM_ELEMENT_GET_CLASS (element)->is_valid != NULL)
-		{
-			if (!ZAK_CGI_FORM_ELEMENT_GET_CLASS (element)->is_valid (element))
-				{
-					ret = FALSE;
-				}
-		}
 	return ret;
 }
 
