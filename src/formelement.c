@@ -125,6 +125,7 @@ zak_cgi_form_element_set_label (ZakCgiFormElement *element, const gchar *label, 
 
 	g_hash_table_replace (priv->ht_label_attrs, "zak-cgi-content", g_strdup (label));
 	g_hash_table_replace (priv->ht_label_attrs, "for", g_hash_table_lookup (priv->ht_attrs, "name"));
+	g_hash_table_replace (priv->ht_label_attrs, "class", "control-label");
 }
 
 /**
@@ -137,12 +138,21 @@ gchar
 {
 	GString *str;
 	gchar *ret;
+	GPtrArray *messages;
 
 	ZakCgiFormElementPrivate *priv;
 
 	priv = ZAK_CGI_FORM_ELEMENT_GET_PRIVATE (element);
 
-	str = g_string_new ("<div class=\"form-group\">\n");
+	str = g_string_new ("<div class=\"form-group");
+
+	messages = ZAK_FORM_ELEMENT_CLASS (zak_cgi_form_element_parent_class)->get_messages (ZAK_FORM_ELEMENT (element));
+	if (messages != NULL)
+		{
+			g_string_append (str, " has-error");
+		}
+
+	g_string_append (str, "\">\n");
 
 	if (priv->ht_label_attrs != NULL)
 		{
@@ -172,6 +182,20 @@ gchar
 				}
 
 			g_string_append (str, ZAK_CGI_FORM_ELEMENT_GET_CLASS (element)->render (element));
+		}
+
+	if (messages != NULL)
+		{
+			guint i;
+
+			for (i = 0; i < messages->len; i++)
+				{
+					g_string_append_printf (str,
+											"\n<span id=\"helpBox_%s%d\" class=\"help-block\">%s</span>",
+											priv->id,
+											i + 1,
+											(gchar *)g_ptr_array_index (messages, i));
+				}
 		}
 
 	g_string_append (str, "\n</div>\n");
