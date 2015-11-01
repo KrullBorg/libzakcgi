@@ -67,7 +67,7 @@ main (int argc, char *argv[])
 	zak_form_element_add_filter (ZAK_FORM_ELEMENT (element),
 									 ZAK_FORM_ELEMENT_IFILTER (zak_form_element_filter_trim_new ()));
 	zak_form_element_add_validator (ZAK_FORM_ELEMENT (element),
-										ZAK_FORM_ELEMENT_IVALIDATOR (zak_form_element_validator_regex_new ("^aaa$")));
+										ZAK_FORM_ELEMENT_VALIDATOR (zak_form_element_validator_regex_new ("^aaa$")));
 	zak_form_form_add_element (ZAK_FORM_FORM (form), ZAK_FORM_ELEMENT (element));
 
 	element = zak_cgi_form_element_check_new ("chk", NULL);
