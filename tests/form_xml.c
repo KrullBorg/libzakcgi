@@ -62,58 +62,27 @@ main (int argc, char *argv[])
 							 "action", "form",
 							 NULL);
 
-	element = zak_cgi_form_element_text_new_attrs ("first", NULL);
-	zak_cgi_form_element_set_label (element, "The Label for first", NULL);
-	zak_form_element_add_filter (ZAK_FORM_ELEMENT (element),
-								 ZAK_FORM_ELEMENT_FILTER (zak_form_element_filter_trim_new ()));
-	zak_form_element_add_validator (ZAK_FORM_ELEMENT (element),
-									ZAK_FORM_ELEMENT_VALIDATOR (zak_form_element_validator_regex_new ("^aaa$")));
-	zak_form_form_add_element (ZAK_FORM_FORM (form), ZAK_FORM_ELEMENT (element));
-
-	element = zak_cgi_form_element_check_new_attrs ("chk", NULL);
-	zak_cgi_form_element_set_label (element, "The checkbox", NULL);
-	zak_form_form_add_element (ZAK_FORM_FORM (form), ZAK_FORM_ELEMENT (element));
-
-	element = zak_cgi_form_element_string_new_attrs ("<h1>big big big</h1>");
-	zak_form_form_add_element (ZAK_FORM_FORM (form), ZAK_FORM_ELEMENT (element));
-
-	element = zak_cgi_form_element_password_new_attrs ("pws", NULL);
-	zak_cgi_form_element_set_label (element, "The password", NULL);
-	zak_form_form_add_element (ZAK_FORM_FORM (form), ZAK_FORM_ELEMENT (element));
-
-	element = zak_cgi_form_element_text_area_new_attrs ("txtarea", NULL);
-	zak_cgi_form_element_set_label (element, "The text area", NULL);
-	zak_form_form_add_element (ZAK_FORM_FORM (form), ZAK_FORM_ELEMENT (element));
-
-	element = zak_cgi_form_element_select_new_attrs ("slc", NULL);
-	zak_cgi_form_element_select_add_option (ZAK_CGI_FORM_ELEMENT_SELECT (element), "1", "first", NULL);
-	zak_cgi_form_element_select_add_option (ZAK_CGI_FORM_ELEMENT_SELECT (element), "2", "second", NULL);
-	zak_cgi_form_element_select_add_option (ZAK_CGI_FORM_ELEMENT_SELECT (element), "3", "third", NULL);
-	zak_form_form_add_element (ZAK_FORM_FORM (form), ZAK_FORM_ELEMENT (element));
-
-	element = zak_cgi_form_element_hidden_new_attrs ("hdn", NULL);
-	zak_form_form_add_element (ZAK_FORM_FORM (form), ZAK_FORM_ELEMENT (element));
-
-	element = zak_cgi_form_element_submit_new_attrs ("submit", "zak-cgi-content", "Submit", NULL);
-	zak_form_form_add_element (ZAK_FORM_FORM (form), ZAK_FORM_ELEMENT (element));
-
-	if (zak_cgi_main_is_post (zakcgimain))
+    GValue *val = zak_cgi_main_get_parameter (zakcgimain, "filename");
+	if (zak_form_form_load_from_file (ZAK_FORM_FORM (form), g_value_get_string (val)))
 		{
-			/* validating the form */
-			zak_cgi_form_bind (form);
-			if (zak_form_form_is_valid (ZAK_FORM_FORM (form)))
+			if (zak_cgi_main_is_post (zakcgimain))
 				{
-					g_string_append (str, "Form is valid!!!");
+					/* validating the form */
+					zak_cgi_form_bind (form);
+					if (zak_form_form_is_valid (ZAK_FORM_FORM (form)))
+						{
+							g_string_append (str, "Form is valid!!!");
+						}
+					else
+						{
+							g_string_append (str, zak_cgi_form_render (form));
+							g_string_append (str, "Form is not valid!!!");
+						}
 				}
 			else
 				{
 					g_string_append (str, zak_cgi_form_render (form));
-					g_string_append (str, "Form is not valid!!!");
 				}
-		}
-	else
-		{
-			g_string_append (str, zak_cgi_form_render (form));
 		}
 
 	g_string_append (str,

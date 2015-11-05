@@ -22,6 +22,8 @@
 
 #include <glib-object.h>
 
+#include <libxml/tree.h>
+
 #include "formelement.h"
 
 
@@ -51,7 +53,10 @@ struct _ZakCgiFormElementStringClass
 
 GType zak_cgi_form_element_string_get_type (void);
 
-ZakCgiFormElement *zak_cgi_form_element_string_new (const gchar *str);
+ZakCgiFormElement *zak_cgi_form_element_string_new (void);
+ZakCgiFormElement *zak_cgi_form_element_string_new_attrs (const gchar *str);
+
+gboolean zak_cgi_form_element_string_xml_parsing (ZakFormElement *element, xmlNodePtr xmlnode);
 
 
 G_END_DECLS

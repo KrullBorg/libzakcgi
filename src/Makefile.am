@@ -1,3 +1,13 @@
+if PLATFORM_WIN32
+libmodulesext = -0.dll
+libmodulesdir = $(bindir)
+else
+libmodulesext = .so
+libmodulesdir = $(libdir)
+endif
+
+libzakformmodulesdir = `pkg-config --variable=modulesdir libzakform`
+
 LIBS = $(ZAKCGI_LIBS)
 
 AM_CPPFLAGS = $(ZAKCGI_CFLAGS) \
@@ -42,3 +52,10 @@ libzakcgi_include_HEADERS = \
                             url.h
 
 libzakcgi_includedir = $(includedir)/libzakcgi
+
+install-exec-hook:
+	cd $(libzakformmodulesdir) && \
+	ln -s -f $(libmodulesdir)/libzakcgi$(libmodulesext) .
+
+uninstall-hook:
+	rm -f $(libzakformmodulesdir)/libzakcgi$(libmodulesext)

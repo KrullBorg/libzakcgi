@@ -82,22 +82,65 @@ zak_cgi_form_element_string_init (ZakCgiFormElementString *zak_cgi_form_element_
 
 /**
  * zak_cgi_form_element_string_new:
- * @str:
  *
  * Returns: the newly created #ZakCgiFormElementString object.
  */
 ZakCgiFormElement
-*zak_cgi_form_element_string_new (const gchar *str)
+*zak_cgi_form_element_string_new ()
 {
 	ZakCgiFormElementString *zak_cgi_form_element_string;
 
 	zak_cgi_form_element_string = ZAK_CGI_FORM_ELEMENT_STRING (g_object_new (zak_cgi_form_element_string_get_type (), NULL));
 
+	return ZAK_CGI_FORM_ELEMENT (zak_cgi_form_element_string);
+}
+
+/**
+ * zak_cgi_form_element_string_new_attrs:
+ * @str:
+ *
+ * Returns: the newly created #ZakCgiFormElementString object.
+ */
+ZakCgiFormElement
+*zak_cgi_form_element_string_new_attrs (const gchar *str)
+{
+	ZakCgiFormElement *zak_cgi_form_element_string;
+
+	zak_cgi_form_element_string = zak_cgi_form_element_string_new ();
+
 	ZakCgiFormElementStringPrivate *priv = ZAK_CGI_FORM_ELEMENT_STRING_GET_PRIVATE (zak_cgi_form_element_string);
 
 	priv->str = g_strdup (str);
 
-	return ZAK_CGI_FORM_ELEMENT (zak_cgi_form_element_string);
+	return zak_cgi_form_element_string;
+}
+
+gboolean
+zak_cgi_form_element_string_xml_parsing (ZakFormElement *element, xmlNodePtr xmlnode)
+{
+	gboolean ret;
+
+	xmlNode *cur;
+
+	ZakCgiFormElementStringPrivate *priv;
+
+	ret = FALSE;
+
+	cur = xmlnode->children;
+	while (cur != NULL)
+		{
+			if (xmlStrcmp (cur->name, (const xmlChar *)"string") == 0)
+				{
+					priv = ZAK_CGI_FORM_ELEMENT_STRING_GET_PRIVATE (ZAK_CGI_FORM_ELEMENT_STRING (element));
+					priv->str = g_strdup ((gchar *)xmlNodeGetContent (cur));
+					ret = TRUE;
+					break;
+				}
+
+			cur = cur->next;
+		}
+
+	return ret;
 }
 
 static gchar

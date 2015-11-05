@@ -80,7 +80,7 @@ gchar *zak_cgi_main_set_cookie (const gchar *name,
 
 G_DEPRECATED_FOR (zak_cgi_main_get_parameter)
 GHashTable *zak_cgi_main_get_parameters (ZakCgiMain *zakcgimain, const gchar *query_string);
-gchar *zak_cgi_main_get_parameter (ZakCgiMain *zakcgimain, const gchar *param);
+GValue *zak_cgi_main_get_parameter (ZakCgiMain *zakcgimain, const gchar *param);
 void zak_cgi_main_parameters_foreach (ZakCgiMain *zakcgimain, GHFunc func, gpointer user_data);
 
 

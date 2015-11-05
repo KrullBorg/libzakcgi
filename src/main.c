@@ -650,14 +650,14 @@ GHashTable
 }
 
 /**
- * zak_cgi_main_get_param:
+ * zak_cgi_main_get_parameter:
  * @zakcgimain:
  * @param:
  *
  * Returns:
  */
 GValue
-*zak_cgi_main_get_param  (ZakCgiMain *zakcgimain, const gchar *param)
+*zak_cgi_main_get_parameter  (ZakCgiMain *zakcgimain, const gchar *param)
 {
 	ZakCgiMainPrivate *priv;
 

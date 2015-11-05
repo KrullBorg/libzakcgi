@@ -78,28 +78,95 @@ zak_cgi_form_element_text_init (ZakCgiFormElementText *zak_cgi_form_element_text
 
 /**
  * zak_cgi_form_element_text_new:
+ *
+ * Returns: the newly created #ZakCgiFormElementText object.
+ */
+ZakCgiFormElement
+*zak_cgi_form_element_text_new ()
+{
+	ZakCgiFormElementText *zak_cgi_form_element_text;
+
+	zak_cgi_form_element_text = ZAK_CGI_FORM_ELEMENT_TEXT (g_object_new (zak_cgi_form_element_text_get_type (), NULL));
+
+	return ZAK_CGI_FORM_ELEMENT (zak_cgi_form_element_text);
+}
+
+/**
+ * zak_cgi_form_element_text_new_attrs:
  * @id:
  * @...:
  *
  * Returns: the newly created #ZakCgiFormElementText object.
  */
 ZakCgiFormElement
-*zak_cgi_form_element_text_new (const gchar *id,
-								...)
+*zak_cgi_form_element_text_new_attrs (const gchar *id,
+									  ...)
 {
 	va_list ap;
 
-	ZakCgiFormElementText *zak_cgi_form_element_text;
+	ZakCgiFormElement *zak_cgi_form_element_text;
 
-	zak_cgi_form_element_text = ZAK_CGI_FORM_ELEMENT_TEXT (g_object_new (zak_cgi_form_element_text_get_type (), NULL));
+	zak_cgi_form_element_text = zak_cgi_form_element_text_new ();
 
 	va_start (ap, id);
 
-	ZAK_CGI_FORM_ELEMENT_CLASS (zak_cgi_form_element_text_parent_class)->construct (ZAK_CGI_FORM_ELEMENT (zak_cgi_form_element_text),
+	ZAK_CGI_FORM_ELEMENT_CLASS (zak_cgi_form_element_text_parent_class)->construct (zak_cgi_form_element_text,
 																					id,
 																					zak_cgi_commons_valist_to_ghashtable (ap));
 
-	return ZAK_CGI_FORM_ELEMENT (zak_cgi_form_element_text);
+	return zak_cgi_form_element_text;
+}
+
+gboolean
+zak_cgi_form_element_text_xml_parsing (ZakFormElement *element, xmlNodePtr xmlnode)
+{
+	gboolean ret;
+
+	gchar *id;
+
+	GHashTable *ht_attrs;
+
+	xmlNode *cur;
+
+	id = NULL;
+
+	ht_attrs = g_hash_table_new (g_str_hash, g_str_equal);
+
+	cur = xmlnode->children;
+	while (cur != NULL)
+		{
+			if (xmlStrcmp (cur->name, (const xmlChar *)"id") == 0)
+				{
+					id = (gchar *)xmlNodeGetContent (cur);
+				}
+			else if (xmlStrcmp (cur->name, (const xmlChar *)"label") == 0)
+				{
+					zak_cgi_form_element_set_label (ZAK_CGI_FORM_ELEMENT (element), (gchar *)xmlNodeGetContent (cur), NULL);
+				}
+			else if (xmlStrcmp (cur->name, (const xmlChar *)"text") == 0)
+				{
+				}
+			else
+				{
+					g_hash_table_replace (ht_attrs, g_strdup (cur->name), (gchar *)xmlNodeGetContent (cur));
+				}
+
+			cur = cur->next;
+		}
+
+	if (id != NULL)
+		{
+			ZAK_CGI_FORM_ELEMENT_CLASS (zak_cgi_form_element_text_parent_class)->construct (ZAK_CGI_FORM_ELEMENT (element),
+																							id,
+																							ht_attrs);
+			ret = TRUE;
+		}
+	else
+		{
+			ret = FALSE;
+		}
+
+	return ret;
 }
 
 static gchar

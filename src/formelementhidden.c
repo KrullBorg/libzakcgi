@@ -78,33 +78,98 @@ zak_cgi_form_element_hidden_init (ZakCgiFormElementHidden *zak_cgi_form_element_
 
 /**
  * zak_cgi_form_element_hidden_new:
+ *
+ * Returns: the newly created #ZakCgiFormElementHidden object.
+ */
+ZakCgiFormElement
+*zak_cgi_form_element_hidden_new ()
+{
+	ZakCgiFormElementHidden *zak_cgi_form_element_hidden;
+
+	zak_cgi_form_element_hidden = ZAK_CGI_FORM_ELEMENT_HIDDEN (g_object_new (zak_cgi_form_element_hidden_get_type (), NULL));
+
+	return ZAK_CGI_FORM_ELEMENT (zak_cgi_form_element_hidden);
+}
+
+/**
+ * zak_cgi_form_element_hidden_new_attrs:
  * @id:
  * @...:
  *
  * Returns: the newly created #ZakCgiFormElementHidden object.
  */
 ZakCgiFormElement
-*zak_cgi_form_element_hidden_new (const gchar *id,
-								  ...)
+*zak_cgi_form_element_hidden_new_attrs (const gchar *id,
+										...)
 {
 	va_list ap;
 
 	GHashTable *ht_attrs;
 
-	ZakCgiFormElementHidden *zak_cgi_form_element_hidden;
+	ZakCgiFormElement *zak_cgi_form_element_hidden;
 
-	zak_cgi_form_element_hidden = ZAK_CGI_FORM_ELEMENT_HIDDEN (g_object_new (zak_cgi_form_element_hidden_get_type (), NULL));
+	zak_cgi_form_element_hidden = zak_cgi_form_element_hidden_new ();
 
 	va_start (ap, id);
 
 	ht_attrs = zak_cgi_commons_valist_to_ghashtable (ap);
 	g_hash_table_replace (ht_attrs, "type", "hidden");
 
-	ZAK_CGI_FORM_ELEMENT_CLASS (zak_cgi_form_element_hidden_parent_class)->construct (ZAK_CGI_FORM_ELEMENT (zak_cgi_form_element_hidden),
-																					id,
-																					ht_attrs);
+	ZAK_CGI_FORM_ELEMENT_CLASS (zak_cgi_form_element_hidden_parent_class)->construct (zak_cgi_form_element_hidden,
+																					  id,
+																					  ht_attrs);
 
-	return ZAK_CGI_FORM_ELEMENT (zak_cgi_form_element_hidden);
+	return zak_cgi_form_element_hidden;
+}
+
+
+gboolean
+zak_cgi_form_element_hidden_xml_parsing (ZakFormElement *element, xmlNodePtr xmlnode)
+{
+	gboolean ret;
+
+	gchar *id;
+
+	GHashTable *ht_attrs;
+
+	xmlNode *cur;
+
+	id = NULL;
+
+	ht_attrs = g_hash_table_new (g_str_hash, g_str_equal);
+	g_hash_table_replace (ht_attrs, "type", "hidden");
+
+	cur = xmlnode->children;
+	while (cur != NULL)
+		{
+			if (xmlStrcmp (cur->name, (const xmlChar *)"id") == 0)
+				{
+					id = (gchar *)xmlNodeGetContent (cur);
+				}
+			else if (xmlStrcmp (cur->name, (const xmlChar *)"text") == 0)
+				{
+				}
+			else
+				{
+					g_hash_table_replace (ht_attrs, g_strdup (cur->name), (gchar *)xmlNodeGetContent (cur));
+				}
+
+			cur = cur->next;
+		}
+
+	if (id != NULL)
+		{
+			ZAK_CGI_FORM_ELEMENT_CLASS (zak_cgi_form_element_hidden_parent_class)->construct (ZAK_CGI_FORM_ELEMENT (element),
+																							  id,
+																							  ht_attrs);
+			ret = TRUE;
+		}
+	else
+		{
+			ret = FALSE;
+		}
+
+	return ret;
 }
 
 static gchar

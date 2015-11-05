@@ -12,8 +12,12 @@ noinst_PROGRAMS = \
                     cookies \
                     env \
                     form \
+                    form_xml \
                     querystring \
                     redirect \
                     session \
                     tag \
                     url
+
+EXTRA_DIST = \
+             form_xml.xml
