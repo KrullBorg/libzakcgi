@@ -38,6 +38,9 @@ main (int argc, char *argv[])
 
 	GString *str;
 
+	GValue *val;
+	gchar *filename;
+
 	ZakCgiForm *form;
 	ZakCgiFormElement *element;
 
@@ -57,13 +60,15 @@ main (int argc, char *argv[])
 						"<body>\n"
 						"<div class=\"container\">\n");
 
+	val = zak_cgi_main_get_parameter (zakcgimain, "filename");
+	filename = (gchar *)g_value_get_string (val);
+
 	form = zak_cgi_form_new (zakcgimain,
 							 "method", "post",
-							 "action", "form",
+							 "action", g_strdup_printf ("form_xml?filename=%s", filename),
 							 NULL);
 
-    GValue *val = zak_cgi_main_get_parameter (zakcgimain, "filename");
-	if (zak_form_form_load_from_file (ZAK_FORM_FORM (form), g_value_get_string (val)))
+	if (zak_form_form_load_from_file (ZAK_FORM_FORM (form), filename))
 		{
 			if (zak_cgi_main_is_post (zakcgimain))
 				{
