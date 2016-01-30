@@ -145,7 +145,7 @@ zak_cgi_form_bind (ZakCgiForm *zakcgiform)
 
 	priv = ZAK_CGI_FORM_GET_PRIVATE (zakcgiform);
 
-	for (i == 0; i < priv->ar_elems->len; i++)
+	for (i = 0; i < priv->ar_elems->len; i++)
 		{
 			ZakCgiFormElement *element = (ZakCgiFormElement *)g_ptr_array_index (priv->ar_elems, i);
 			if (!ZAK_CGI_IS_FORM_ELEMENT_STRING (element))
@@ -214,7 +214,7 @@ gchar
 	g_string_append (str, tmp);
 	g_free (tmp);
 
-	for (i == 0; i < priv->ar_elems->len; i++)
+	for (i = 0; i < priv->ar_elems->len; i++)
 		{
 			ZakCgiFormElement *element = (ZakCgiFormElement *)g_ptr_array_index (priv->ar_elems, i);
 			tmp = zak_cgi_form_element_render (element);

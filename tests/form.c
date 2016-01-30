@@ -41,7 +41,7 @@ main (int argc, char *argv[])
 	ZakCgiForm *form;
 	ZakCgiFormElement *element;
 
-	ZakFormElementValidator *validator;
+	ZakFormElementValidatorRegex *validator;
 
 	zakcgimain = zak_cgi_main_new ();
 
@@ -69,8 +69,8 @@ main (int argc, char *argv[])
 	zak_form_element_add_filter (ZAK_FORM_ELEMENT (element),
 								 ZAK_FORM_ELEMENT_FILTER (zak_form_element_filter_trim_new ()));
 	validator = zak_form_element_validator_regex_new ();
-	zak_form_element_validator_regex_set_regex (ZAK_FORM_ELEMENT_VALIDATOR_REGEX (validator), "^aaa$");
-	zak_form_element_add_validator (ZAK_FORM_ELEMENT (element), validator);
+	zak_form_element_validator_regex_set_regex (validator, "^aaa$");
+	zak_form_element_add_validator (ZAK_FORM_ELEMENT (element), ZAK_FORM_ELEMENT_VALIDATOR (validator));
 	zak_form_form_add_element (ZAK_FORM_FORM (form), ZAK_FORM_ELEMENT (element));
 
 	element = zak_cgi_form_element_check_new_attrs ("chk", NULL);
