@@ -142,7 +142,7 @@ zak_cgi_url_dispatch (ZakCgiUrl *url)
 			while (g_hash_table_iter_next (&iter, &key, &value))
 				{
 					error = NULL;
-					str_regex = g_strdup_printf ("%s$", (gchar *)key);
+					str_regex = g_strdup_printf ("^%s$", (gchar *)key);
 					regex = g_regex_new (str_regex, 0, 0, &error);
 					g_free (str_regex);
 					if (regex == NULL
