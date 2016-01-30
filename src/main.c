@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Andrea Zagli <azagli@libero.it>
+ * Copyright (C) 2015-2016 Andrea Zagli <azagli@libero.it>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -1134,13 +1134,13 @@ zak_cgi_main_redirect (ZakCgiMain *zakcgimain, const gchar *url)
 		{
 			ht_env = _zak_cgi_main_get_env (zakcgimain);
 
-			value = (gchar *)g_hash_table_lookup (ht_env, "REQUEST_SCHEME");
+			value = (gchar *)g_value_get_string ((GValue *)g_hash_table_lookup (ht_env, "REQUEST_SCHEME"));
 			if (value != NULL)
 				{
 					g_string_append_printf (_url, "%s://", value);
 				}
 
-			value = (gchar *)g_hash_table_lookup (ht_env, "SERVER_NAME");
+			value = (gchar *)g_value_get_string ((GValue *)g_hash_table_lookup (ht_env, "SERVER_NAME"));
 			if (value != NULL)
 				{
 					if (!g_str_has_prefix (url, value))
@@ -1153,7 +1153,7 @@ zak_cgi_main_redirect (ZakCgiMain *zakcgimain, const gchar *url)
 				{
 					/* TODO
 					 * test if it starts with a domain, ex: www.google.it */
-					value = (gchar *)g_hash_table_lookup (ht_env, "CONTEXT_PREFIX");
+					value = (gchar *)g_value_get_string ((GValue *)g_hash_table_lookup (ht_env, "CONTEXT_PREFIX"));
 					if (value != NULL)
 						{
 							if (!g_str_has_prefix (url, value))
