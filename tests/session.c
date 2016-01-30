@@ -21,6 +21,17 @@
 #include <main.h>
 #include <session.h>
 
+void
+ht_foreach (gpointer key,
+			gpointer value,
+			gpointer user_data)
+{
+	GString *str = (GString *)user_data;
+
+	g_string_append_printf (str, "<tr><td>%s</td><td>%s</td></tr>\n",
+							(gchar *)key, g_value_get_string ((GValue *)value));
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -30,20 +41,27 @@ main (int argc, char *argv[])
 	GString *header;
 	GHashTable *ht;
 	GHashTable *ht_stdin;
+	ZakCgiMain *zakcgimain;
 	ZakCgiSession *session;
 
 	gchar *method;
 
-	session = zak_cgi_session_new (NULL, NULL, NULL);
+	zakcgimain = zak_cgi_main_new ();
+
+	session = zak_cgi_session_new (zakcgimain, NULL, NULL);
 
 	str = g_string_new ("<html>\n"
 	                    "<head><title>Session Cookie</title></head>\n"
 	                    "<body>\n");
 
-	ht = zak_cgi_main_get_env (NULL);
+	g_string_append_printf (str, "<table>\n");
+	zak_cgi_main_cookies_foreach (zakcgimain, ht_foreach, str);
+	g_string_append_printf (str, "</table>\n");
+
+	ht = zak_cgi_main_get_env (zakcgimain);
 	if (ht != NULL)
 		{
-			method = g_hash_table_lookup (ht, "REQUEST_METHOD");
+			method = g_value_get_string (g_hash_table_lookup (ht, "REQUEST_METHOD"));
 			if (g_strcmp0 (method, "POST") == 0)
 				{
 					const gchar *content_type = g_getenv ("CONTENT_TYPE");
@@ -52,7 +70,7 @@ main (int argc, char *argv[])
 						{
 							gchar **boundary = g_strsplit (splitted[1], "=", 2);
 
-							env = zak_cgi_main_get_stdin (NULL);
+							env = zak_cgi_main_get_stdin (zakcgimain);
 
 							ht_stdin = zak_cgi_main_parse_stdin (env, boundary[1]);
 

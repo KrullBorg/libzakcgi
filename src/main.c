@@ -25,8 +25,6 @@
 #include <string.h>
 #include <locale.h>
 
-#include <syslog.h>
-
 #include <glib/gprintf.h>
 #include <gio/gunixinputstream.h>
 
@@ -359,7 +357,7 @@ GValue
 
 	ht = _zak_cgi_main_get_cookies (zakcgimain);
 
-	ret = g_hash_table_lookup (ht, cookie);
+	ret = (GValue *)g_hash_table_lookup (ht, cookie);
 
 	return ret;
 }
@@ -745,11 +743,11 @@ gchar
 					                         &error);
 					if (l != bytesread)
 						{
-							syslog (LOG_MAKEPRI(LOG_SYSLOG, LOG_DEBUG), "error reading stdin: bytes read differ from content length");
+							g_warning ("Error reading stdin: bytes read differ from content length");
 						}
 					if (error != NULL)
 						{
-							syslog (LOG_MAKEPRI(LOG_SYSLOG, LOG_DEBUG), "error reading stdin: %s", error->message);
+							g_warning ("Error reading stdin: %s", error->message);
 						}
 				}
 		}

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Andrea Zagli <azagli@libero.it>
+ * Copyright (C) 2015-2016 Andrea Zagli <azagli@libero.it>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,8 +19,6 @@
 #ifdef HAVE_CONFIG_H
 	#include <config.h>
 #endif
-
-#include <syslog.h>
 
 #include <gio/gio.h>
 
@@ -96,14 +94,13 @@ ZakCgiSession
 					  const gchar *base_uri,
 					  const gchar *path)
 {
-	GHashTable *ht_cookies;
-
 	GError *error;
+	gchar *val;
 
 	ZakCgiSession *zak_cgi_session;
 	ZakCgiSessionPrivate *priv;
 
-	gchar *val;
+	g_return_val_if_fail (ZAK_CGI_IS_MAIN (zakcgimain), NULL);
 
 	zak_cgi_session = ZAK_CGI_SESSION (g_object_new (zak_cgi_session_get_type (), NULL));
 
@@ -118,8 +115,7 @@ ZakCgiSession
 			priv->path = g_strdup (path);
 		}
 
-	ht_cookies = zak_cgi_main_get_cookies (priv->zakcgimain);
-	priv->sid = g_hash_table_lookup (ht_cookies, "ZAKCGISID");
+	priv->sid = g_strdup ((gchar *)g_value_get_string (zak_cgi_main_get_cookie (priv->zakcgimain, "ZAKCGISID")));
 
 	if (priv->sid != NULL)
 		{
@@ -219,8 +215,6 @@ gchar
 	guint32 i;
 	gchar *tmp;
 
-	GHashTable *ht_env;
-
 	ZakCgiSessionPrivate *priv = ZAK_CGI_SESSION_GET_PRIVATE (session);
 
 	if (priv->sid == NULL)
@@ -245,6 +239,8 @@ gchar
 			    || error != NULL)
 				{
 					/* TODO */
+					g_warning ("Unable to write new session file: %s.",
+							   error != NULL && error->message != NULL ? error->message : "no details");
 				}
 			else
 				{
@@ -259,6 +255,8 @@ gchar
 						|| error != NULL)
 						{
 							/* TODO */
+							g_warning ("Unable to read session file: %s.",
+									   error != NULL && error->message != NULL ? error->message : "no details");
 						}
 					else
 						{
@@ -275,10 +273,8 @@ gchar
 						}
 				}
 
-			ht_env = zak_cgi_main_get_env (priv->zakcgimain);
-
 			ret = zak_cgi_main_set_cookie ("ZAKCGISID", priv->sid, NULL, NULL,
-										   priv->base_uri != NULL ? priv->base_uri : (gchar *)g_hash_table_lookup (ht_env, "CONTEXT_PREFIX"),
+										   priv->base_uri != NULL ? priv->base_uri : (gchar *)g_value_get_string (zak_cgi_main_get_env_field (priv->zakcgimain, "CONTEXT_PREFIX")),
 										   FALSE, FALSE);
 		}
 	else
@@ -301,10 +297,19 @@ zak_cgi_session_set_value (ZakCgiSession *session, const gchar *name, const gcha
 {
 	ZakCgiSessionPrivate *priv = ZAK_CGI_SESSION_GET_PRIVATE (session);
 
+	GError *error;
+
 	if (priv->kfile != NULL)
 		{
 			g_key_file_set_value (priv->kfile, "SESSION", name, value);
-			g_key_file_save_to_file (priv->kfile, g_file_get_path (priv->gfile), NULL);
+
+			error = NULL;
+			if (!g_key_file_save_to_file (priv->kfile, g_file_get_path (priv->gfile), &error)
+				|| error != NULL)
+				{
+					g_warning ("Unable to write value tosession file: %s.",
+							   error != NULL && error->message != NULL ? error->message : "no details");
+				}
 		}
 }
 
