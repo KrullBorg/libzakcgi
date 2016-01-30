@@ -20,8 +20,6 @@
 	#include <config.h>
 #endif
 
-#include <syslog.h>
-
 #include "commons.h"
 #include "formelement.h"
 #include "tag.h"

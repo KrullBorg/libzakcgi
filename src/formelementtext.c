@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Andrea Zagli <azagli@libero.it>
+ * Copyright (C) 2015-2016 Andrea Zagli <azagli@libero.it>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,8 +19,6 @@
 #ifdef HAVE_CONFIG_H
 	#include <config.h>
 #endif
-
-#include <syslog.h>
 
 #include "commons.h"
 #include "tag.h"
