@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Andrea Zagli <azagli@libero.it>
+ * Copyright (C) 2015-2016 Andrea Zagli <azagli@libero.it>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -146,7 +146,7 @@ gchar
 
 	str = g_string_new ("<div class=\"form-group");
 
-	messages = ZAK_FORM_ELEMENT_CLASS (zak_cgi_form_element_parent_class)->get_messages (ZAK_FORM_ELEMENT (element));
+	messages = zak_form_element_get_messages (ZAK_FORM_ELEMENT (element));
 	if (messages != NULL)
 		{
 			g_string_append (str, " has-error");
