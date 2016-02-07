@@ -122,8 +122,10 @@ zak_cgi_form_element_set_label (ZakCgiFormElement *element, const gchar *label, 
 	priv->ht_label_attrs = zak_cgi_commons_valist_to_ghashtable (ap);
 
 	g_hash_table_replace (priv->ht_label_attrs, "zak-cgi-content", g_strdup (label));
-	g_hash_table_replace (priv->ht_label_attrs, "for", g_hash_table_lookup (priv->ht_attrs, "name"));
+	g_hash_table_replace (priv->ht_label_attrs, "for", priv->id != NULL  ? g_strdup (priv->id) : g_strdup (""));
 	g_hash_table_replace (priv->ht_label_attrs, "class", "control-label");
+
+	zak_form_element_set_long_name (ZAK_FORM_ELEMENT (element), label);
 }
 
 /**
@@ -155,6 +157,11 @@ gchar
 	if (priv->ht_label_attrs != NULL)
 		{
 			gchar *lbl_id;
+
+			if (g_strcmp0 (g_hash_table_lookup (priv->ht_label_attrs, "for"), "") == 0)
+				{
+					g_hash_table_replace (priv->ht_label_attrs, "for", g_strdup (priv->id));
+				}
 
 			lbl_id = g_strdup_printf ("lbl_%s", priv->id);
 			g_string_append (str, zak_cgi_tag_tag_ht ("label", lbl_id, priv->ht_label_attrs));
@@ -224,6 +231,7 @@ zak_cgi_form_element_construct (ZakCgiFormElement *element,
 		{
 			g_hash_table_insert (priv->ht_attrs, "name", g_strdup (id));
 		}
+	zak_form_element_set_name (ZAK_FORM_ELEMENT (element), g_hash_table_lookup (priv->ht_attrs, "name"));
 
 	return;
 }
