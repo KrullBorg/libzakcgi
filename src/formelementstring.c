@@ -124,6 +124,8 @@ zak_cgi_form_element_string_xml_parsing (ZakFormElement *element, xmlNodePtr xml
 
 	ret = FALSE;
 
+	ZAK_CGI_FORM_ELEMENT_CLASS (zak_cgi_form_element_string_parent_class)->xml_parsing (element, xmlnode);
+
 	cur = xmlnode->children;
 	while (cur != NULL)
 		{

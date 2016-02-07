@@ -133,6 +133,8 @@ zak_cgi_form_element_email_xml_parsing (ZakFormElement *element, xmlNodePtr xmln
 
 	id = NULL;
 
+	ZAK_CGI_FORM_ELEMENT_CLASS (zak_cgi_form_element_email_parent_class)->xml_parsing (element, xmlnode);
+
 	ht_attrs = g_hash_table_new (g_str_hash, g_str_equal);
 	g_hash_table_replace (ht_attrs, "type", "email");
 

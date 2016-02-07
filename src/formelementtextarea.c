@@ -128,6 +128,8 @@ zak_cgi_form_element_text_area_xml_parsing (ZakFormElement *element, xmlNodePtr 
 
 	id = NULL;
 
+	ZAK_CGI_FORM_ELEMENT_CLASS (zak_cgi_form_element_text_area_parent_class)->xml_parsing (element, xmlnode);
+
 	ht_attrs = g_hash_table_new (g_str_hash, g_str_equal);
 
 	cur = xmlnode->children;

@@ -50,6 +50,8 @@ static void zak_cgi_form_element_get_property (GObject *object,
 static void zak_cgi_form_element_dispose (GObject *gobject);
 static void zak_cgi_form_element_finalize (GObject *gobject);
 
+static void zak_cgi_form_element_xml_parsing (ZakFormElement *element, xmlNode *xmlnode);
+
 #define ZAK_CGI_FORM_ELEMENT_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), ZAK_CGI_TYPE_FORM_ELEMENT, ZakCgiFormElementPrivate))
 
 typedef struct _ZakCgiFormElementPrivate ZakCgiFormElementPrivate;
@@ -71,6 +73,8 @@ zak_cgi_form_element_class_init (ZakCgiFormElementClass *class)
 	object_class->get_property = zak_cgi_form_element_get_property;
 	object_class->dispose = zak_cgi_form_element_dispose;
 	object_class->finalize = zak_cgi_form_element_finalize;
+
+	class->xml_parsing = zak_cgi_form_element_xml_parsing;
 
 	g_type_class_add_private (object_class, sizeof (ZakCgiFormElementPrivate));
 
@@ -302,4 +306,10 @@ zak_cgi_form_element_finalize (GObject *gobject)
 
 	GObjectClass *parent_class = g_type_class_peek_parent (G_OBJECT_GET_CLASS (gobject));
 	parent_class->finalize (gobject);
+}
+
+static void
+zak_cgi_form_element_xml_parsing (ZakFormElement *element, xmlNode *xmlnode)
+{
+	ZAK_FORM_ELEMENT_GET_CLASS (element)->xml_parsing (element, xmlnode);
 }
