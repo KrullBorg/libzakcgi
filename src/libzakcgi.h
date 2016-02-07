@@ -19,8 +19,9 @@
 #ifndef __LIBZAKCGI_H__
 #define __LIBZAKCGI_H__
 
-#include <libzakcgi/formelementcheck.h>
 #include <libzakcgi/formelement.h>
+#include <libzakcgi/formelementcheck.h>
+#include <libzakcgi/formelementemail.h>
 #include <libzakcgi/formelementhidden.h>
 #include <libzakcgi/formelementpassword.h>
 #include <libzakcgi/formelementselect.h>
