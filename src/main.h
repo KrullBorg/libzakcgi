@@ -55,6 +55,7 @@ GType zak_cgi_main_get_type (void);
 ZakCgiMain *zak_cgi_main_new (void);
 
 void zak_cgi_main_out (const gchar *header, const gchar *body);
+void zak_cgi_main_out_not_null_term (const gchar *header, const gchar *body, guint length);
 
 G_DEPRECATED_FOR (zak_cgi_main_get_env_field)
 GHashTable *zak_cgi_main_get_env (ZakCgiMain *zakcgimain);
