@@ -102,6 +102,7 @@ ZakCgiMain
 
 /**
  * zak_cgi_main_out:
+ * header:
  * body:
  *
  */
@@ -123,6 +124,41 @@ zak_cgi_main_out (const gchar *header, const gchar *body)
 	          _header,
 	          13, 10,
 	          body);
+
+	g_free (_header);
+}
+
+/**
+ * zak_cgi_main_out_not_null_term:
+ * header:
+ * body:
+ * length:
+ *
+ */
+void
+zak_cgi_main_out_not_null_term (const gchar *header, const gchar *body, guint length)
+{
+	guint i;
+	gchar *_header;
+
+	if (header == NULL)
+		{
+			_header = g_strdup (ZAK_CGI_STANDARD_HEADER_HTML);
+		}
+	else
+		{
+			_header = g_strdup (header);
+		}
+
+	g_printf ("%s%c%c\n",
+	          _header,
+	          13, 10);
+
+	for (i = 0; i < length; i++)
+		{
+			g_printf ("%c", body[i]);
+		}
+	g_printf ("\n");
 
 	g_free (_header);
 }
