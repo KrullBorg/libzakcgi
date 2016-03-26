@@ -75,7 +75,10 @@ main (int argc, char *argv[])
 							ht_stdin = zak_cgi_main_parse_stdin (env, boundary[1]);
 							if (g_hash_table_lookup (ht_stdin, "reset") != NULL)
 								{
+									g_warning ("Session: %s", zak_cgi_session_get_value_full (session, "NEW GROUP", "new key"));
+
 									zak_cgi_session_set_value (session, "user_name", NULL);
+									zak_cgi_session_set_value_full (session, "NEW GROUP", NULL, NULL);
 								}
 							else
 								{
@@ -114,6 +117,8 @@ main (int argc, char *argv[])
 				}
 			else
 				{
+					zak_cgi_session_set_value_full (session, "NEW GROUP", "new key", "new value");
+
 					g_string_append (str, ", on the second page.<br/><br/>");
 					g_string_append (str,
 					                 "<form action=\"/cgi-bin/session\" method=\"post\" enctype=\"multipart/form-data\">\n"

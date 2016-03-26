@@ -286,14 +286,15 @@ gchar
 }
 
 /**
- * zak_cgi_session_set_value:
+ * zak_cgi_session_set_value_full:
  * @session:
+ * @group:
  * @name:
  * @value:
  *
  */
 void
-zak_cgi_session_set_value (ZakCgiSession *session, const gchar *name, const gchar *value)
+zak_cgi_session_set_value_full (ZakCgiSession *session, const gchar *group, const gchar *name, const gchar *value)
 {
 	ZakCgiSessionPrivate *priv = ZAK_CGI_SESSION_GET_PRIVATE (session);
 
@@ -301,20 +302,36 @@ zak_cgi_session_set_value (ZakCgiSession *session, const gchar *name, const gcha
 
 	if (priv->kfile != NULL)
 		{
-			if (value == NULL)
+			if (name == NULL)
 				{
 					error = NULL;
-					if (!g_key_file_remove_key (priv->kfile, "SESSION", name, &error)
+					if (!g_key_file_remove_group (priv->kfile, group, &error)
 						|| error != NULL)
 						{
-							g_warning ("Unable to unset key «%s»: %s.",
+							g_warning ("Unable to unset key «%s» in group «%s»: %s.",
 									   name,
+									   group,
 									   error != NULL && error->message != NULL ? error->message : "no details");
 						}
 				}
 			else
 				{
-					g_key_file_set_value (priv->kfile, "SESSION", name, value);
+					if (value == NULL)
+						{
+							error = NULL;
+							if (!g_key_file_remove_key (priv->kfile, group, name, &error)
+								|| error != NULL)
+								{
+									g_warning ("Unable to unset key «%s» in group «%s»: %s.",
+											   name,
+											   group,
+											   error != NULL && error->message != NULL ? error->message : "no details");
+								}
+						}
+					else
+						{
+							g_key_file_set_value (priv->kfile, group, name, value);
+						}
 				}
 
 			error = NULL;
@@ -328,14 +345,15 @@ zak_cgi_session_set_value (ZakCgiSession *session, const gchar *name, const gcha
 }
 
 /**
- * zak_cgi_session_get_value:
+ * zak_cgi_session_get_value_full:
  * @session:
+ * @group:
  * @name:
  *
  * Returns: a value from session.
  */
 gchar
-*zak_cgi_session_get_value (ZakCgiSession *session, const gchar *name)
+*zak_cgi_session_get_value_full (ZakCgiSession *session, const gchar *group, const gchar *name)
 {
 	gchar *ret;
 
@@ -347,16 +365,43 @@ gchar
 	if (priv->kfile != NULL)
 		{
 			error = NULL;
-			ret = g_key_file_get_value (priv->kfile, "SESSION", name, &error);
+			ret = g_key_file_get_value (priv->kfile, group, name, &error);
 			if (error != NULL)
 				{
-					g_warning ("Unable to get session value «%s»: %s",
+					g_warning ("Unable to get session value «%s» in group «%s»: %s",
 							   name,
-							   error->message != NULL ? error->message : "noo details.");
+							   group,
+							   error->message != NULL ? error->message : "no details.");
 				}
 		}
 
 	return ret;
+}
+
+/**
+ * zak_cgi_session_set_value:
+ * @session:
+ * @name:
+ * @value:
+ *
+ */
+void
+zak_cgi_session_set_value (ZakCgiSession *session, const gchar *name, const gchar *value)
+{
+	zak_cgi_session_set_value_full (session, "SESSION", name, value);
+}
+
+/**
+ * zak_cgi_session_get_value:
+ * @session:
+ * @name:
+ *
+ * Returns: a value from session.
+ */
+gchar
+*zak_cgi_session_get_value (ZakCgiSession *session, const gchar *name)
+{
+	return zak_cgi_session_get_value_full (session, "SESSION", name);
 }
 
 /**

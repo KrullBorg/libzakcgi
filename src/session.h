@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Andrea Zagli <azagli@libero.it>
+ * Copyright (C) 2015-2016 Andrea Zagli <azagli@libero.it>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -56,6 +56,9 @@ ZakCgiSession *zak_cgi_session_new (ZakCgiMain *zakcgimain,
 									const gchar *path);
 
 gchar *zak_cgi_session_get_header (ZakCgiSession *session);
+
+void zak_cgi_session_set_value_full (ZakCgiSession *session, const gchar *group, const gchar *name, const gchar *value);
+gchar *zak_cgi_session_get_value_full (ZakCgiSession *session, const gchar *group, const gchar *name);
 
 void zak_cgi_session_set_value (ZakCgiSession *session, const gchar *name, const gchar *value);
 gchar *zak_cgi_session_get_value (ZakCgiSession *session, const gchar *name);
