@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Andrea Zagli <azagli@libero.it>
+ * Copyright (C) 2015-2016 Andrea Zagli <azagli@libero.it>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
@@ -16,7 +16,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <syslog.h>
 #include <string.h>
 
 #include <gio/gio.h>
@@ -61,7 +60,7 @@ main (int argc, char *argv[])
 	                        "\n%s",
 	                        zak_cgi_main_set_cookie ("SECONDO", "il secondo cookie", NULL, NULL, "/", FALSE, TRUE));
 
-	syslog (LOG_MAKEPRI(LOG_SYSLOG, LOG_DEBUG), "header: %s", header->str);
+	g_message ("header: %s", header->str);
 
 	zak_cgi_main_out (header->str, str->str);
 	g_string_free (str, TRUE);
