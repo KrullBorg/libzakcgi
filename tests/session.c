@@ -73,8 +73,14 @@ main (int argc, char *argv[])
 							env = zak_cgi_main_get_stdin (zakcgimain);
 
 							ht_stdin = zak_cgi_main_parse_stdin (env, boundary[1]);
-
-							zak_cgi_session_set_value (session, "user_name", (gchar *)g_value_get_string ((GValue *)g_hash_table_lookup (ht_stdin, "user")));
+							if (g_hash_table_lookup (ht_stdin, "reset") != NULL)
+								{
+									zak_cgi_session_set_value (session, "user_name", NULL);
+								}
+							else
+								{
+									zak_cgi_session_set_value (session, "user_name", (gchar *)g_value_get_string ((GValue *)g_hash_table_lookup (ht_stdin, "user")));
+								}
 
 							g_free (env);
 							g_strfreev (boundary);
@@ -108,7 +114,11 @@ main (int argc, char *argv[])
 				}
 			else
 				{
-					g_string_append (str, ", on the second page.");
+					g_string_append (str, ", on the second page.<br/><br/>");
+					g_string_append (str,
+					                 "<form action=\"/cgi-bin/session\" method=\"post\" enctype=\"multipart/form-data\">\n"
+					                 "<input type=\"submit\" name=\"reset\" value=\"Reset\" />\n"
+					                 "</form>\n");
 				}
 			g_free (method);
 		}

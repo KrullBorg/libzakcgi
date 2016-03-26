@@ -301,13 +301,27 @@ zak_cgi_session_set_value (ZakCgiSession *session, const gchar *name, const gcha
 
 	if (priv->kfile != NULL)
 		{
-			g_key_file_set_value (priv->kfile, "SESSION", name, value);
+			if (value == NULL)
+				{
+					error = NULL;
+					if (!g_key_file_remove_key (priv->kfile, "SESSION", name, &error)
+						|| error != NULL)
+						{
+							g_warning ("Unable to unset key «%s»: %s.",
+									   name,
+									   error != NULL && error->message != NULL ? error->message : "no details");
+						}
+				}
+			else
+				{
+					g_key_file_set_value (priv->kfile, "SESSION", name, value);
+				}
 
 			error = NULL;
 			if (!g_key_file_save_to_file (priv->kfile, g_file_get_path (priv->gfile), &error)
 				|| error != NULL)
 				{
-					g_warning ("Unable to write value tosession file: %s.",
+					g_warning ("Unable to write session file: %s.",
 							   error != NULL && error->message != NULL ? error->message : "no details");
 				}
 		}
@@ -325,12 +339,21 @@ gchar
 {
 	gchar *ret;
 
+	GError *error;
+
 	ZakCgiSessionPrivate *priv = ZAK_CGI_SESSION_GET_PRIVATE (session);
 
 	ret = NULL;
 	if (priv->kfile != NULL)
 		{
-			ret = g_key_file_get_value (priv->kfile, "SESSION", name, NULL);
+			error = NULL;
+			ret = g_key_file_get_value (priv->kfile, "SESSION", name, &error);
+			if (error != NULL)
+				{
+					g_warning ("Unable to get session value «%s»: %s",
+							   name,
+							   error->message != NULL ? error->message : "noo details.");
+				}
 		}
 
 	return ret;
