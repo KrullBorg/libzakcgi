@@ -60,6 +60,10 @@ void zak_cgi_url_connect (ZakCgiUrl *url,
 						  ZakCgiUrlConnectedFunction function,
 						  gpointer user_data);
 
+void zak_cgi_url_connect_not_found (ZakCgiUrl *url,
+									ZakCgiUrlConnectedFunction function,
+									gpointer user_data);
+
 void zak_cgi_url_set_remove_trailing_slashes (ZakCgiUrl *url, gboolean remove);
 gboolean zak_cgi_url_get_remove_trailing_slashes (ZakCgiUrl *url);
 

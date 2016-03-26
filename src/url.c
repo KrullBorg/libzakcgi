@@ -45,6 +45,7 @@ struct _ZakCgiUrlPrivate
 		ZakCgiMain *zakcgimain;
 
 		GHashTable *ht_functions;
+		GPtrArray *ar_not_found;
 
 		gboolean remove_trailing_slashes;
 	};
@@ -72,6 +73,8 @@ zak_cgi_url_init (ZakCgiUrl *zak_cgi_url)
 	priv->zakcgimain = NULL;
 
 	priv->ht_functions = g_hash_table_new (g_str_hash, g_str_equal);
+	priv->ar_not_found = NULL;
+
 	priv->remove_trailing_slashes = FALSE;
 }
 
@@ -120,6 +123,34 @@ zak_cgi_url_connect (ZakCgiUrl *url,
 	g_hash_table_replace (priv->ht_functions, g_strdup (regex), g_ptr_array_ref (ar));
 
 	g_ptr_array_unref (ar);
+}
+
+/**
+ * zak_cgi_url_connect_not_found:
+ * @url:
+ * @function:
+ * @user_data:
+ *
+ */
+void
+zak_cgi_url_connect_not_found (ZakCgiUrl *url,
+							   ZakCgiUrlConnectedFunction function,
+							   gpointer user_data)
+{
+	ZakCgiUrlPrivate *priv = ZAK_CGI_URL_GET_PRIVATE (url);
+
+	if (priv->ar_not_found != NULL)
+		{
+			g_ptr_array_unref (priv->ar_not_found);
+			priv->ar_not_found = NULL;
+		}
+
+	if (function != NULL)
+		{
+			priv->ar_not_found = g_ptr_array_new ();
+			g_ptr_array_add (priv->ar_not_found, function);
+			g_ptr_array_add (priv->ar_not_found, user_data);
+		}
 }
 
 /**
@@ -176,6 +207,8 @@ zak_cgi_url_dispatch (ZakCgiUrl *url)
 	GPtrArray *ar;
 	ZakCgiUrlConnectedFunction function;
 
+	gboolean not_found;
+
 	ZakCgiUrlPrivate *priv = ZAK_CGI_URL_GET_PRIVATE (url);
 
 	ht_env = zak_cgi_main_get_parameters (priv->zakcgimain, NULL);
@@ -199,6 +232,8 @@ zak_cgi_url_dispatch (ZakCgiUrl *url)
 						}
 				}
 
+			not_found = TRUE;
+
 			g_hash_table_iter_init (&iter, priv->ht_functions);
 			while (g_hash_table_iter_next (&iter, &key, &value))
 				{
@@ -219,7 +254,14 @@ zak_cgi_url_dispatch (ZakCgiUrl *url)
 							ar = (GPtrArray *)value;
 							function = g_ptr_array_index (ar, 0);
 							(*function)(minfo, g_ptr_array_index (ar, 1));
+							not_found = FALSE;
 						}
+				}
+
+			if (not_found && priv->ar_not_found != NULL)
+				{
+					function = g_ptr_array_index (priv->ar_not_found, 0);
+					(*function)(NULL, g_ptr_array_index (priv->ar_not_found, 1));
 				}
 		}
 
