@@ -52,6 +52,14 @@ hook (GMatchInfo *minfo, gpointer user_data)
 		}
 }
 
+void
+hook_not_found (GMatchInfo *minfo, gpointer user_data)
+{
+	GString *str = (GString *)user_data;
+
+	g_string_append_printf (str, "NOT FOUND<br/><br/>\n");
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -68,7 +76,9 @@ main (int argc, char *argv[])
 
 	url = zak_cgi_url_new (NULL);
 
-	zak_cgi_url_connect (url, "/(?<controller>[a-zA-Z0-9_-]+)/([a-zA-Z0-9_-]+)", (ZakCgiUrlConnectedFunction)hook, str);
+	zak_cgi_url_connect_not_found (url, (ZakCgiUrlConnectedFunction)hook_not_found, str);
+
+	zak_cgi_url_connect (url, "/(?<controller>[a-z][a-zA-Z0-9_-]+)/([a-zA-Z0-9_-]+)", (ZakCgiUrlConnectedFunction)hook, str);
 
 	zak_cgi_url_set_remove_trailing_slashes (url, TRUE);
 
