@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Andrea Zagli <azagli@libero.it>
+ * Copyright (C) 2015-2016 Andrea Zagli <azagli@libero.it>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
@@ -16,7 +16,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <syslog.h>
 #include <string.h>
 
 #include <gio/gio.h>
@@ -134,7 +133,7 @@ main (int argc, char *argv[])
 
 	env = zak_cgi_main_get_stdin (zakcgimain);
 	zak_cgi_main_parse_stdin (env, NULL);
-	/*syslog (LOG_MAKEPRI(LOG_SYSLOG, LOG_DEBUG), "stdin: %s", env);*/
+	/*g_message ("stdin: %s", env);*/
 	if (env != NULL)
 		{
 			g_string_append_printf (str,

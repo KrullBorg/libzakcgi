@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Andrea Zagli <azagli@libero.it>
+ * Copyright (C) 2015-2016 Andrea Zagli <azagli@libero.it>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
@@ -69,6 +69,8 @@ main (int argc, char *argv[])
 	url = zak_cgi_url_new (NULL);
 
 	zak_cgi_url_connect (url, "/(?<controller>[a-zA-Z0-9_-]+)/([a-zA-Z0-9_-]+)", (ZakCgiUrlConnectedFunction)hook, str);
+
+	zak_cgi_url_set_remove_trailing_slashes (url, TRUE);
 
 	zak_cgi_url_dispatch (url);
 

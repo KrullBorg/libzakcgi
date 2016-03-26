@@ -45,6 +45,8 @@ struct _ZakCgiUrlPrivate
 		ZakCgiMain *zakcgimain;
 
 		GHashTable *ht_functions;
+
+		gboolean remove_trailing_slashes;
 	};
 
 G_DEFINE_TYPE (ZakCgiUrl, zak_cgi_url, G_TYPE_OBJECT)
@@ -70,6 +72,7 @@ zak_cgi_url_init (ZakCgiUrl *zak_cgi_url)
 	priv->zakcgimain = NULL;
 
 	priv->ht_functions = g_hash_table_new (g_str_hash, g_str_equal);
+	priv->remove_trailing_slashes = FALSE;
 }
 
 /**
@@ -92,6 +95,14 @@ ZakCgiUrl
 	return zak_cgi_url;
 }
 
+/**
+ * zak_cgi_url_connect:
+ * @url:
+ * @regex:
+ * @function:
+ * @user_data:
+ *
+ */
 void
 zak_cgi_url_connect (ZakCgiUrl *url,
 					 const gchar *regex,
@@ -111,12 +122,47 @@ zak_cgi_url_connect (ZakCgiUrl *url,
 	g_ptr_array_unref (ar);
 }
 
+/**
+ * zak_cgi_url_set_remove_trailing_slashes:
+ * @url:
+ * @remove:
+ *
+ */
+void
+zak_cgi_url_set_remove_trailing_slashes (ZakCgiUrl *url, gboolean remove)
+{
+	ZakCgiUrlPrivate *priv = ZAK_CGI_URL_GET_PRIVATE (url);
+
+	priv->remove_trailing_slashes = remove;
+}
+
+/**
+ * zak_cgi_url_get_remove_trailing_slashes:
+ * @url:
+ *
+ * Returns:
+ */
+gboolean
+zak_cgi_url_get_remove_trailing_slashes (ZakCgiUrl *url)
+{
+	ZakCgiUrlPrivate *priv = ZAK_CGI_URL_GET_PRIVATE (url);
+
+	return priv->remove_trailing_slashes;
+}
+
+/**
+ * zak_cgi_url_dispatch:
+ * @url:
+ *
+ */
 void
 zak_cgi_url_dispatch (ZakCgiUrl *url)
 {
 	GError *error;
 
-	const gchar *_url;
+	GString *_url;
+
+	gint pos;
 
 	GHashTable *ht_env;
 	GHashTableIter iter;
@@ -133,9 +179,26 @@ zak_cgi_url_dispatch (ZakCgiUrl *url)
 	ZakCgiUrlPrivate *priv = ZAK_CGI_URL_GET_PRIVATE (url);
 
 	ht_env = zak_cgi_main_get_parameters (priv->zakcgimain, NULL);
-	_url = g_value_get_string (g_hash_table_lookup (ht_env, "_url"));
-	if (_url != NULL)
+	_url = g_string_new (g_value_get_string (g_hash_table_lookup (ht_env, "_url")));
+	if (_url != NULL
+		&& g_strcmp0 (_url->str, "") != 0)
 		{
+			if (priv->remove_trailing_slashes)
+				{
+					/* removing trailing slashes */
+					for (pos = _url->len; pos > 0; pos--)
+						{
+							if (_url->str[pos - 1] != '/')
+								{
+									break;
+								}
+						}
+					if (pos > 0 && pos < (gint)_url->len)
+						{
+							g_string_truncate (_url, pos);
+						}
+				}
+
 			g_hash_table_iter_init (&iter, priv->ht_functions);
 			while (g_hash_table_iter_next (&iter, &key, &value))
 				{
@@ -151,7 +214,7 @@ zak_cgi_url_dispatch (ZakCgiUrl *url)
 							return;
 						}
 
-					if (g_regex_match ((const GRegex *)regex, _url, 0, &minfo))
+					if (g_regex_match ((const GRegex *)regex, _url->str, 0, &minfo))
 						{
 							ar = (GPtrArray *)value;
 							function = g_ptr_array_index (ar, 0);
@@ -159,6 +222,8 @@ zak_cgi_url_dispatch (ZakCgiUrl *url)
 						}
 				}
 		}
+
+	g_string_free (_url, TRUE);
 }
 
 /* PRIVATE */
