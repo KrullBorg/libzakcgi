@@ -63,6 +63,14 @@ gchar *zak_cgi_session_get_value_full (ZakCgiSession *session, const gchar *grou
 void zak_cgi_session_set_value (ZakCgiSession *session, const gchar *name, const gchar *value);
 gchar *zak_cgi_session_get_value (ZakCgiSession *session, const gchar *name);
 
+void zak_cgi_session_set_value_full_int (ZakCgiSession *session, const gchar *group, const gchar *name, gint value);
+void zak_cgi_session_set_value_full_double (ZakCgiSession *session, const gchar *group, const gchar *name, gdouble value);
+void zak_cgi_session_set_value_full_boolean (ZakCgiSession *session, const gchar *group, const gchar *name, gboolean value);
+
+gint zak_cgi_session_get_value_full_int (ZakCgiSession *session, const gchar *group, const gchar *name);
+gdouble zak_cgi_session_get_value_full_double (ZakCgiSession *session, const gchar *group, const gchar *name);
+gboolean zak_cgi_session_get_value_full_boolean (ZakCgiSession *session, const gchar *group, const gchar *name);
+
 void zak_cgi_session_close (ZakCgiSession *session);
 
 

@@ -20,6 +20,8 @@
 	#include <config.h>
 #endif
 
+#include <stdlib.h>
+
 #include <gio/gio.h>
 
 #include <string.h>
@@ -402,6 +404,112 @@ gchar
 *zak_cgi_session_get_value (ZakCgiSession *session, const gchar *name)
 {
 	return zak_cgi_session_get_value_full (session, "SESSION", name);
+}
+
+/**
+ * zak_cgi_session_set_value_full_int:
+ * @session:
+ * @group:
+ * @name:
+ * @value:
+ *
+ */
+void
+zak_cgi_session_set_value_full_int (ZakCgiSession *session, const gchar *group, const gchar *name, gint value)
+{
+	gchar *str;
+
+	str = g_strdup_printf ("%d", value);
+	zak_cgi_session_set_value_full (session, group, name, str);
+	g_free (str);
+}
+
+/**
+ * zak_cgi_session_set_value_full_double:
+ * @session:
+ * @group:
+ * @name:
+ * @value:
+ *
+ */
+void
+zak_cgi_session_set_value_full_double (ZakCgiSession *session, const gchar *group, const gchar *name, gdouble value)
+{
+	gchar *str;
+
+	str = g_strdup_printf ("%f", value);
+	zak_cgi_session_set_value_full (session, group, name, str);
+	g_free (str);
+}
+
+/**
+ * zak_cgi_session_set_value_full_boolean:
+ * @session:
+ * @group:
+ * @name:
+ * @value:
+ *
+ */
+void
+zak_cgi_session_set_value_full_boolean (ZakCgiSession *session, const gchar *group, const gchar *name, gboolean value)
+{
+	zak_cgi_session_set_value_full_int (session, group, name, (gint)value);
+}
+
+/**
+ * zak_cgi_session_get_value_full_int:
+ * @session:
+ * @group:
+ * @name:
+ *
+ * Returns:
+ */
+gint
+zak_cgi_session_get_value_full_int (ZakCgiSession *session, const gchar *group, const gchar *name)
+{
+	gchar *str;
+	gint ret;
+
+	str = zak_cgi_session_get_value_full (session, group, name);
+	ret = strtol (str, NULL, 10);
+	g_free (str);
+
+	return ret;
+}
+
+/**
+ * zak_cgi_session_get_value_full_double:
+ * @session:
+ * @group:
+ * @name:
+ *
+ * Returns:
+ */
+gdouble
+zak_cgi_session_get_value_full_double (ZakCgiSession *session, const gchar *group, const gchar *name)
+{
+	gchar *str;
+	gdouble ret;
+
+	str = zak_cgi_session_get_value_full (session, group, name);
+	ret = g_strtod (str, NULL);
+	g_free (str);
+
+	return ret;
+}
+
+/**
+ * zak_cgi_session_get_value_full_boolean:
+ * @session:
+ * @group:
+ * @name:
+ *
+ * Returns:
+ */
+gboolean
+zak_cgi_session_get_value_full_boolean (ZakCgiSession *session, const gchar *group, const gchar *name)
+{
+	return (gboolean)zak_cgi_session_get_value_full_int (session, group, name);
 }
 
 /**

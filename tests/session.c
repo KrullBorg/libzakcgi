@@ -75,7 +75,10 @@ main (int argc, char *argv[])
 							ht_stdin = zak_cgi_main_parse_stdin (env, boundary[1]);
 							if (g_hash_table_lookup (ht_stdin, "reset") != NULL)
 								{
-									g_warning ("Session: %s", zak_cgi_session_get_value_full (session, "NEW GROUP", "new key"));
+									g_warning ("new key: %s", zak_cgi_session_get_value_full (session, "NEW GROUP", "new key"));
+									g_warning ("new int: %d", zak_cgi_session_get_value_full_int (session, "NEW GROUP", "new int"));
+									g_warning ("new double: %f", zak_cgi_session_get_value_full_double (session, "NEW GROUP", "new double"));
+									g_warning ("new boolean: %d", zak_cgi_session_get_value_full_boolean (session, "NEW GROUP", "new boolean"));
 
 									zak_cgi_session_set_value (session, "user_name", NULL);
 									zak_cgi_session_set_value_full (session, "NEW GROUP", NULL, NULL);
@@ -118,6 +121,9 @@ main (int argc, char *argv[])
 			else
 				{
 					zak_cgi_session_set_value_full (session, "NEW GROUP", "new key", "new value");
+					zak_cgi_session_set_value_full_int (session, "NEW GROUP", "new int", 55);
+					zak_cgi_session_set_value_full_double (session, "NEW GROUP", "new double", 123.66);
+					zak_cgi_session_set_value_full_boolean (session, "NEW GROUP", "new boolean", TRUE);
 
 					g_string_append (str, ", on the second page.<br/><br/>");
 					g_string_append (str,
