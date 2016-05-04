@@ -140,14 +140,14 @@ ZakCgiSession
 				}
 			else
 				{
-					val = g_key_file_get_value (priv->kfile, "ZAKCGI", "REMOTE_ADDR", NULL);
+					val = g_key_file_get_string (priv->kfile, "ZAKCGI", "REMOTE_ADDR", NULL);
 					if (val == NULL
 						|| g_strcmp0 (val, g_getenv ("REMOTE_ADDR")) != 0)
 						{
 							zak_cgi_session_close (zak_cgi_session);
 						}
 
-					val = g_key_file_get_value (priv->kfile, "ZAKCGI", "TIMESTAMP", NULL);
+					val = g_key_file_get_string (priv->kfile, "ZAKCGI", "TIMESTAMP", NULL);
 					if (val == NULL)
 						{
 							zak_cgi_session_close (zak_cgi_session);
@@ -325,7 +325,7 @@ gchar
 	ret = NULL;
 	if (priv->kfile != NULL)
 		{
-			ret = g_key_file_get_value (priv->kfile, "SESSION", name, NULL);
+			ret = g_key_file_get_string (priv->kfile, "SESSION", name, NULL);
 		}
 
 	return ret;
