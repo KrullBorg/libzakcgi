@@ -138,14 +138,14 @@ ZakCgiSession
 				}
 			else
 				{
-					val = g_key_file_get_value (priv->kfile, "ZAKCGI", "REMOTE_ADDR", NULL);
+					val = g_key_file_get_string (priv->kfile, "ZAKCGI", "REMOTE_ADDR", NULL);
 					if (val == NULL
 						|| g_strcmp0 (val, g_getenv ("REMOTE_ADDR")) != 0)
 						{
 							zak_cgi_session_close (zak_cgi_session);
 						}
 
-					val = g_key_file_get_value (priv->kfile, "ZAKCGI", "TIMESTAMP", NULL);
+					val = g_key_file_get_string (priv->kfile, "ZAKCGI", "TIMESTAMP", NULL);
 					if (val == NULL)
 						{
 							zak_cgi_session_close (zak_cgi_session);
@@ -367,7 +367,7 @@ gchar
 	if (priv->kfile != NULL)
 		{
 			error = NULL;
-			ret = g_key_file_get_value (priv->kfile, group, name, &error);
+			ret = g_key_file_get_string (priv->kfile, group, name, &error);
 			if (error != NULL)
 				{
 					g_warning ("Unable to get session value «%s» in group «%s»: %s",
