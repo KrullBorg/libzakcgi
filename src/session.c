@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Andrea Zagli <azagli@libero.it>
+ * Copyright (C) 2015-2016 Andrea Zagli <azagli@libero.it>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -181,7 +181,7 @@ ZakCgiSession
 											else
 												{
 													/* update timestamp */
-													g_key_file_set_value (priv->kfile, "ZAKCGI", "TIMESTAMP", g_date_time_format (gdt_now, "%FT%T"));
+													g_key_file_set_string (priv->kfile, "ZAKCGI", "TIMESTAMP", g_date_time_format (gdt_now, "%FT%T"));
 													g_key_file_save_to_file (priv->kfile, g_file_get_path (priv->gfile), NULL);
 												}
 
@@ -267,8 +267,8 @@ gchar
 
 							gdt = g_date_time_new_now_local ();
 
-							g_key_file_set_value (priv->kfile, "ZAKCGI", "REMOTE_ADDR", g_getenv ("REMOTE_ADDR"));
-							g_key_file_set_value (priv->kfile, "ZAKCGI", "TIMESTAMP", g_date_time_format (gdt, "%FT%T"));
+							g_key_file_set_string (priv->kfile, "ZAKCGI", "REMOTE_ADDR", g_getenv ("REMOTE_ADDR"));
+							g_key_file_set_string (priv->kfile, "ZAKCGI", "TIMESTAMP", g_date_time_format (gdt, "%FT%T"));
 							g_key_file_save_to_file (priv->kfile, g_file_get_path (priv->gfile), NULL);
 
 							g_date_time_unref (gdt);
@@ -303,7 +303,7 @@ zak_cgi_session_set_value (ZakCgiSession *session, const gchar *name, const gcha
 
 	if (priv->kfile != NULL)
 		{
-			g_key_file_set_value (priv->kfile, "SESSION", name, value);
+			g_key_file_set_string (priv->kfile, "SESSION", name, value);
 			g_key_file_save_to_file (priv->kfile, g_file_get_path (priv->gfile), NULL);
 		}
 }
