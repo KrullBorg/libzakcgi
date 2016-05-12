@@ -26,6 +26,8 @@
 
 #include <string.h>
 
+#include <libzakformini/libzakformini.h>
+
 #include "session.h"
 
 static void zak_cgi_session_class_init (ZakCgiSessionClass *class);
@@ -54,6 +56,7 @@ struct _ZakCgiSessionPrivate
 		gchar *sid;
 		GFile *gfile;
 		GKeyFile *kfile;
+		ZakFormIniProvider *zakformini;
 	};
 
 G_DEFINE_TYPE (ZakCgiSession, zak_cgi_session, G_TYPE_OBJECT)
@@ -81,6 +84,7 @@ zak_cgi_session_init (ZakCgiSession *zak_cgi_session)
 	priv->path = NULL;
 	priv->gfile = NULL;
 	priv->kfile = NULL;
+	priv->zakformini = NULL;
 }
 
 /**
@@ -510,6 +514,47 @@ gboolean
 zak_cgi_session_get_value_full_boolean (ZakCgiSession *session, const gchar *group, const gchar *name)
 {
 	return (gboolean)zak_cgi_session_get_value_full_int (session, group, name);
+}
+
+static void
+zak_cgi_session_get_form_ini_provider (ZakCgiSession *session)
+{
+	ZakCgiSessionPrivate *priv = ZAK_CGI_SESSION_GET_PRIVATE (session);
+
+	if (priv->zakformini == NULL)
+		{
+			priv->zakformini = zak_form_ini_provider_new_from_gkeyfile (priv->kfile, g_file_get_path (priv->gfile));
+		}
+}
+
+/**
+ * zak_cgi_session_set_from_form:
+ * @session:
+ * @form:
+ *
+ */
+void
+zak_cgi_session_set_from_form (ZakCgiSession *session, ZakFormForm *form)
+{
+	ZakCgiSessionPrivate *priv = ZAK_CGI_SESSION_GET_PRIVATE (session);
+
+	zak_cgi_session_get_form_ini_provider (session);
+	zak_form_form_insert (ZAK_FORM_FORM (form), ZAK_FORM_IPROVIDER (priv->zakformini));
+}
+
+/**
+ * zak_cgi_session_fill_form:
+ * @session:
+ * @form:
+ *
+ */
+void
+zak_cgi_session_fill_form (ZakCgiSession *session, ZakFormForm *form)
+{
+	ZakCgiSessionPrivate *priv = ZAK_CGI_SESSION_GET_PRIVATE (session);
+
+	zak_cgi_session_get_form_ini_provider (session);
+	zak_form_form_load (ZAK_FORM_FORM (form), ZAK_FORM_IPROVIDER (priv->zakformini));
 }
 
 /**
