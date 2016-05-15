@@ -138,6 +138,7 @@ zak_cgi_form_bind (ZakCgiForm *zakcgiform)
 	guint i;
 
 	GValue *gval;
+	gchar *value;
 
 	ZakCgiFormPrivate *priv;
 
@@ -153,7 +154,8 @@ zak_cgi_form_bind (ZakCgiForm *zakcgiform)
 					gval = zak_cgi_main_get_stdin_field (priv->zakcgimain, zak_cgi_form_element_get_id (element));
 					if (gval != NULL)
 						{
-							zak_form_element_set_value (ZAK_FORM_ELEMENT (element), g_value_get_string (gval));
+							value = zak_form_element_unformat (ZAK_FORM_ELEMENT (element), g_value_get_string (gval));
+							zak_form_element_set_value (ZAK_FORM_ELEMENT (element), value);
 						}
 				}
 		}
