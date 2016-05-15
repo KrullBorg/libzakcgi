@@ -20,6 +20,8 @@
 	#include <config.h>
 #endif
 
+#include <libzakutils/libzakutils.h>
+
 #include "commons.h"
 #include "tag.h"
 #include "formelementcheck.h"
@@ -28,8 +30,6 @@ static void zak_cgi_form_element_check_class_init (ZakCgiFormElementCheckClass *
 static void zak_cgi_form_element_check_init (ZakCgiFormElementCheck *zak_cgi_form_element_check);
 
 static gchar *zak_cgi_form_element_check_render (ZakCgiFormElement *element);
-
-static gboolean zak_cgi_form_element_check_is_valid (ZakCgiFormElement *element);
 
 static void zak_cgi_form_element_check_set_property (GObject *object,
                                guint property_id,
@@ -193,9 +193,10 @@ static gchar
 	ht_attrs = klass->get_ht_attrs (element);
 
 	value = zak_form_element_get_value (ZAK_FORM_ELEMENT (element));
-	if (value != NULL)
+	if (value != NULL
+		&& zak_utils_string_to_boolean (value))
 		{
-			g_hash_table_insert (ht_attrs, (gpointer)"value", (gpointer)g_strdup (value));
+			g_hash_table_insert (ht_attrs, (gpointer)"checked", (gpointer)"checked");
 		}
 
 	ret = zak_cgi_tag_tag_ht ("input", zak_cgi_form_element_get_id (element), ht_attrs);
