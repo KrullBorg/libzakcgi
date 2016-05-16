@@ -50,6 +50,8 @@ gchar *zak_cgi_form_element_get_id (ZakCgiFormElement *element);
 
 void zak_cgi_form_element_set_label (ZakCgiFormElement *element, const gchar *label, ...);
 
+void zak_cgi_form_element_bind (ZakCgiFormElement *element, const gchar *value);
+
 gchar *zak_cgi_form_element_render (ZakCgiFormElement *element);
 
 
