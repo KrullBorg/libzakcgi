@@ -516,8 +516,8 @@ zak_cgi_session_get_value_full_boolean (ZakCgiSession *session, const gchar *gro
 	return (gboolean)zak_cgi_session_get_value_full_int (session, group, name);
 }
 
-static void
-zak_cgi_session_get_form_ini_provider (ZakCgiSession *session)
+static ZakFormIniProvider
+*zak_cgi_session_get_form_ini_provider (ZakCgiSession *session)
 {
 	ZakCgiSessionPrivate *priv = ZAK_CGI_SESSION_GET_PRIVATE (session);
 
@@ -525,6 +525,8 @@ zak_cgi_session_get_form_ini_provider (ZakCgiSession *session)
 		{
 			priv->zakformini = zak_form_ini_provider_new_from_gkeyfile (priv->kfile, g_file_get_path (priv->gfile));
 		}
+
+	return priv->zakformini;
 }
 
 /**
@@ -536,10 +538,7 @@ zak_cgi_session_get_form_ini_provider (ZakCgiSession *session)
 void
 zak_cgi_session_set_from_form (ZakCgiSession *session, ZakFormForm *form)
 {
-	ZakCgiSessionPrivate *priv = ZAK_CGI_SESSION_GET_PRIVATE (session);
-
-	zak_cgi_session_get_form_ini_provider (session);
-	zak_form_form_insert (ZAK_FORM_FORM (form), ZAK_FORM_IPROVIDER (priv->zakformini));
+	zak_form_form_insert (ZAK_FORM_FORM (form), ZAK_FORM_IPROVIDER (zak_cgi_session_get_form_ini_provider (session)));
 }
 
 /**
