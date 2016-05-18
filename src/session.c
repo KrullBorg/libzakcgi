@@ -44,6 +44,7 @@ static void zak_cgi_session_dispose (GObject *gobject);
 static void zak_cgi_session_finalize (GObject *gobject);
 
 static gchar *zak_cgi_session_build_filename (ZakCgiSession *session);
+static void zak_cgi_session_create_file (ZakCgiSession *session);
 
 #define ZAK_CGI_SESSION_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), ZAK_CGI_TYPE_SESSION, ZakCgiSessionPrivate))
 
@@ -151,72 +152,13 @@ gchar
 {
 	gchar *ret;
 
-	gchar *filename;
-
-	GError *error;
-	GFileIOStream *iostream;
-
-	guint32 i;
-	gchar *tmp;
-
 	GHashTable *ht_env;
 
 	ZakCgiSessionPrivate *priv = ZAK_CGI_SESSION_GET_PRIVATE (session);
 
 	if (priv->sid == NULL)
 		{
-			/* create new random name */
-
-			i = g_random_int ();
-
-			tmp = g_strdup_printf ("%d", i);
-
-			priv->sid = g_compute_checksum_for_string (G_CHECKSUM_MD5,
-			                                           tmp,
-			                                           strlen (tmp));
-
-			g_free (tmp);
-
-			/* see if file already exists */
-			filename = zak_cgi_session_build_filename (session);
-			priv->gfile = g_file_new_for_path (filename);
-			g_free (filename);
-
-			error = NULL;
-			iostream = g_file_replace_readwrite (priv->gfile, NULL, FALSE, G_FILE_CREATE_PRIVATE, NULL, &error);
-			if (iostream == NULL
-			    || error != NULL)
-				{
-					/* TODO */
-				}
-			else
-				{
-					g_io_stream_close (G_IO_STREAM (iostream), NULL, NULL);
-					g_object_unref (iostream);
-
-					priv->kfile = g_key_file_new ();
-					if (!g_key_file_load_from_file (priv->kfile,
-													g_file_get_path (priv->gfile),
-													G_KEY_FILE_NONE,
-													&error)
-						|| error != NULL)
-						{
-							/* TODO */
-						}
-					else
-						{
-							/* write REMOTE_ADDR and creation timestamp */
-							GDateTime *gdt;
-
-							gdt = g_date_time_new_now_local ();
-
-							g_key_file_set_string (priv->kfile, "ZAKCGI", "REMOTE_ADDR", g_getenv ("REMOTE_ADDR"));
-							g_key_file_set_string (priv->kfile, "ZAKCGI", "TIMESTAMP", g_date_time_format (gdt, "%FT%T"));
-							g_key_file_save_to_file (priv->kfile, g_file_get_path (priv->gfile), NULL);
-
-							g_date_time_unref (gdt);
-						}
-				}
+			zak_cgi_session_create_file (session);
 
 			ht_env = zak_cgi_main_get_env (priv->zakcgimain);
 
@@ -472,4 +414,70 @@ static gchar
 	filename = g_build_filename (priv->path != NULL ? priv->path : g_get_tmp_dir (), priv->sid, NULL);
 
 	return filename;
+}
+
+static void
+zak_cgi_session_create_file (ZakCgiSession *session)
+{
+	gchar *filename;
+
+	GError *error;
+	GFileIOStream *iostream;
+
+	guint32 i;
+	gchar *tmp;
+
+	GDateTime *gdt;
+
+	ZakCgiSessionPrivate *priv = ZAK_CGI_SESSION_GET_PRIVATE (session);
+
+	/* create new random name */
+	i = g_random_int ();
+
+	tmp = g_strdup_printf ("%d", i);
+
+	priv->sid = g_compute_checksum_for_string (G_CHECKSUM_MD5,
+											   tmp,
+											   strlen (tmp));
+
+	g_free (tmp);
+
+	/* see if file already exists */
+	filename = zak_cgi_session_build_filename (session);
+	priv->gfile = g_file_new_for_path (filename);
+	g_free (filename);
+
+	error = NULL;
+	iostream = g_file_replace_readwrite (priv->gfile, NULL, FALSE, G_FILE_CREATE_PRIVATE, NULL, &error);
+	if (iostream == NULL
+		|| error != NULL)
+		{
+			/* TODO */
+		}
+	else
+		{
+			g_io_stream_close (G_IO_STREAM (iostream), NULL, NULL);
+			g_object_unref (iostream);
+
+			priv->kfile = g_key_file_new ();
+			if (!g_key_file_load_from_file (priv->kfile,
+											g_file_get_path (priv->gfile),
+											G_KEY_FILE_NONE,
+											&error)
+				|| error != NULL)
+				{
+					/* TODO */
+				}
+			else
+				{
+					/* write REMOTE_ADDR and creation timestamp */
+					gdt = g_date_time_new_now_local ();
+
+					g_key_file_set_string (priv->kfile, "ZAKCGI", "REMOTE_ADDR", g_getenv ("REMOTE_ADDR"));
+					g_key_file_set_string (priv->kfile, "ZAKCGI", "TIMESTAMP", g_date_time_format (gdt, "%FT%T"));
+					g_key_file_save_to_file (priv->kfile, g_file_get_path (priv->gfile), NULL);
+
+					g_date_time_unref (gdt);
+				}
+		}
 }
