@@ -43,6 +43,8 @@ static void zak_cgi_session_get_property (GObject *object,
 static void zak_cgi_session_dispose (GObject *gobject);
 static void zak_cgi_session_finalize (GObject *gobject);
 
+static gchar *zak_cgi_session_build_filename (ZakCgiSession *session);
+
 #define ZAK_CGI_SESSION_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), ZAK_CGI_TYPE_SESSION, ZakCgiSessionPrivate))
 
 typedef struct _ZakCgiSessionPrivate ZakCgiSessionPrivate;
@@ -149,6 +151,8 @@ gchar
 {
 	gchar *ret;
 
+	gchar *filename;
+
 	GError *error;
 	GFileIOStream *iostream;
 
@@ -174,7 +178,10 @@ gchar
 			g_free (tmp);
 
 			/* see if file already exists */
-			priv->gfile = g_file_new_for_path (g_build_filename (priv->path != NULL ? priv->path : g_get_tmp_dir (), priv->sid, NULL));
+			filename = zak_cgi_session_build_filename (session);
+			priv->gfile = g_file_new_for_path (filename);
+			g_free (filename);
+
 			error = NULL;
 			iostream = g_file_replace_readwrite (priv->gfile, NULL, FALSE, G_FILE_CREATE_PRIVATE, NULL, &error);
 			if (iostream == NULL
@@ -294,7 +301,7 @@ zak_cgi_session_is_valid (ZakCgiSession *session)
 	if (priv->sid != NULL)
 		{
 			/* open the file */
-			filename = g_build_filename (priv->path != NULL ? priv->path : g_get_tmp_dir (), priv->sid, NULL);
+			filename = zak_cgi_session_build_filename (session);
 			priv->gfile = g_file_new_for_path (filename);
 			g_free (filename);
 
@@ -453,4 +460,16 @@ zak_cgi_session_finalize (GObject *gobject)
 
 	GObjectClass *parent_class = g_type_class_peek_parent (G_OBJECT_GET_CLASS (gobject));
 	parent_class->finalize (gobject);
+}
+
+static gchar
+*zak_cgi_session_build_filename (ZakCgiSession *session)
+{
+	gchar *filename;
+
+	ZakCgiSessionPrivate *priv = ZAK_CGI_SESSION_GET_PRIVATE (session);
+
+	filename = g_build_filename (priv->path != NULL ? priv->path : g_get_tmp_dir (), priv->sid, NULL);
+
+	return filename;
 }
