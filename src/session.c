@@ -161,6 +161,8 @@ ZakCgiSession
 				{
 					zak_cgi_session_close (zak_cgi_session);
 				}
+
+			zak_cgi_session_create_file (zak_cgi_session);
 		}
 
 	return zak_cgi_session;
@@ -213,7 +215,10 @@ gchar
 	if (priv->sid == NULL)
 		{
 			zak_cgi_session_create_file (session);
+		}
 
+	if (priv->sid != NULL)
+		{
 			ht_env = zak_cgi_main_get_env (priv->zakcgimain);
 
 			ret = zak_cgi_main_set_cookie ("ZAKCGISID", priv->sid, NULL, NULL,
@@ -512,7 +517,9 @@ zak_cgi_session_create_file (ZakCgiSession *session)
 	if (iostream == NULL
 		|| error != NULL)
 		{
-			/* TODO */
+			g_warning ("Unable to create the session file «%s»: %s.",
+					   filename,
+					   error != NULL && error->message != NULL ? error->message : "no details");
 		}
 	else
 		{
