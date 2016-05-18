@@ -28,6 +28,12 @@
 
 #include "session.h"
 
+enum
+{
+	PROP_0,
+	PROP_MINUTES,
+};
+
 static void zak_cgi_session_class_init (ZakCgiSessionClass *class);
 static void zak_cgi_session_init (ZakCgiSession *zak_cgi_session);
 
@@ -48,6 +54,8 @@ static void zak_cgi_session_create_file (ZakCgiSession *session);
 
 #define ZAK_CGI_SESSION_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), ZAK_CGI_TYPE_SESSION, ZakCgiSessionPrivate))
 
+#define MINUTES_DEFAULT 5
+
 typedef struct _ZakCgiSessionPrivate ZakCgiSessionPrivate;
 struct _ZakCgiSessionPrivate
 	{
@@ -57,6 +65,8 @@ struct _ZakCgiSessionPrivate
 		gchar *sid;
 		GFile *gfile;
 		GKeyFile *kfile;
+
+		gint minutes;
 	};
 
 G_DEFINE_TYPE (ZakCgiSession, zak_cgi_session, G_TYPE_OBJECT)
@@ -71,6 +81,15 @@ zak_cgi_session_class_init (ZakCgiSessionClass *class)
 	object_class->dispose = zak_cgi_session_dispose;
 	object_class->finalize = zak_cgi_session_finalize;
 
+	g_object_class_install_property (object_class, PROP_MINUTES,
+	                                 g_param_spec_int ("minutes",
+													   "Minutes",
+													   "Minutes",
+													   -1,
+													   G_MAXINT,
+													   MINUTES_DEFAULT,
+													   G_PARAM_READABLE));
+
 	g_type_class_add_private (object_class, sizeof (ZakCgiSessionPrivate));
 }
 
@@ -84,6 +103,8 @@ zak_cgi_session_init (ZakCgiSession *zak_cgi_session)
 	priv->path = NULL;
 	priv->gfile = NULL;
 	priv->kfile = NULL;
+
+	priv->minutes = MINUTES_DEFAULT;
 }
 
 /**
@@ -91,13 +112,15 @@ zak_cgi_session_init (ZakCgiSession *zak_cgi_session)
  * @zakcgimain:
  * @base_uri:
  * @path:
+ * @minutes:
  *
  * Returns: the newly created #ZakCgiSession object.
  */
 ZakCgiSession
-*zak_cgi_session_new (ZakCgiMain *zakcgimain,
-					  const gchar *base_uri,
-					  const gchar *path)
+*zak_cgi_session_new_minutes (ZakCgiMain *zakcgimain,
+							  const gchar *base_uri,
+							  const gchar *path,
+							  gint minutes)
 {
 	GHashTable *ht_cookies;
 
@@ -119,6 +142,8 @@ ZakCgiSession
 			priv->path = g_strdup (path);
 		}
 
+	priv->minutes = MAX (-1, minutes);
+
 	ht_cookies = zak_cgi_main_get_cookies (priv->zakcgimain);
 	priv->sid = g_strdup (g_value_get_string (g_hash_table_lookup (ht_cookies, "ZAKCGISID")));
 
@@ -139,6 +164,35 @@ ZakCgiSession
 		}
 
 	return zak_cgi_session;
+}
+
+/**
+ * zak_cgi_session_new:
+ * @zakcgimain:
+ * @base_uri:
+ * @path:
+ *
+ * Returns: the newly created #ZakCgiSession object.
+ */
+ZakCgiSession
+*zak_cgi_session_new (ZakCgiMain *zakcgimain,
+					  const gchar *base_uri,
+					  const gchar *path)
+{
+	return zak_cgi_session_new_minutes (zakcgimain, base_uri, path, MINUTES_DEFAULT);
+}
+
+/**
+ * zak_cgi_session_get_minutes:
+ * @session:
+ *
+ */
+gint
+zak_cgi_session_get_minutes (ZakCgiSession *session)
+{
+	ZakCgiSessionPrivate *priv = ZAK_CGI_SESSION_GET_PRIVATE (session);
+
+	return priv->minutes;
 }
 
 /**
@@ -261,45 +315,47 @@ zak_cgi_session_is_valid (ZakCgiSession *session)
 					if (val != NULL
 						&& g_strcmp0 (val, g_getenv ("REMOTE_ADDR")) == 0)
 						{
-							val = g_key_file_get_string (priv->kfile, "ZAKCGI", "TIMESTAMP", NULL);
-							if (val != NULL)
+							/* if priv->minutes <= -1 the session never expires */
+							if (priv->minutes > -1)
 								{
-									if (g_time_val_from_iso8601 (val, &tval))
+									val = g_key_file_get_string (priv->kfile, "ZAKCGI", "TIMESTAMP", NULL);
+									if (val != NULL)
 										{
-											gdt = g_date_time_new_from_timeval_local (&tval);
-											if (gdt != NULL)
+											if (g_time_val_from_iso8601 (val, &tval))
 												{
-													/* TODO
-													 * add a property for minutes number */
-													gdt_plus = g_date_time_add_minutes (gdt, 5);
-													gdt_now = g_date_time_new_now_local ();
-													if (g_date_time_compare (gdt_plus, gdt_now) > -1)
+													gdt = g_date_time_new_from_timeval_local (&tval);
+													if (gdt != NULL)
 														{
-															ret = TRUE;
+															gdt_plus = g_date_time_add_minutes (gdt, priv->minutes);
+															gdt_now = g_date_time_new_now_local ();
+															if (g_date_time_compare (gdt_plus, gdt_now) > -1)
+																{
+																	ret = TRUE;
+																}
+															else
+																{
+																	g_warning ("Session expired.");
+																}
+
+															g_date_time_unref (gdt_plus);
+															g_date_time_unref (gdt_now);
 														}
 													else
 														{
 															g_warning ("Session expired.");
 														}
 
-													g_date_time_unref (gdt_plus);
-													g_date_time_unref (gdt_now);
+													g_date_time_unref (gdt);
 												}
 											else
 												{
 													g_warning ("Session expired.");
 												}
-
-											g_date_time_unref (gdt);
 										}
 									else
 										{
 											g_warning ("Session expired.");
 										}
-								}
-							else
-								{
-									g_warning ("Session expired.");
 								}
 						}
 					else
@@ -359,9 +415,9 @@ zak_cgi_session_set_property (GObject *object,
 
 	switch (property_id)
 		{
-			default:
-				G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
-				break;
+		default:
+			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+			break;
 		}
 }
 
@@ -376,9 +432,13 @@ zak_cgi_session_get_property (GObject *object,
 
 	switch (property_id)
 		{
-			default:
-				G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
-				break;
+		case PROP_MINUTES:
+			g_value_set_int (value, zak_cgi_session_get_minutes (zak_cgi_session));
+			break;
+
+		default:
+			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+			break;
 		}
 }
 
