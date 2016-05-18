@@ -46,7 +46,7 @@ main (int argc, char *argv[])
 
 	zakcgimain = zak_cgi_main_new ();
 
-	session = zak_cgi_session_new (zakcgimain, NULL, NULL);
+	session = zak_cgi_session_new_minutes (zakcgimain, NULL, NULL, 1);
 
 	str = g_string_new ("<html>\n"
 	                    "<head><title>Session Cookie</title></head>\n"

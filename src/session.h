@@ -53,9 +53,16 @@ struct _ZakCgiSessionClass
 GType zak_cgi_session_get_type (void);
 
 
+ZakCgiSession *zak_cgi_session_new_minutes (ZakCgiMain *zakcgimain,
+											const gchar *base_uri,
+											const gchar *path,
+											gint minutes);
+
 ZakCgiSession *zak_cgi_session_new (ZakCgiMain *zakcgimain,
 									const gchar *base_uri,
 									const gchar *path);
+
+gint zak_cgi_session_get_minutes (ZakCgiSession *session);
 
 gchar *zak_cgi_session_get_header (ZakCgiSession *session);
 
@@ -75,6 +82,8 @@ gboolean zak_cgi_session_get_value_full_boolean (ZakCgiSession *session, const g
 
 void zak_cgi_session_set_from_form (ZakCgiSession *session, ZakFormForm *form);
 void zak_cgi_session_fill_form (ZakCgiSession *session, ZakFormForm *form);
+
+gboolean zak_cgi_session_is_valid (ZakCgiSession *session);
 
 void zak_cgi_session_close (ZakCgiSession *session);
 
