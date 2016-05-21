@@ -20,8 +20,10 @@
 	#include <config.h>
 #endif
 
+#include <sys/stat.h>
 #include <syslog.h>
 
+#include <glib/gstdio.h>
 #include <gio/gio.h>
 
 #include <string.h>
@@ -125,6 +127,7 @@ ZakCgiSession
 	GHashTable *ht_cookies;
 
 	GDateTime *gdt_now;
+	GDateTime *gdt_exp;
 
 	ZakCgiSession *zak_cgi_session;
 	ZakCgiSessionPrivate *priv;
@@ -151,9 +154,14 @@ ZakCgiSession
 		{
 			/* update timestamp */
 			gdt_now = g_date_time_new_now_local ();
+			gdt_exp = g_date_time_add_minutes (gdt_now, priv->minutes);
 			g_key_file_set_string (priv->kfile, "ZAKCGI", "TIMESTAMP", g_date_time_format (gdt_now, "%FT%T"));
+			g_key_file_set_string (priv->kfile, "ZAKCGI", "TIMESTAMP_EXPIRES", g_date_time_format (gdt_exp, "%FT%T"));
 			g_key_file_save_to_file (priv->kfile, g_file_get_path (priv->gfile), NULL);
+			g_date_time_unref (gdt_exp);
 			g_date_time_unref (gdt_now);
+
+			g_chmod (g_file_get_path (priv->gfile), S_IRUSR | S_IWUSR);
 		}
 	else
 		{
@@ -249,6 +257,7 @@ zak_cgi_session_set_value (ZakCgiSession *session, const gchar *name, const gcha
 		{
 			g_key_file_set_string (priv->kfile, "SESSION", name, value);
 			g_key_file_save_to_file (priv->kfile, g_file_get_path (priv->gfile), NULL);
+			g_chmod (g_file_get_path (priv->gfile), S_IRUSR | S_IWUSR);
 		}
 }
 
@@ -473,10 +482,13 @@ static gchar
 *zak_cgi_session_build_filename (ZakCgiSession *session)
 {
 	gchar *filename;
+	gchar *tmp;
 
 	ZakCgiSessionPrivate *priv = ZAK_CGI_SESSION_GET_PRIVATE (session);
 
-	filename = g_build_filename (priv->path != NULL ? priv->path : g_get_tmp_dir (), priv->sid, NULL);
+	tmp = g_strdup_printf ("%s.session", priv->sid);
+	filename = g_build_filename (priv->path != NULL ? priv->path : g_get_tmp_dir (), "zakcgi", tmp, NULL);
+	g_free (tmp);
 
 	return filename;
 }
@@ -487,12 +499,14 @@ zak_cgi_session_create_file (ZakCgiSession *session)
 	gchar *filename;
 
 	GError *error;
-	GFileIOStream *iostream;
+	GFile *gf_path;
+	GFileOutputStream *ostream;
 
 	guint32 i;
 	gchar *tmp;
 
 	GDateTime *gdt;
+	GDateTime *gdt_exp;
 
 	ZakCgiSessionPrivate *priv = ZAK_CGI_SESSION_GET_PRIVATE (session);
 
@@ -507,14 +521,37 @@ zak_cgi_session_create_file (ZakCgiSession *session)
 
 	g_free (tmp);
 
-	/* see if file already exists */
 	filename = zak_cgi_session_build_filename (session);
 	priv->gfile = g_file_new_for_path (filename);
 	g_free (filename);
 
+	/* check if path exists */
+	gf_path = g_file_get_parent (priv->gfile);
+	if (gf_path != NULL)
+		{
+			if (!g_file_query_exists (gf_path, NULL))
+				{
+					tmp = g_file_get_path (gf_path);
+					if (g_mkdir_with_parents (tmp, S_IRWXU) < 0)
+						{
+							g_warning ("Unable to create the session file directory «%s».",
+									   tmp);
+
+							g_free (tmp);
+							g_object_unref (gf_path);
+
+							zak_cgi_session_close (session);
+
+							return;
+						}
+					g_free (tmp);
+				}
+			g_object_unref (gf_path);
+		}
+
 	error = NULL;
-	iostream = g_file_replace_readwrite (priv->gfile, NULL, FALSE, G_FILE_CREATE_PRIVATE, NULL, &error);
-	if (iostream == NULL
+	ostream = g_file_replace (priv->gfile, NULL, FALSE, G_FILE_CREATE_PRIVATE, NULL, &error);
+	if (ostream == NULL
 		|| error != NULL)
 		{
 			g_warning ("Unable to create the session file «%s»: %s.",
@@ -523,8 +560,8 @@ zak_cgi_session_create_file (ZakCgiSession *session)
 		}
 	else
 		{
-			g_io_stream_close (G_IO_STREAM (iostream), NULL, NULL);
-			g_object_unref (iostream);
+			g_output_stream_close (G_OUTPUT_STREAM (ostream), NULL, NULL);
+			g_object_unref (ostream);
 
 			priv->kfile = g_key_file_new ();
 			if (!g_key_file_load_from_file (priv->kfile,
@@ -539,12 +576,17 @@ zak_cgi_session_create_file (ZakCgiSession *session)
 				{
 					/* write REMOTE_ADDR and creation timestamp */
 					gdt = g_date_time_new_now_local ();
+					gdt_exp = g_date_time_add_minutes (gdt, priv->minutes);
 
 					g_key_file_set_string (priv->kfile, "ZAKCGI", "REMOTE_ADDR", g_getenv ("REMOTE_ADDR"));
 					g_key_file_set_string (priv->kfile, "ZAKCGI", "TIMESTAMP", g_date_time_format (gdt, "%FT%T"));
+					g_key_file_set_string (priv->kfile, "ZAKCGI", "TIMESTAMP_EXPIRES", g_date_time_format (gdt_exp, "%FT%T"));
 					g_key_file_save_to_file (priv->kfile, g_file_get_path (priv->gfile), NULL);
 
+					g_date_time_unref (gdt_exp);
 					g_date_time_unref (gdt);
 				}
+
+			g_chmod (g_file_get_path (priv->gfile), S_IRUSR | S_IWUSR);
 		}
 }
