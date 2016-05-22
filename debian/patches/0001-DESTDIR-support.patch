@@ -1,0 +1,32 @@
+From: Andrea Zagli <azagli@libero.it>
+Date: Sun, 22 May 2016 11:09:20 +0200
+Subject: DESTDIR support.
+
+---
+ src/Makefile.am | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/src/Makefile.am b/src/Makefile.am
+index 51b4a6a..d309397 100644
+--- a/src/Makefile.am
++++ b/src/Makefile.am
+@@ -6,7 +6,7 @@ libmodulesext = .so
+ libmodulesdir = $(libdir)
+ endif
+ 
+-libzakformmodulesdir = `pkg-config --variable=modulesdir libzakform`
++libzakformmodulesdir = $(DESTDIR)`pkg-config --variable=modulesdir libzakform`
+ 
+ LIBS = $(ZAKCGI_LIBS)
+ 
+@@ -56,8 +56,8 @@ libzakcgi_include_HEADERS = \
+ libzakcgi_includedir = $(includedir)/libzakcgi
+ 
+ install-exec-hook:
+-	cd $(libzakformmodulesdir) && \
+-	ln -s -f $(libmodulesdir)/libzakcgi$(libmodulesext) .
++	mkdir -p $(libzakformmodulesdir)
++	ln -s -f -t $(libzakformmodulesdir) $(libmodulesdir)/libzakcgi$(libmodulesext)
+ 
+ uninstall-hook:
+ 	rm -f $(libzakformmodulesdir)/libzakcgi$(libmodulesext)
