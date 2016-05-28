@@ -1,0 +1,40 @@
+From: Andrea Zagli <azagli@libero.it>
+Date: Wed, 25 May 2016 16:43:59 +0200
+Subject: Glib old version.
+
+---
+ configure.ac    | 8 ++++----
+ libzakcgi.pc.in | 2 +-
+ 2 files changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/configure.ac b/configure.ac
+index a02bbbf..b4aaa88 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -30,10 +30,10 @@ AC_PROG_LIBTOOL
+ AC_PROG_RANLIB
+ 
+ # Checks for libraries.
+-PKG_CHECK_MODULES(ZAKCGI, [glib-2.0 >= 2.36
+-                           gobject-2.0 >= 2.36
+-                           gio-2.0 >= 2.36
+-                           gio-unix-2.0 >= 2.36
++PKG_CHECK_MODULES(ZAKCGI, [glib-2.0 >= 2.32
++                           gobject-2.0 >= 2.32
++                           gio-2.0 >= 2.32
++                           gio-unix-2.0 >= 2.32
+                            libzakform >= 0.0.1
+                            libzakformini])
+ 
+diff --git a/libzakcgi.pc.in b/libzakcgi.pc.in
+index 5b736f5..4b9bac0 100644
+--- a/libzakcgi.pc.in
++++ b/libzakcgi.pc.in
+@@ -6,6 +6,6 @@ includedir=@includedir@
+ Name: @PACKAGE_NAME@
+ Description: Class for CGI.
+ Version: @PACKAGE_VERSION@
+-Requires: glib-2.0 >= 2.36 gobject-2.0 gio-2.0 gio-unix-2.0 libzakform libzakformini
++Requires: glib-2.0 >= 2.32 gobject-2.0 gio-2.0 gio-unix-2.0 libzakform libzakformini
+ Libs: -L${libdir} -lzakcgi
+ Cflags: -I${includedir}

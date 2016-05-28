@@ -1,0 +1,18 @@
+From: Andrea Zagli <azagli@libero.it>
+Date: Sat, 28 May 2016 11:00:30 +0200
+Subject: No tests.
+
+---
+ Makefile.am | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/Makefile.am b/Makefile.am
+index c87fc2b..72c9b28 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -1,4 +1,4 @@
+-SUBDIRS = src tests
++SUBDIRS = src
+ 
+ ACLOCAL_AMFLAGS = -I m4
+ 
