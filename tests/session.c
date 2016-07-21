@@ -19,6 +19,17 @@
 #include <main.h>
 #include <session.h>
 
+void
+ht_foreach (gpointer key,
+			gpointer value,
+			gpointer user_data)
+{
+	GString *str = (GString *)user_data;
+
+	g_string_append_printf (str, "<tr><td>%s</td><td>%s</td></tr>\n",
+							(gchar *)key, g_value_get_string ((GValue *)value));
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -41,6 +52,10 @@ main (int argc, char *argv[])
 	                    "<head><title>Session Cookie</title></head>\n"
 	                    "<body>\n");
 
+	g_string_append_printf (str, "<table>\n");
+	zak_cgi_main_cookies_foreach (zakcgimain, ht_foreach, str);
+	g_string_append_printf (str, "</table>\n");
+
 	ht = zak_cgi_main_get_env (zakcgimain);
 	if (ht != NULL)
 		{
@@ -56,8 +71,20 @@ main (int argc, char *argv[])
 							env = zak_cgi_main_get_stdin (zakcgimain);
 
 							ht_stdin = zak_cgi_main_parse_stdin (env, boundary[1]);
+							if (g_hash_table_lookup (ht_stdin, "reset") != NULL)
+								{
+									g_warning ("new key: %s", zak_cgi_session_get_value_full (session, "NEW GROUP", "new key"));
+									g_warning ("new int: %d", zak_cgi_session_get_value_full_int (session, "NEW GROUP", "new int"));
+									g_warning ("new double: %f", zak_cgi_session_get_value_full_double (session, "NEW GROUP", "new double"));
+									g_warning ("new boolean: %d", zak_cgi_session_get_value_full_boolean (session, "NEW GROUP", "new boolean"));
 
-							zak_cgi_session_set_value (session, "user_name", (gchar *)g_value_get_string ((GValue *)g_hash_table_lookup (ht_stdin, "user")));
+									zak_cgi_session_set_value (session, "user_name", NULL);
+									zak_cgi_session_set_value_full (session, "NEW GROUP", NULL, NULL);
+								}
+							else
+								{
+									zak_cgi_session_set_value (session, "user_name", (gchar *)g_value_get_string ((GValue *)g_hash_table_lookup (ht_stdin, "user")));
+								}
 
 							g_free (env);
 							g_strfreev (boundary);
@@ -91,7 +118,16 @@ main (int argc, char *argv[])
 				}
 			else
 				{
-					g_string_append (str, ", on the second page.");
+					zak_cgi_session_set_value_full (session, "NEW GROUP", "new key", "new value");
+					zak_cgi_session_set_value_full_int (session, "NEW GROUP", "new int", 55);
+					zak_cgi_session_set_value_full_double (session, "NEW GROUP", "new double", 123.66);
+					zak_cgi_session_set_value_full_boolean (session, "NEW GROUP", "new boolean", TRUE);
+
+					g_string_append (str, ", on the second page.<br/><br/>");
+					g_string_append (str,
+					                 "<form action=\"/cgi-bin/session\" method=\"post\" enctype=\"multipart/form-data\">\n"
+					                 "<input type=\"submit\" name=\"reset\" value=\"Reset\" />\n"
+					                 "</form>\n");
 				}
 			g_free (method);
 		}

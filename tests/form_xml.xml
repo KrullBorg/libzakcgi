@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<zakform>
+
+  <element type="zak_cgi_form_element_text">
+	<id>first</id>
+	<label>The Label for first</label>
+	<filter type="zak_form_element_filter_trim"></filter>
+	<validator type="zak_form_element_validator_regex">^blahblahblah$</validator>
+  </element>
+
+  <element type="zak_cgi_form_element_check">
+	<id>chk</id>
+	<label>The checkbox</label>
+  </element>
+
+  <element type="zak_cgi_form_element_string">
+	<string>&lt;h1&gt;big big big&lt;/h1&gt;</string>
+  </element>
+
+  <element type="zak_cgi_form_element_password">
+	<id>pws</id>
+	<label>The password</label>
+  </element>
+
+  <element type="zak_cgi_form_element_text_area">
+	<id>txtarea</id>
+	<label>The Text Area</label>
+  </element>
+
+  <element type="zak_cgi_form_element_select">
+	<id>slc</id>
+	<option id="1">first</option>
+	<option id="2">second</option>
+	<option id="3">third</option>
+  </element>
+
+  <element type="zak_cgi_form_element_hidden">
+	<id>hdn</id>
+  </element>
+
+  <element type="zak_cgi_form_element_submit">
+	<id>submit</id>
+	<zak-cgi-content>Submit</zak-cgi-content>
+  </element>
+
+</zakform>

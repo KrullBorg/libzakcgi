@@ -33,7 +33,10 @@ main (int argc, char *argv[])
 									  NULL));
 
 	g_string_append_printf (str, "%s<br/>\n", zak_cgi_tag_tag ("textarea", "textarea",
-									  "content", "the content of the text area",
+									  "zak-cgi-content", "the content of the text area",
+									  NULL));
+
+	g_string_append_printf (str, "%s<br/>\n", zak_cgi_tag_tag ("textarea", "textarea-nocont",
 									  NULL));
 
 	g_string_append_printf (str, "%s<br/>\n", zak_cgi_tag_img ("theimage", "src", "pippo.png", NULL));
@@ -46,19 +49,19 @@ main (int argc, char *argv[])
 	g_string_append_printf (select_content,
 							zak_cgi_tag_tag ("option", NULL,
 											 "value", "1",
-											 "content", "One",
+											 "zak-cgi-content", "One",
 											 NULL));
 	g_string_append_printf (select_content,
 							zak_cgi_tag_tag ("option", NULL,
 											 "value", "2",
-											 "content", "Two",
+											 "zak-cgi-content", "Two",
 											 NULL));
 	g_string_append_printf (select_content,
 							zak_cgi_tag_tag ("option", NULL,
 											 "value", "3",
-											 "content", "Three",
+											 "zak-cgi-content", "Three",
 											 NULL));
-	g_string_append_printf (str, "%s<br/>\n", zak_cgi_tag_tag ("select", "idselect", "content", select_content->str, NULL));
+	g_string_append_printf (str, "%s<br/>\n", zak_cgi_tag_tag ("select", "idselect", "zak-cgi-content", select_content->str, NULL));
 
 	zak_cgi_main_out (NULL, str->str);
 

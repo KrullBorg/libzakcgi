@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Andrea Zagli <azagli@libero.it>
+ * Copyright (C) 2015-2016 Andrea Zagli <azagli@libero.it>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,11 +21,11 @@
 #endif
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <locale.h>
 
-#include <syslog.h>
-
+#include <glib/gprintf.h>
 #include <gio/gunixinputstream.h>
 
 #include "main.h"
@@ -393,7 +393,7 @@ GValue
 
 	ht = _zak_cgi_main_get_cookies (zakcgimain);
 
-	ret = g_hash_table_lookup (ht, cookie);
+	ret = (GValue *)g_hash_table_lookup (ht, cookie);
 
 	return ret;
 }
@@ -684,14 +684,14 @@ GHashTable
 }
 
 /**
- * zak_cgi_main_get_param:
+ * zak_cgi_main_get_parameter:
  * @zakcgimain:
  * @param:
  *
  * Returns:
  */
 GValue
-*zak_cgi_main_get_param  (ZakCgiMain *zakcgimain, const gchar *param)
+*zak_cgi_main_get_parameter  (ZakCgiMain *zakcgimain, const gchar *param)
 {
 	ZakCgiMainPrivate *priv;
 
@@ -779,11 +779,11 @@ gchar
 					                         &error);
 					if (l != bytesread)
 						{
-							syslog (LOG_MAKEPRI(LOG_SYSLOG, LOG_DEBUG), "error reading stdin: bytes read differ from content length");
+							g_warning ("Error reading stdin: bytes read differ from content length");
 						}
 					if (error != NULL)
 						{
-							syslog (LOG_MAKEPRI(LOG_SYSLOG, LOG_DEBUG), "error reading stdin: %s", error->message);
+							g_warning ("Error reading stdin: %s", error->message);
 						}
 				}
 		}
@@ -1168,13 +1168,13 @@ zak_cgi_main_redirect (ZakCgiMain *zakcgimain, const gchar *url)
 		{
 			ht_env = _zak_cgi_main_get_env (zakcgimain);
 
-			value = (gchar *)g_hash_table_lookup (ht_env, "REQUEST_SCHEME");
+			value = (gchar *)g_value_get_string ((GValue *)g_hash_table_lookup (ht_env, "REQUEST_SCHEME"));
 			if (value != NULL)
 				{
 					g_string_append_printf (_url, "%s://", value);
 				}
 
-			value = (gchar *)g_hash_table_lookup (ht_env, "SERVER_NAME");
+			value = (gchar *)g_value_get_string ((GValue *)g_hash_table_lookup (ht_env, "SERVER_NAME"));
 			if (value != NULL)
 				{
 					if (!g_str_has_prefix (url, value))
@@ -1187,7 +1187,7 @@ zak_cgi_main_redirect (ZakCgiMain *zakcgimain, const gchar *url)
 				{
 					/* TODO
 					 * test if it starts with a domain, ex: www.google.it */
-					value = (gchar *)g_hash_table_lookup (ht_env, "CONTEXT_PREFIX");
+					value = (gchar *)g_value_get_string ((GValue *)g_hash_table_lookup (ht_env, "CONTEXT_PREFIX"));
 					if (value != NULL)
 						{
 							if (!g_str_has_prefix (url, value))

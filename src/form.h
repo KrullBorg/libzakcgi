@@ -16,18 +16,39 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __ZAK_CGI_COMMONS_H__
-#define __ZAK_CGI_COMMONS_H__
+#ifndef __ZAK_CGI_FORM_H__
+#define __ZAK_CGI_FORM_H__
 
 
 #include <glib-object.h>
 
+#include <libzakform/libzakform.h>
+
 #include "main.h"
+#include "formelement.h"
 
 
-GHashTable *zak_cgi_commons_valist_to_ghashtable (va_list ap);
-
-gchar *zak_cgi_commons_ghashtable_to_str_attrs (GHashTable *ht);
+G_BEGIN_DECLS
 
 
-#endif /* __ZAK_CGI_COMMONS_H__ */
+#define ZAK_CGI_TYPE_FORM zak_cgi_form_get_type ()
+G_DECLARE_DERIVABLE_TYPE (ZakCgiForm, zak_cgi_form, ZAK_CGI, FORM, ZakFormForm)
+
+struct _ZakCgiFormClass
+{
+	ZakFormFormClass parent_class;
+};
+
+
+ZakCgiForm *zak_cgi_form_new (ZakCgiMain *zakcgimain, ...);
+
+void zak_cgi_form_bind (ZakCgiForm *zakcgiform);
+
+gchar *zak_cgi_form_render_start (ZakCgiForm *zakcgiform);
+gchar *zak_cgi_form_render (ZakCgiForm *zakcgiform);
+
+
+G_END_DECLS
+
+
+#endif /* __ZAK_CGI_FORM_H__ */

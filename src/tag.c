@@ -61,7 +61,7 @@ static gchar
 	g_hash_table_iter_init (&iter, ht_attrs);
 	while (g_hash_table_iter_next (&iter, &key, &val))
 		{
-			if (g_strcmp0 ((gchar *)key, "content") == 0)
+			if (g_strcmp0 ((gchar *)key, "zak-cgi-content") == 0)
 				{
 					with_content = TRUE;
 					if (content != NULL)
@@ -92,7 +92,14 @@ static gchar
 									id);
 		}
 
-	if (!with_content)
+	if (!with_content
+			 && g_strcmp0 (name, "textarea") == 0)
+		{
+			g_string_append_printf (str,
+									"></%s>",
+									name);
+		}
+	else if (!with_content)
 		{
 			g_string_append (str,
 							 " />");
@@ -248,7 +255,7 @@ gchar
  */
 gchar
 *zak_cgi_tag_file_ht (const gchar *id,
-				   GHashTable *ht)
+					  GHashTable *ht)
 {
 	g_hash_table_insert (ht, "type", "file");
 
@@ -274,7 +281,7 @@ gchar
 	ht = zak_cgi_commons_valist_to_ghashtable (ap);
 	g_hash_table_insert (ht, "type", "submit");
 
-	return zak_cgi_tag_tag_attrs ("input", id, ht);
+	return zak_cgi_tag_tag_attrs ("button", id, ht);
 }
 
 
@@ -291,5 +298,5 @@ gchar
 {
 	g_hash_table_insert (ht, "type", "submit");
 
-	return zak_cgi_tag_tag_attrs ("input", id, ht);
+	return zak_cgi_tag_tag_attrs ("button", id, ht);
 }

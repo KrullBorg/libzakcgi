@@ -20,13 +20,18 @@
 	#include <config.h>
 #endif
 
+#include <stdlib.h>
+
 #include <sys/stat.h>
 #include <syslog.h>
+
 
 #include <glib/gstdio.h>
 #include <gio/gio.h>
 
 #include <string.h>
+
+#include <libzakformini/libzakformini.h>
 
 #include "session.h"
 
@@ -67,6 +72,7 @@ struct _ZakCgiSessionPrivate
 		gchar *sid;
 		GFile *gfile;
 		GKeyFile *kfile;
+		ZakFormIniProvider *zakformini;
 
 		gint minutes;
 	};
@@ -105,6 +111,7 @@ zak_cgi_session_init (ZakCgiSession *zak_cgi_session)
 	priv->path = NULL;
 	priv->gfile = NULL;
 	priv->kfile = NULL;
+	priv->zakformini = NULL;
 
 	priv->minutes = MINUTES_DEFAULT;
 }
@@ -124,13 +131,13 @@ ZakCgiSession
 							  const gchar *path,
 							  gint minutes)
 {
-	GHashTable *ht_cookies;
-
 	GDateTime *gdt_now;
 	GDateTime *gdt_exp;
 
 	ZakCgiSession *zak_cgi_session;
 	ZakCgiSessionPrivate *priv;
+
+	g_return_val_if_fail (ZAK_CGI_IS_MAIN (zakcgimain), NULL);
 
 	zak_cgi_session = ZAK_CGI_SESSION (g_object_new (zak_cgi_session_get_type (), NULL));
 
@@ -145,10 +152,8 @@ ZakCgiSession
 			priv->path = g_strdup (path);
 		}
 
+	priv->sid = g_strdup ((gchar *)g_value_get_string (zak_cgi_main_get_cookie (priv->zakcgimain, "ZAKCGISID")));
 	priv->minutes = MAX (-1, minutes);
-
-	ht_cookies = zak_cgi_main_get_cookies (priv->zakcgimain);
-	priv->sid = g_strdup (g_value_get_string (g_hash_table_lookup (ht_cookies, "ZAKCGISID")));
 
 	if (zak_cgi_session_is_valid (zak_cgi_session))
 		{
@@ -230,12 +235,106 @@ gchar
 			ht_env = zak_cgi_main_get_env (priv->zakcgimain);
 
 			ret = zak_cgi_main_set_cookie ("ZAKCGISID", priv->sid, NULL, NULL,
-										   priv->base_uri != NULL ? priv->base_uri : (gchar *)g_hash_table_lookup (ht_env, "CONTEXT_PREFIX"),
+										   priv->base_uri != NULL ? priv->base_uri : (gchar *)g_value_get_string (zak_cgi_main_get_env_field (priv->zakcgimain, "CONTEXT_PREFIX")),
 										   FALSE, FALSE);
 		}
 	else
 		{
 			ret = g_strdup ("");
+		}
+
+	return ret;
+}
+
+/**
+ * zak_cgi_session_set_value_full:
+ * @session:
+ * @group:
+ * @name:
+ * @value:
+ *
+ */
+void
+zak_cgi_session_set_value_full (ZakCgiSession *session, const gchar *group, const gchar *name, const gchar *value)
+{
+	ZakCgiSessionPrivate *priv = ZAK_CGI_SESSION_GET_PRIVATE (session);
+
+	GError *error;
+
+	if (priv->kfile != NULL)
+		{
+			if (name == NULL)
+				{
+					error = NULL;
+					if (!g_key_file_remove_group (priv->kfile, group, &error)
+						|| error != NULL)
+						{
+							g_warning ("Unable to unset key «%s» in group «%s»: %s.",
+									   name,
+									   group,
+									   error != NULL && error->message != NULL ? error->message : "no details");
+						}
+				}
+			else
+				{
+					if (value == NULL)
+						{
+							error = NULL;
+							if (!g_key_file_remove_key (priv->kfile, group, name, &error)
+								|| error != NULL)
+								{
+									g_warning ("Unable to unset key «%s» in group «%s»: %s.",
+											   name,
+											   group,
+											   error != NULL && error->message != NULL ? error->message : "no details");
+								}
+						}
+					else
+						{
+							g_key_file_set_string (priv->kfile, group, name, value);
+						}
+				}
+
+			error = NULL;
+			if (!g_key_file_save_to_file (priv->kfile, g_file_get_path (priv->gfile), &error)
+				|| error != NULL)
+				{
+					g_warning ("Unable to write session file: %s.",
+							   error != NULL && error->message != NULL ? error->message : "no details");
+				}
+			g_chmod (g_file_get_path (priv->gfile), S_IRUSR | S_IWUSR);
+		}
+}
+
+/**
+ * zak_cgi_session_get_value_full:
+ * @session:
+ * @group:
+ * @name:
+ *
+ * Returns: a value from session.
+ */
+gchar
+*zak_cgi_session_get_value_full (ZakCgiSession *session, const gchar *group, const gchar *name)
+{
+	gchar *ret;
+
+	GError *error;
+
+	ZakCgiSessionPrivate *priv = ZAK_CGI_SESSION_GET_PRIVATE (session);
+
+	ret = NULL;
+	if (priv->kfile != NULL)
+		{
+			error = NULL;
+			ret = g_key_file_get_string (priv->kfile, group, name, &error);
+			if (error != NULL)
+				{
+					g_warning ("Unable to get session value «%s» in group «%s»: %s",
+							   name,
+							   group,
+							   error->message != NULL ? error->message : "no details.");
+				}
 		}
 
 	return ret;
@@ -251,14 +350,7 @@ gchar
 void
 zak_cgi_session_set_value (ZakCgiSession *session, const gchar *name, const gchar *value)
 {
-	ZakCgiSessionPrivate *priv = ZAK_CGI_SESSION_GET_PRIVATE (session);
-
-	if (priv->kfile != NULL)
-		{
-			g_key_file_set_string (priv->kfile, "SESSION", name, value);
-			g_key_file_save_to_file (priv->kfile, g_file_get_path (priv->gfile), NULL);
-			g_chmod (g_file_get_path (priv->gfile), S_IRUSR | S_IWUSR);
-		}
+	zak_cgi_session_set_value_full (session, "SESSION", name, value);
 }
 
 /**
@@ -271,17 +363,153 @@ zak_cgi_session_set_value (ZakCgiSession *session, const gchar *name, const gcha
 gchar
 *zak_cgi_session_get_value (ZakCgiSession *session, const gchar *name)
 {
-	gchar *ret;
+	return zak_cgi_session_get_value_full (session, "SESSION", name);
+}
 
-	ZakCgiSessionPrivate *priv = ZAK_CGI_SESSION_GET_PRIVATE (session);
+/**
+ * zak_cgi_session_set_value_full_int:
+ * @session:
+ * @group:
+ * @name:
+ * @value:
+ *
+ */
+void
+zak_cgi_session_set_value_full_int (ZakCgiSession *session, const gchar *group, const gchar *name, gint value)
+{
+	gchar *str;
 
-	ret = NULL;
-	if (priv->kfile != NULL)
-		{
-			ret = g_key_file_get_string (priv->kfile, "SESSION", name, NULL);
-		}
+	str = g_strdup_printf ("%d", value);
+	zak_cgi_session_set_value_full (session, group, name, str);
+	g_free (str);
+}
+
+/**
+ * zak_cgi_session_set_value_full_double:
+ * @session:
+ * @group:
+ * @name:
+ * @value:
+ *
+ */
+void
+zak_cgi_session_set_value_full_double (ZakCgiSession *session, const gchar *group, const gchar *name, gdouble value)
+{
+	gchar *str;
+
+	str = g_strdup_printf ("%f", value);
+	zak_cgi_session_set_value_full (session, group, name, str);
+	g_free (str);
+}
+
+/**
+ * zak_cgi_session_set_value_full_boolean:
+ * @session:
+ * @group:
+ * @name:
+ * @value:
+ *
+ */
+void
+zak_cgi_session_set_value_full_boolean (ZakCgiSession *session, const gchar *group, const gchar *name, gboolean value)
+{
+	zak_cgi_session_set_value_full_int (session, group, name, (gint)value);
+}
+
+/**
+ * zak_cgi_session_get_value_full_int:
+ * @session:
+ * @group:
+ * @name:
+ *
+ * Returns:
+ */
+gint
+zak_cgi_session_get_value_full_int (ZakCgiSession *session, const gchar *group, const gchar *name)
+{
+	gchar *str;
+	gint ret;
+
+	str = zak_cgi_session_get_value_full (session, group, name);
+	ret = strtol (str, NULL, 10);
+	g_free (str);
 
 	return ret;
+}
+
+/**
+ * zak_cgi_session_get_value_full_double:
+ * @session:
+ * @group:
+ * @name:
+ *
+ * Returns:
+ */
+gdouble
+zak_cgi_session_get_value_full_double (ZakCgiSession *session, const gchar *group, const gchar *name)
+{
+	gchar *str;
+	gdouble ret;
+
+	str = zak_cgi_session_get_value_full (session, group, name);
+	ret = g_strtod (str, NULL);
+	g_free (str);
+
+	return ret;
+}
+
+/**
+ * zak_cgi_session_get_value_full_boolean:
+ * @session:
+ * @group:
+ * @name:
+ *
+ * Returns:
+ */
+gboolean
+zak_cgi_session_get_value_full_boolean (ZakCgiSession *session, const gchar *group, const gchar *name)
+{
+	return (gboolean)zak_cgi_session_get_value_full_int (session, group, name);
+}
+
+static ZakFormIniProvider
+*zak_cgi_session_get_form_ini_provider (ZakCgiSession *session)
+{
+	ZakCgiSessionPrivate *priv = ZAK_CGI_SESSION_GET_PRIVATE (session);
+
+	if (priv->zakformini == NULL)
+		{
+			priv->zakformini = zak_form_ini_provider_new_from_gkeyfile (priv->kfile, g_file_get_path (priv->gfile));
+		}
+
+	return priv->zakformini;
+}
+
+/**
+ * zak_cgi_session_set_from_form:
+ * @session:
+ * @form:
+ *
+ */
+void
+zak_cgi_session_set_from_form (ZakCgiSession *session, ZakFormForm *form)
+{
+	zak_form_form_insert (ZAK_FORM_FORM (form), ZAK_FORM_IPROVIDER (zak_cgi_session_get_form_ini_provider (session)));
+}
+
+/**
+ * zak_cgi_session_fill_form:
+ * @session:
+ * @form:
+ *
+ */
+void
+zak_cgi_session_fill_form (ZakCgiSession *session, ZakFormForm *form)
+{
+	ZakCgiSessionPrivate *priv = ZAK_CGI_SESSION_GET_PRIVATE (session);
+
+	zak_cgi_session_get_form_ini_provider (session);
+	zak_form_form_load (ZAK_FORM_FORM (form), ZAK_FORM_IPROVIDER (priv->zakformini));
 }
 
 /**

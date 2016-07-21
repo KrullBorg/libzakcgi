@@ -52,6 +52,8 @@ Rules-quot
 *.csv
 tests/cookies
 tests/env
+tests/form
+tests/form_xml
 tests/querystring
 tests/redirect
 tests/session

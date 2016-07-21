@@ -64,11 +64,11 @@ main (int argc, char *argv[])
 
 	g_string_append_printf (str,
 							"<tr><td>IS GET?</td><td>%s</td></tr>\n",
-							zak_cgi_main_is_get (NULL) ? "TRUE" : "FALSE");
+							zak_cgi_main_is_get (main) ? "TRUE" : "FALSE");
 
 	g_string_append_printf (str,
 							"<tr><td>IS POST?</td><td>%s</td></tr>\n",
-							zak_cgi_main_is_post (NULL) ? "TRUE" : "FALSE");
+							zak_cgi_main_is_post (main) ? "TRUE" : "FALSE");
 
 	zak_cgi_main_parameters_foreach (main, ht_foreach, str);
 

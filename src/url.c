@@ -20,8 +20,6 @@
 	#include <config.h>
 #endif
 
-#include <syslog.h>
-
 #include "url.h"
 
 static void zak_cgi_url_class_init (ZakCgiUrlClass *class);
@@ -240,14 +238,14 @@ zak_cgi_url_dispatch (ZakCgiUrl *url)
 			while (g_hash_table_iter_next (&iter, &key, &value))
 				{
 					error = NULL;
-					str_regex = g_strdup_printf ("%s$", (gchar *)key);
+					str_regex = g_strdup_printf ("^%s$", (gchar *)key);
 					regex = g_regex_new (str_regex, 0, 0, &error);
 					g_free (str_regex);
 					if (regex == NULL
 						|| error != NULL)
 						{
-							syslog (LOG_MAKEPRI(LOG_SYSLOG, LOG_DEBUG), "Error on creating regex: %s.",
-									error->message != NULL ? error->message : "no details");
+							g_warning ("Error on creating regex: %s.",
+									   error->message != NULL ? error->message : "no details");
 							return;
 						}
 
