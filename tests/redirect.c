@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Andrea Zagli <azagli@libero.it>
+ * Copyright (C) 2015-2016 Andrea Zagli <azagli@libero.it>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
@@ -22,12 +22,10 @@ int
 main (int argc, char *argv[])
 {
 	ZakCgiMain *zakcgi_main;
-	GHashTable *ht_env;
 
 	zakcgi_main = zak_cgi_main_new ();
-	ht_env = zak_cgi_main_get_parameters (zakcgi_main, NULL);
 
-	zak_cgi_main_redirect (zakcgi_main, (gchar *)g_value_get_string ((GValue *)(const gchar *)g_hash_table_lookup (ht_env, "redirectto")));
+	zak_cgi_main_redirect (zakcgi_main, (gchar *)g_value_get_string (zak_cgi_main_get_parameter (zakcgi_main, "redirectto")));
 
 	return 0;
 }

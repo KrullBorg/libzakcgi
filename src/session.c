@@ -221,8 +221,6 @@ gchar
 {
 	gchar *ret;
 
-	GHashTable *ht_env;
-
 	ZakCgiSessionPrivate *priv = ZAK_CGI_SESSION_GET_PRIVATE (session);
 
 	if (priv->sid == NULL)
@@ -232,8 +230,6 @@ gchar
 
 	if (priv->sid != NULL)
 		{
-			ht_env = zak_cgi_main_get_env (priv->zakcgimain);
-
 			ret = zak_cgi_main_set_cookie ("ZAKCGISID", priv->sid, NULL, NULL,
 										   priv->base_uri != NULL ? priv->base_uri : (gchar *)g_value_get_string (zak_cgi_main_get_env_field (priv->zakcgimain, "CONTEXT_PREFIX")),
 										   FALSE, FALSE);
