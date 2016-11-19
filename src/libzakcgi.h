@@ -19,6 +19,7 @@
 #ifndef __LIBZAKCGI_H__
 #define __LIBZAKCGI_H__
 
+#include <libzakcgi/commons.h>
 #include <libzakcgi/formelement.h>
 #include <libzakcgi/formelementcheck.h>
 #include <libzakcgi/formelementemail.h>

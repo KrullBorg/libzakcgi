@@ -33,9 +33,7 @@ AC_PROG_RANLIB
 PKG_CHECK_MODULES(ZAKCGI, [glib-2.0 >= 2.36
                            gobject-2.0 >= 2.36
                            gio-2.0 >= 2.36
-                           gio-unix-2.0 >= 2.36
-                           libzakform >= 0.0.1
-                           libzakformini])
+                           gio-unix-2.0 >= 2.36])
 
 AC_SUBST(ZAKCGI_CFLAGS)
 AC_SUBST(ZAKCGI_LIBS)

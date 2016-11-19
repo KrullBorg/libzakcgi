@@ -31,8 +31,6 @@
 
 #include <string.h>
 
-#include <libzakformini/libzakformini.h>
-
 #include "session.h"
 
 enum
@@ -72,7 +70,6 @@ struct _ZakCgiSessionPrivate
 		gchar *sid;
 		GFile *gfile;
 		GKeyFile *kfile;
-		ZakFormIniProvider *zakformini;
 
 		gint minutes;
 	};
@@ -111,7 +108,6 @@ zak_cgi_session_init (ZakCgiSession *zak_cgi_session)
 	priv->path = NULL;
 	priv->gfile = NULL;
 	priv->kfile = NULL;
-	priv->zakformini = NULL;
 
 	priv->minutes = MINUTES_DEFAULT;
 }
@@ -468,46 +464,6 @@ zak_cgi_session_get_value_full_boolean (ZakCgiSession *session, const gchar *gro
 	return (gboolean)zak_cgi_session_get_value_full_int (session, group, name);
 }
 
-static ZakFormIniProvider
-*zak_cgi_session_get_form_ini_provider (ZakCgiSession *session)
-{
-	ZakCgiSessionPrivate *priv = ZAK_CGI_SESSION_GET_PRIVATE (session);
-
-	if (priv->zakformini == NULL)
-		{
-			priv->zakformini = zak_form_ini_provider_new_from_gkeyfile (priv->kfile, g_file_get_path (priv->gfile));
-		}
-
-	return priv->zakformini;
-}
-
-/**
- * zak_cgi_session_set_from_form:
- * @session:
- * @form:
- *
- */
-void
-zak_cgi_session_set_from_form (ZakCgiSession *session, ZakFormForm *form)
-{
-	zak_form_form_insert (ZAK_FORM_FORM (form), ZAK_FORM_IPROVIDER (zak_cgi_session_get_form_ini_provider (session)));
-}
-
-/**
- * zak_cgi_session_fill_form:
- * @session:
- * @form:
- *
- */
-void
-zak_cgi_session_fill_form (ZakCgiSession *session, ZakFormForm *form)
-{
-	ZakCgiSessionPrivate *priv = ZAK_CGI_SESSION_GET_PRIVATE (session);
-
-	zak_cgi_session_get_form_ini_provider (session);
-	zak_form_form_load (ZAK_FORM_FORM (form), ZAK_FORM_IPROVIDER (priv->zakformini));
-}
-
 /**
  * zak_cgi_session_is_valid:
  * @session:
@@ -611,6 +567,34 @@ zak_cgi_session_is_valid (ZakCgiSession *session)
 		}
 
 	return ret;
+}
+
+/**
+ * zak_cgi_session_get_gkeyfile:
+ * @session:
+ *
+ * Returns:
+ */
+GKeyFile
+*zak_cgi_session_get_gkeyfile (ZakCgiSession *session)
+{
+	ZakCgiSessionPrivate *priv = ZAK_CGI_SESSION_GET_PRIVATE (session);
+
+	return priv->kfile;
+}
+
+/**
+ * zak_cgi_session_get_gfile:
+ * @session:
+ *
+ * Returns:
+ */
+GFile
+*zak_cgi_session_get_gfile (ZakCgiSession *session)
+{
+	ZakCgiSessionPrivate *priv = ZAK_CGI_SESSION_GET_PRIVATE (session);
+
+	return priv->gfile;
 }
 
 /**
