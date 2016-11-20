@@ -1,7 +1,7 @@
 Source: libzakcgi
 Priority: optional
 Maintainer: Andrea Zagli <azagli@libero.it>
-Build-Depends: debhelper (>=9), intltool, pkg-config, gtk-doc-tools, libzakformini-dev, gnome-common
+Build-Depends: debhelper (>=9), intltool, pkg-config, gtk-doc-tools, gnome-common, libglib2.0-dev
 Standards-Version: 3.9.8
 Section: libs
 Homepage: http://saetta.ns0.it
@@ -11,7 +11,7 @@ Homepage: http://saetta.ns0.it
 Package: libzakcgi-dev
 Section: libdevel
 Architecture: any
-Depends: libzakcgi (= ${binary:Version}), ${misc:Depends}, libzakformini-dev
+Depends: libzakcgi (= ${binary:Version}), ${misc:Depends}, libglib2.0-dev
 Description: A GLib framework to create (Fast)CGI programs - dev files
  A library that is a mini-framework, based on gobject/glib, to create CGI (and FastCGI) programs.
  .
@@ -19,6 +19,6 @@ Description: A GLib framework to create (Fast)CGI programs - dev files
 
 Package: libzakcgi
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, libzakformini
+Depends: ${shlibs:Depends}, ${misc:Depends}, libglib2.0-0
 Description: A GLib framework to create (Fast)CGI programs
  A library that is a mini-framework, based on gobject/glib, to create CGI (and FastCGI) programs.

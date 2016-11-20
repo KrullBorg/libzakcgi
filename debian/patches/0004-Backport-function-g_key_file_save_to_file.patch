@@ -7,10 +7,10 @@ Subject: Backport function g_key_file_save_to_file.
  1 file changed, 22 insertions(+)
 
 diff --git a/src/session.c b/src/session.c
-index aa8d0bc..81100a7 100644
+index 2c064f0..89403c3 100644
 --- a/src/session.c
 +++ b/src/session.c
-@@ -116,6 +116,28 @@ zak_cgi_session_init (ZakCgiSession *zak_cgi_session)
+@@ -112,6 +112,28 @@ zak_cgi_session_init (ZakCgiSession *zak_cgi_session)
  	priv->minutes = MINUTES_DEFAULT;
  }
  

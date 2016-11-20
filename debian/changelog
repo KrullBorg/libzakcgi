@@ -1,5 +1,10 @@
-libzakcgi (0.0.1-1) UNRELEASED; urgency=medium
+libzakcgi (0.0.1-1~1.gbp355c78) UNRELEASED; urgency=medium
 
+  ** SNAPSHOT build @355c78403baf915bf08ac6764fc1a4edd6661304 **
+
+  [ Andrea Zagli ]
   * Initial release
+
+  [ tux ]
 
  -- Andrea Zagli <azagli@libero.it>  Sun, 22 May 2016 09:49:11 +0200
