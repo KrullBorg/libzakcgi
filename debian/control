@@ -1,7 +1,7 @@
 Source: libzakcgi
 Priority: optional
 Maintainer: Andrea Zagli <azagli@libero.it>
-Build-Depends: debhelper (>=9), intltool, pkg-config, gtk-doc-tools, libzakformini-dev, gnome-common
+Build-Depends: debhelper (>=9), intltool, pkg-config, gnome-common, gtk-doc-tools, libzakformini-dev, gnome-common
 Standards-Version: 3.9.8
 Section: libs
 Homepage: http://saetta.ns0.it
