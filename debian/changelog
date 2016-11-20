@@ -1,6 +1,6 @@
-libzakcgi (0.0.1-1~1.gbp33521d) UNRELEASED; urgency=medium
+libzakcgi (0.0.1-1~2.gbp9d2f66) UNRELEASED; urgency=medium
 
-  ** SNAPSHOT build @33521d0eb5d132d76a779f714d022165cf0ec88c **
+  ** SNAPSHOT build @9d2f66d569e076b3cf944170b26cae9b234decd0 **
 
   [ Andrea Zagli ]
   * Initial release
