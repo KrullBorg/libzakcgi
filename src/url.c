@@ -195,7 +195,6 @@ zak_cgi_url_dispatch (ZakCgiUrl *url)
 
 	gint pos;
 
-	GHashTable *ht_env;
 	GHashTableIter iter;
 	gpointer key;
 	gpointer value;
@@ -211,8 +210,7 @@ zak_cgi_url_dispatch (ZakCgiUrl *url)
 
 	ZakCgiUrlPrivate *priv = ZAK_CGI_URL_GET_PRIVATE (url);
 
-	ht_env = zak_cgi_main_get_parameters (priv->zakcgimain, NULL);
-	_url = g_string_new (g_value_get_string (g_hash_table_lookup (ht_env, "_url")));
+	_url = g_string_new (g_value_get_string (zak_cgi_main_get_parameter (priv->zakcgimain, "_url")));
 	if (_url != NULL
 		&& g_strcmp0 (_url->str, "") != 0)
 		{

@@ -21,8 +21,7 @@
 
 
 #include <glib-object.h>
-
-#include <libzakform/libzakform.h>
+#include <gio/gio.h>
 
 #include "main.h"
 
@@ -80,10 +79,10 @@ gint zak_cgi_session_get_value_full_int (ZakCgiSession *session, const gchar *gr
 gdouble zak_cgi_session_get_value_full_double (ZakCgiSession *session, const gchar *group, const gchar *name);
 gboolean zak_cgi_session_get_value_full_boolean (ZakCgiSession *session, const gchar *group, const gchar *name);
 
-void zak_cgi_session_set_from_form (ZakCgiSession *session, ZakFormForm *form);
-void zak_cgi_session_fill_form (ZakCgiSession *session, ZakFormForm *form);
-
 gboolean zak_cgi_session_is_valid (ZakCgiSession *session);
+
+GKeyFile *zak_cgi_session_get_gkeyfile (ZakCgiSession *session);
+GFile *zak_cgi_session_get_gfile (ZakCgiSession *session);
 
 void zak_cgi_session_close (ZakCgiSession *session);
 
