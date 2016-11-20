@@ -19,6 +19,17 @@
 #include <url.h>
 
 void
+ht_foreach (gpointer key,
+			gpointer value,
+			gpointer user_data)
+{
+	GString *str = (GString *)user_data;
+
+	g_string_append_printf (str, "<tr><td>%s</td><td>%s</td></tr>\n",
+							(gchar *)key, g_value_get_string ((GValue *)value));
+}
+
+void
 hook (GMatchInfo *minfo, gpointer user_data)
 {
 	GString *str = (GString *)user_data;
@@ -63,16 +74,22 @@ hook_not_found (GMatchInfo *minfo, gpointer user_data)
 int
 main (int argc, char *argv[])
 {
-	gchar *env;
+	ZakCgiMain *zakcgimain;
+	GString *env;
 	ZakCgiUrl *url;
 	GString *str;
+
+	zakcgimain = zak_cgi_main_new ();
 
 	str = g_string_new ("<html>\n"
 	                    "<head><title>Url</title></head>\n"
 	                    "<body>\n"
 						"FROM INIT<br/><br/>\n");
 
-	env = zak_cgi_main_dump_env (NULL);
+	env = g_string_new ("");
+	g_string_append_printf (env, "<table>\n");
+	zak_cgi_main_env_foreach (zakcgimain, ht_foreach, env);
+	g_string_append_printf (env, "</table>\n");
 
 	url = zak_cgi_url_new (NULL);
 
@@ -84,10 +101,12 @@ main (int argc, char *argv[])
 
 	zak_cgi_url_dispatch (url);
 
-	g_string_append_printf (str, "<hr/>%s</body>\n", env);
+	g_string_append_printf (str, "<hr/>%s</body>\n", env->str);
 
 	zak_cgi_main_out (NULL, str->str);
+
 	g_string_free (str, TRUE);
+	g_string_free (env, TRUE);
 
 	return 0;
 }

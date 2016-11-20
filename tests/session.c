@@ -33,7 +33,6 @@ ht_foreach (gpointer key,
 int
 main (int argc, char *argv[])
 {
-	gchar *env;
 	gchar *username;
 	GString *str;
 	GString *header;
@@ -56,41 +55,29 @@ main (int argc, char *argv[])
 	zak_cgi_main_cookies_foreach (zakcgimain, ht_foreach, str);
 	g_string_append_printf (str, "</table>\n");
 
-	ht = zak_cgi_main_get_env (zakcgimain);
-	if (ht != NULL)
+	method = (gchar *)g_value_get_string (zak_cgi_main_get_env_field (zakcgimain, "REQUEST_METHOD"));
+	if (g_strcmp0 (method, "POST") == 0)
 		{
-			method = g_value_get_string (g_hash_table_lookup (ht, "REQUEST_METHOD"));
-			if (g_strcmp0 (method, "POST") == 0)
+			const gchar *content_type = g_getenv ("CONTENT_TYPE");
+			gchar **splitted = g_strsplit (content_type, ";", -1);
+			if (g_strv_length (splitted) == 2)
 				{
-					const gchar *content_type = g_getenv ("CONTENT_TYPE");
-					gchar **splitted = g_strsplit (content_type, ";", -1);
-					if (g_strv_length (splitted) == 2)
+					if (zak_cgi_main_get_stdin_field (zakcgimain, "reset") != NULL)
 						{
-							gchar **boundary = g_strsplit (splitted[1], "=", 2);
+							g_warning ("new key: %s", zak_cgi_session_get_value_full (session, "NEW GROUP", "new key"));
+							g_warning ("new int: %d", zak_cgi_session_get_value_full_int (session, "NEW GROUP", "new int"));
+							g_warning ("new double: %f", zak_cgi_session_get_value_full_double (session, "NEW GROUP", "new double"));
+							g_warning ("new boolean: %d", zak_cgi_session_get_value_full_boolean (session, "NEW GROUP", "new boolean"));
 
-							env = zak_cgi_main_get_stdin (zakcgimain);
-
-							ht_stdin = zak_cgi_main_parse_stdin (env, boundary[1]);
-							if (g_hash_table_lookup (ht_stdin, "reset") != NULL)
-								{
-									g_warning ("new key: %s", zak_cgi_session_get_value_full (session, "NEW GROUP", "new key"));
-									g_warning ("new int: %d", zak_cgi_session_get_value_full_int (session, "NEW GROUP", "new int"));
-									g_warning ("new double: %f", zak_cgi_session_get_value_full_double (session, "NEW GROUP", "new double"));
-									g_warning ("new boolean: %d", zak_cgi_session_get_value_full_boolean (session, "NEW GROUP", "new boolean"));
-
-									zak_cgi_session_set_value (session, "user_name", NULL);
-									zak_cgi_session_set_value_full (session, "NEW GROUP", NULL, NULL);
-								}
-							else
-								{
-									zak_cgi_session_set_value (session, "user_name", (gchar *)g_value_get_string ((GValue *)g_hash_table_lookup (ht_stdin, "user")));
-								}
-
-							g_free (env);
-							g_strfreev (boundary);
+							zak_cgi_session_set_value (session, "user_name", NULL);
+							zak_cgi_session_set_value_full (session, "NEW GROUP", NULL, NULL);
 						}
-					g_strfreev (splitted);
+					else
+						{
+							zak_cgi_session_set_value (session, "user_name", (gchar *)g_value_get_string (zak_cgi_main_get_stdin_field (zakcgimain, "user")));
+						}
 				}
+			g_strfreev (splitted);
 		}
 
 	username = zak_cgi_session_get_value (session, "user_name");
