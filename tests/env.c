@@ -120,7 +120,7 @@ main (int argc, char *argv[])
 	GHashTable *ht;
 	gchar *env;
 	gchar *ret;
-	sleep(10);
+
 	zakcgimain = zak_cgi_main_new ();
 
 	str = g_string_new ("<html>\n"

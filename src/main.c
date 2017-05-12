@@ -853,11 +853,6 @@ static GPtrArray
 							b->length = length;
 
 							g_ptr_array_add (ar, b);
-
-							FILE *fout;
-							fout = fopen (g_strdup_printf("/tmp/blocco_loop_%d_%d_%d.txt", i, start, length), "wb");
-							fwrite (b->data, b->length, 1, fout);
-							fclose (fout);
 						}
 
 					start = i;
@@ -876,21 +871,6 @@ static GPtrArray
 			b->length = length;
 
 			g_ptr_array_add (ar, b);
-
-			FILE *fout;
-			fout = fopen (g_strdup_printf("/tmp/blocco_loop_%d_%d_%d.txt", i, start, length), "wb");
-			fwrite (b->data, b->length, 1, fout);
-			fclose (fout);
-		}
-
-	for (i = 0; i < ar->len; i++)
-		{
-			FILE *fout;
-			Block *b;
-			b = (Block *)g_ptr_array_index(ar, i);
-			fout = fopen (g_strdup_printf("/tmp/blocco_%d.txt", i), "wb");
-			fwrite (b->data, b->length, 1, fout);
-			fclose (fout);
 		}
 
 	return ar;
