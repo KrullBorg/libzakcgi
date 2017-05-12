@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2016 Andrea Zagli <azagli@libero.it>
+ * Copyright (C) 2015-2017 Andrea Zagli <azagli@libero.it>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
@@ -42,15 +42,15 @@ gchar
 
 					iostream = NULL;
 					gfile = g_file_new_tmp (g_strdup_printf ("cgi-XXXXXX-%s", zgfile->name),
-											&iostream,
-											NULL);
+					                        &iostream,
+					                        NULL);
 
 					ostream = g_io_stream_get_output_stream (G_IO_STREAM (iostream));
 					g_output_stream_write (ostream,
-										   zgfile->content,
-										   zgfile->size,
-										   NULL,
-										   NULL);
+					                       zgfile->content,
+					                       zgfile->size,
+					                       NULL,
+					                       NULL);
 					g_output_stream_close (ostream, NULL, NULL);
 
 					g_object_unref (ostream);
@@ -71,19 +71,19 @@ gchar
 
 void
 ht_foreach (gpointer key,
-			gpointer value,
-			gpointer user_data)
+            gpointer value,
+            gpointer user_data)
 {
 	GString *str = (GString *)user_data;
 
 	g_string_append_printf (str, "<tr><td>%s</td><td>%s</td></tr>\n",
-							(gchar *)key, g_value_get_string ((GValue *)value));
+	                        (gchar *)key, g_value_get_string ((GValue *)value));
 }
 
 void
 ht_foreach_stdin (gpointer key,
-			gpointer value,
-			gpointer user_data)
+                  gpointer value,
+                  gpointer user_data)
 {
 	gchar *ret;
 
@@ -97,8 +97,8 @@ ht_foreach_stdin (gpointer key,
 				{
 					ret = get_value (g_ptr_array_index (ar, i));
 					g_string_append_printf (str,
-											"<tr><td>%s[%d]</td><td>%s</td></tr>\n",
-											(gchar *)key, i, ret);
+					                        "<tr><td>%s[%d]</td><td>%s</td></tr>\n",
+					                        (gchar *)key, i, ret);
 					g_free (ret);
 				}
 		}
@@ -106,8 +106,8 @@ ht_foreach_stdin (gpointer key,
 		{
 			ret = get_value ((GValue *)value);
 			g_string_append_printf (str,
-									"<tr><td>%s</td><td>%s</td></tr>\n",
-									(gchar *)key, ret);
+			                        "<tr><td>%s</td><td>%s</td></tr>\n",
+			                        (gchar *)key, ret);
 			g_free (ret);
 		}
 }
@@ -120,12 +120,12 @@ main (int argc, char *argv[])
 	GHashTable *ht;
 	gchar *env;
 	gchar *ret;
-
+	sleep(10);
 	zakcgimain = zak_cgi_main_new ();
 
 	str = g_string_new ("<html>\n"
-						"<head><title>Environment variables</title></head>\n"
-						"<body>\n");
+	                    "<head><title>Environment variables</title></head>\n"
+	                    "<body>\n");
 
 	g_string_append_printf (str, "<table>\n");
 	zak_cgi_main_env_foreach (zakcgimain, ht_foreach, str);
@@ -136,19 +136,19 @@ main (int argc, char *argv[])
 	if (env != NULL)
 		{
 			g_string_append_printf (str,
-									"<br/><hr/>\n"
-									"%s",
-									env);
+			                        "<br/><hr/>\n"
+			                        "%s",
+			                        env);
 
 			g_string_append_printf (str, "<br/><hr/>\n<table>\n");
 
 			g_string_append_printf (str,
-									"<tr><td>IS GET?</td><td>%s</td></tr>\n",
-									zak_cgi_main_is_get (zakcgimain) ? "TRUE" : "FALSE");
+			                        "<tr><td>IS GET?</td><td>%s</td></tr>\n",
+			                        zak_cgi_main_is_get (zakcgimain) ? "TRUE" : "FALSE");
 
 			g_string_append_printf (str,
-									"<tr><td>IS POST?</td><td>%s</td></tr>\n",
-									zak_cgi_main_is_post (zakcgimain) ? "TRUE" : "FALSE");
+			                        "<tr><td>IS POST?</td><td>%s</td></tr>\n",
+			                        zak_cgi_main_is_post (zakcgimain) ? "TRUE" : "FALSE");
 
 			zak_cgi_main_stdin_foreach (zakcgimain, ht_foreach_stdin, str);
 
