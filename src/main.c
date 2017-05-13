@@ -786,11 +786,6 @@ gchar
 						{
 							g_warning ("Error reading stdin: %s", error->message);
 						}
-
-					FILE *fout;
-					fout = fopen("/tmp/pippo.txt", "wb");
-					fwrite(ret, bytesread, 1, fout);
-					fclose(fout);
 				}
 		}
 
@@ -828,11 +823,6 @@ static GPtrArray
 	ar = g_ptr_array_new ();
 
 	l_delimiter = strlen (_delimiter);
-
-	FILE *fout;
-	fout = fopen ("/tmp/buf.txt", "wb");
-	fwrite (buf, l, 1, fout);
-	fclose (fout);
 
 	start = 0;
 	for (i = 0; i < (l - (l_delimiter + 2)); i++)
