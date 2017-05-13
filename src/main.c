@@ -875,6 +875,7 @@ ZakCgiFile
 	b->name = g_strdup (file->name);
 	b->content = g_memdup (file->content, file->size);
 	b->size = file->size;
+	b->content_type = g_strdup (file->content_type);
 
 	return b;
 }
@@ -884,6 +885,7 @@ zak_cgi_file_free (ZakCgiFile *file)
 {
 	g_free (file->name);
 	g_free (file->content);
+	g_free (file->content_type);
 	g_slice_free (ZakCgiFile, file);
 }
 
@@ -898,15 +900,35 @@ static GHashTable
 	const gchar *env;
 
 	guint l;
-	guint i;
-	guint bytesread;
 
 	gchar *_boundary;
 
-	gchar *line;
 	gchar *content_disposition;
 	gchar *content_type;
 	gchar *tmp;
+
+	gchar **splitted;
+
+	GPtrArray *content_splitted;
+	guint j;
+
+	gchar **boundary_splitted;
+
+	gchar **v_content;
+	gchar **parts;
+	guint l_v_content;
+
+	gchar *param_name;
+	gchar *param_name_file;
+	gchar *param_value;
+	guint file_l;
+
+	GValue *gval;
+	GValue *gval_tmp;
+
+	ZakCgiFile *zgfile;
+
+	GPtrArray *ar;
 
 	ht = NULL;
 
@@ -924,13 +946,13 @@ static GHashTable
 			return ht;
 		}
 
-	content_type = (gchar *)g_getenv ("CONTENT_TYPE");
+	content_type = g_strdup (g_getenv ("CONTENT_TYPE"));
 	if (content_type == NULL)
 		{
 			return ht;
 		}
 
-	gchar **splitted = g_strsplit (content_type, ";", -1);
+	splitted = g_strsplit (content_type, ";", -1);
 	if (g_strcmp0 (content_type, "") == 0
 		|| g_strcmp0 (splitted[0], "application/x-www-form-urlencoded") == 0)
 		{
@@ -938,14 +960,10 @@ static GHashTable
 		}
 	else if (g_strcmp0 (splitted[0], "multipart/form-data") == 0)
 		{
-			GPtrArray *content_splitted;
-			guint j;
-			guint l_boundary;
-
 			if (g_strv_length (splitted) > 1
 				&& boundary == NULL)
 				{
-					gchar **boundary_splitted = g_strsplit (splitted[1], "=", 2);
+					boundary_splitted = g_strsplit (splitted[1], "=", 2);
 					_boundary = g_strdup_printf ("--%s", boundary_splitted[1]);
 					g_strfreev (boundary_splitted);
 				}
@@ -957,8 +975,6 @@ static GHashTable
 						}
 				}
 			g_strfreev (splitted);
-
-			l_boundary = strlen (_boundary);
 
 			ht = g_hash_table_new (g_str_hash, g_str_equal);
 
@@ -986,22 +1002,6 @@ static GHashTable
 					dataistream = g_data_input_stream_new (G_INPUT_STREAM (mstream));
 
 					/* content-disposition */
-					gchar **v_content;
-					gchar **parts;
-					guint l_v_content;
-
-					gchar *param_name;
-					gchar *param_name_file;
-					gchar *param_value;
-					guint file_l;
-
-					GValue *gval;
-					GValue *gval_tmp;
-
-					ZakCgiFile *zgfile;
-
-					GPtrArray *ar;
-
 					error = NULL;
 					content_disposition = g_data_input_stream_read_line (dataistream, NULL, NULL, &error);
 					if (content_disposition == NULL)
@@ -1030,12 +1030,29 @@ static GHashTable
 							g_strfreev (parts);
 
 							/* content-type */
-							content_type = g_data_input_stream_read_line (dataistream, &length, NULL, NULL);
-							g_free (content_type);
+							/* if (content_type != NULL) */
+							/* 	{ */
+							/* 		g_free (content_type); */
+							/* 		content_type = NULL; */
+							/* 	} */
+							tmp = g_data_input_stream_read_line (dataistream, &length, NULL, NULL);
+							tmp[length - 1] = '\0';
+							parts = g_strsplit (tmp, ": ", -1);
+							content_type = g_strdup (parts[1]);
+							g_strfreev (parts);
+							g_free (tmp);
+						}
+					else
+						{
+							/* if (content_type != NULL) */
+							/* 	{ */
+							/* 		g_free (content_type); */
+									content_type = NULL;
+							/* 	} */
 						}
 
-					g_strfreev (v_content);
 					g_free (content_disposition);
+					g_strfreev (v_content);
 
 					/* empty */
 					g_data_input_stream_read_line (dataistream, NULL, NULL, NULL);
@@ -1074,6 +1091,8 @@ static GHashTable
 							zgfile->name = g_strdup (param_name_file);
 							zgfile->content = g_memdup (param_value, file_l - 2);
 							zgfile->size = file_l - 2;
+							zgfile->content_type = g_strdup (content_type);
+							g_free (content_type);
 
 							g_value_init (gval_tmp, ZAK_CGI_TYPE_FILE);
 							g_value_take_boxed (gval_tmp, zgfile);

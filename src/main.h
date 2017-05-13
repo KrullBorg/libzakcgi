@@ -92,6 +92,7 @@ struct _ZakCgiFile
 	gchar *name;
 	gchar *content;
 	guint size;
+	gchar *content_type;
 };
 
 #define ZAK_CGI_TYPE_FILE (zak_cgi_file_get_type ())
