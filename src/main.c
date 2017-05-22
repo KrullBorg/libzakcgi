@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2016 Andrea Zagli <azagli@libero.it>
+ * Copyright (C) 2015-2017 Andrea Zagli <azagli@libero.it>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -26,6 +26,7 @@
 #include <locale.h>
 
 #include <glib/gprintf.h>
+#include <glib/gstdio.h>
 #include <gio/gunixinputstream.h>
 
 #include "main.h"
@@ -34,13 +35,13 @@ static void zak_cgi_main_class_init (ZakCgiMainClass *class);
 static void zak_cgi_main_init (ZakCgiMain *zak_cgi_main);
 
 static void zak_cgi_main_set_property (GObject *object,
-                               guint property_id,
-                               const GValue *value,
-                               GParamSpec *pspec);
+                                       guint property_id,
+                                       const GValue *value,
+                                       GParamSpec *pspec);
 static void zak_cgi_main_get_property (GObject *object,
-                               guint property_id,
-                               GValue *value,
-                               GParamSpec *pspec);
+                                       guint property_id,
+                                       GValue *value,
+                                       GParamSpec *pspec);
 
 static void zak_cgi_main_dispose (GObject *gobject);
 static void zak_cgi_main_finalize (GObject *gobject);
@@ -779,7 +780,7 @@ gchar
 					                         &error);
 					if (l != bytesread)
 						{
-							g_warning ("Error reading stdin: bytes read differ from content length");
+							g_warning ("Error reading stdin: bytes read (%d) differ from content length (%d).", bytesread, l);
 						}
 					if (error != NULL)
 						{
@@ -790,42 +791,79 @@ gchar
 
 	if (zakcgimain != NULL)
 		{
-			priv->stdin = g_strdup (ret);
+			priv->stdin = g_memdup (ret, bytesread);
 		}
 
 	return ret;
 }
 
-static gchar
-*zak_cgi_main_read_line (const gchar *buf, guint l, guint *i,
-                         gboolean no_new_line_but_null_terminated,
-                         guint *bytesread)
+typedef struct
 {
-	gchar *line;
-	guint line_start;
-	guint count;
+	gchar *data;
+	gsize length;
+} Block;
 
-	for (line_start = *i, count = 1; *i < l - 1; (*i)++, count++)
+static GPtrArray
+*zak_cgi_main_split_content (const gchar *buf,
+                             guint l,
+                             const gchar *delimiter)
+{
+	guint i;
+	guint l_delimiter;
+	guint start;
+
+	gchar *_delimiter;
+
+	GPtrArray *ar;
+
+	gsize length;
+
+	_delimiter = g_strdup_printf ("%s%c%c", delimiter, 13, 10);
+
+	ar = g_ptr_array_new ();
+
+	l_delimiter = strlen (_delimiter);
+
+	start = 0;
+	for (i = 0; i < (l - (l_delimiter + 2)); i++)
 		{
-			if (buf[*i] == 13 && buf[*i + 1] == 10)
+			/* start to control if delimiter is reached */
+			if (i >= l_delimiter
+				&& memcmp (buf + (i - l_delimiter), _delimiter, l_delimiter) == 0)
 				{
-					(*i)++;
-					count++;
-					break;
+					Block *b;
+
+					length = i - l_delimiter - start;
+
+					if (length > 0)
+						{
+							b = g_new0 (Block, 1);
+
+							b->data = g_memdup (buf + start, length);
+							b->length = length;
+
+							g_ptr_array_add (ar, b);
+						}
+
+					start = i;
 				}
 		}
 
-	line = (gchar *)g_memdup (buf + line_start, count);
-	if (no_new_line_but_null_terminated)
+	if (i >= l_delimiter)
 		{
-			line[count - 2] = '\0';
+			Block *b;
+
+			length = i - start;
+
+			b = g_new0 (Block, 1);
+
+			b->data = g_memdup (buf + start, length);
+			b->length = length;
+
+			g_ptr_array_add (ar, b);
 		}
 
-	*bytesread = count;
-
-	(*i)++;
-
-	return line;
+	return ar;
 }
 
 ZakCgiFile
@@ -837,6 +875,7 @@ ZakCgiFile
 	b->name = g_strdup (file->name);
 	b->content = g_memdup (file->content, file->size);
 	b->size = file->size;
+	b->content_type = g_strdup (file->content_type);
 
 	return b;
 }
@@ -846,6 +885,7 @@ zak_cgi_file_free (ZakCgiFile *file)
 {
 	g_free (file->name);
 	g_free (file->content);
+	g_free (file->content_type);
 	g_slice_free (ZakCgiFile, file);
 }
 
@@ -860,15 +900,35 @@ static GHashTable
 	const gchar *env;
 
 	guint l;
-	guint i;
-	guint bytesread;
 
 	gchar *_boundary;
 
-	gchar *line;
 	gchar *content_disposition;
 	gchar *content_type;
 	gchar *tmp;
+
+	gchar **splitted;
+
+	GPtrArray *content_splitted;
+	guint j;
+
+	gchar **boundary_splitted;
+
+	gchar **v_content;
+	gchar **parts;
+	guint l_v_content;
+
+	gchar *param_name;
+	gchar *param_name_file;
+	gchar *param_value;
+	guint file_l;
+
+	GValue *gval;
+	GValue *gval_tmp;
+
+	ZakCgiFile *zgfile;
+
+	GPtrArray *ar;
 
 	ht = NULL;
 
@@ -886,13 +946,13 @@ static GHashTable
 			return ht;
 		}
 
-    content_type = (gchar *)g_getenv ("CONTENT_TYPE");
+	content_type = g_strdup (g_getenv ("CONTENT_TYPE"));
 	if (content_type == NULL)
 		{
 			return ht;
 		}
 
-	gchar **splitted = g_strsplit (content_type, ";", -1);
+	splitted = g_strsplit (content_type, ";", -1);
 	if (g_strcmp0 (content_type, "") == 0
 		|| g_strcmp0 (splitted[0], "application/x-www-form-urlencoded") == 0)
 		{
@@ -903,7 +963,7 @@ static GHashTable
 			if (g_strv_length (splitted) > 1
 				&& boundary == NULL)
 				{
-					gchar **boundary_splitted = g_strsplit (splitted[1], "=", 2);
+					boundary_splitted = g_strsplit (splitted[1], "=", 2);
 					_boundary = g_strdup_printf ("--%s", boundary_splitted[1]);
 					g_strfreev (boundary_splitted);
 				}
@@ -918,169 +978,170 @@ static GHashTable
 
 			ht = g_hash_table_new (g_str_hash, g_str_equal);
 
-			i = 0;
-			do
+			content_splitted = zak_cgi_main_split_content (buf, l, _boundary);
+
+			for (j = 0; j < content_splitted->len; j++)
 				{
-					/* read line */
-					line = zak_cgi_main_read_line (buf, l, &i, TRUE, &bytesread);
-					if (g_strcmp0 (line, _boundary) == 0)
+					GMemoryInputStream *mstream;
+					GDataInputStream *dataistream;
+					gsize length;
+					GError *error;
+
+					Block *b;
+
+					b = (Block *)g_ptr_array_index (content_splitted, j);
+
+					if (b->length == 0
+						|| memcmp (b->data, "--", 2) == 0)
 						{
-							/* content-disposition */
-							gchar **v_content;
-							gchar **parts;
-							guint l_v_content;
+							continue;
+						}
 
-							gchar *param_name;
-							gchar *param_name_file;
-							gchar *param_value;
-							guint file_l;
+					/* read line */
+					mstream = G_MEMORY_INPUT_STREAM (g_memory_input_stream_new_from_data (b->data, b->length, NULL));
+					dataistream = g_data_input_stream_new (G_INPUT_STREAM (mstream));
 
-							GValue *gval;
-							GValue *gval_tmp;
+					/* content-disposition */
+					error = NULL;
+					content_disposition = g_data_input_stream_read_line (dataistream, NULL, NULL, &error);
+					if (content_disposition == NULL)
+						{
+							if (error != NULL)
+								{
+									g_warning ("Error on read content disposition: %s", error->message);
+								}
+							else
+								{
+									g_warning ("No content disposition found.");
+								}
+						}
 
-							ZakCgiFile *zgfile;
+					v_content = g_strsplit (content_disposition, ";", -1);
+					l_v_content = g_strv_length (v_content);
 
-							GPtrArray *ar;
+					parts = g_strsplit_set (v_content[1], "=\"", 0);
+					param_name = g_strdup (parts[2]);
+					g_strfreev (parts);
 
-							content_disposition = zak_cgi_main_read_line (buf, l, &i, TRUE, &bytesread);
-
-							v_content = g_strsplit (content_disposition, ";", -1);
-							l_v_content = g_strv_length (v_content);
-
-							parts = g_strsplit (v_content[1], "=", 2);
-							param_name = g_strndup (parts[1] + 1, strlen (parts[1]) - 2);
-							param_name[strlen (parts[1]) - 2] = '\0';
+					if (l_v_content == 3)
+						{
+							parts = g_strsplit_set (v_content[2], "=\"", 0);
+							param_name_file = g_strdup (parts[2]);
 							g_strfreev (parts);
 
-							if (l_v_content == 3)
+							/* content-type */
+							/* if (content_type != NULL) */
+							/* 	{ */
+							/* 		g_free (content_type); */
+							/* 		content_type = NULL; */
+							/* 	} */
+							tmp = g_data_input_stream_read_line (dataistream, &length, NULL, NULL);
+							tmp[length - 1] = '\0';
+							parts = g_strsplit (tmp, ": ", -1);
+							content_type = g_strdup (parts[1]);
+							g_strfreev (parts);
+							g_free (tmp);
+						}
+					else
+						{
+							/* if (content_type != NULL) */
+							/* 	{ */
+							/* 		g_free (content_type); */
+									content_type = NULL;
+							/* 	} */
+						}
+
+					g_free (content_disposition);
+					g_strfreev (v_content);
+
+					/* empty */
+					g_data_input_stream_read_line (dataistream, NULL, NULL, NULL);
+
+					if (l_v_content == 3)
+						{
+							param_value = (gchar *)g_malloc (1);
+							if (g_strcmp0 (param_name_file, "") != 0)
 								{
-									parts = g_strsplit (v_content[2], "=", 2);
-									param_name_file = g_strndup (parts[1] + 1, strlen (parts[1]) - 2);
-									param_name_file[strlen (parts[1]) - 2] = '\0';
-									g_strfreev (parts);
+									tmp = g_data_input_stream_read_upto (dataistream, "", -1, &length, NULL, NULL);
 
-									/* content-type */
-									content_type = zak_cgi_main_read_line (buf, l, &i, TRUE, &bytesread);
-									g_free (content_type);
-								}
+									param_value = g_realloc (param_value, length);
+									memmove (param_value, tmp, length);
 
-							g_strfreev (v_content);
-							g_free (content_disposition);
-
-							/* empty */
-							g_free (zak_cgi_main_read_line (buf, l, &i, TRUE, &bytesread));
-
-							if (l_v_content == 3)
-								{
-									param_value = (gchar *)g_malloc (1);
-									if (g_strcmp0 (param_name_file, "") != 0)
-										{
-											gboolean exit;
-
-											exit = FALSE;
-											file_l = 0;
-											do
-												{
-													tmp = zak_cgi_main_read_line (buf, l, &i, FALSE, &bytesread);
-
-													if (memcmp (tmp, _boundary, strlen (_boundary)) == 0)
-														{
-															i -= bytesread;
-															exit = TRUE;
-														}
-													else
-														{
-															param_value = g_realloc (param_value, file_l + bytesread);
-															memmove (param_value + file_l, tmp, bytesread);
-															file_l += bytesread;
-														}
-
-													g_free (tmp);
-												} while (!exit);
-										}
-									else
-										{
-											/* empty */
-											g_free (zak_cgi_main_read_line (buf, l, &i, TRUE, &bytesread));
-
-											file_l = 3;
-											param_value[0] = '\0';
-										}
+									file_l = length;
 								}
 							else
 								{
-									param_value = zak_cgi_main_read_line (buf, l, &i, TRUE, &bytesread);
-								}
+									/* empty */
+									g_data_input_stream_read_line (dataistream, NULL, NULL, NULL);
 
-							gval_tmp = g_new0 (GValue, 1);
-							if (l_v_content == 3)
-								{
-									zgfile = (ZakCgiFile *)g_new0 (ZakCgiFile, 1);
-									zgfile->name = g_strdup (param_name_file);
-									zgfile->content = g_memdup (param_value, file_l - 2);
-									zgfile->size = file_l - 2;
-
-									g_value_init (gval_tmp, ZAK_CGI_TYPE_FILE);
-									g_value_take_boxed (gval_tmp, zgfile);
-								}
-							else
-								{
-									g_value_init (gval_tmp, G_TYPE_STRING);
-									g_value_set_string (gval_tmp, g_strdup (param_value));
-								}
-
-							gval = g_hash_table_lookup (ht, param_name);
-							if (gval != NULL)
-								{
-									if (!G_VALUE_HOLDS (gval, G_TYPE_PTR_ARRAY))
-										{
-											GValue *g;
-
-											g = (GValue *)g_new0 (GValue, 1);
-											g_value_init (g, G_VALUE_TYPE (gval));
-											g_value_copy (gval, g);
-											g_value_unset (gval);
-
-											/* converto to GPtrArray */
-											ar = g_ptr_array_new ();
-
-											g_ptr_array_add (ar, g);
-
-											g_value_init (gval, G_TYPE_PTR_ARRAY);
-											g_value_take_boxed (gval, ar);
-											g_hash_table_replace (ht, g_strdup (param_name), gval);
-										}
-									else
-										{
-											ar = (GPtrArray *)g_value_get_boxed (gval);
-										}
-									g_ptr_array_add (ar, gval_tmp);
-								}
-							else
-								{
-									g_hash_table_replace (ht, g_strdup (param_name), gval_tmp);
-								}
-
-							g_free (param_name);
-							g_free (param_value);
-							if (l_v_content == 3)
-								{
-									g_free (param_name_file);
+									file_l = 2;
+									param_value[0] = '\0';
 								}
 						}
 					else
 						{
-							tmp = g_strdup_printf ("%s--", _boundary);
-							if (g_strcmp0 (line, tmp) == 0)
-								{
-									g_free (tmp);
-									break;
-								}
-							g_free (tmp);
+							param_value = g_data_input_stream_read_line (dataistream, &length, NULL, NULL);
+							param_value[length - 1] = '\0';
 						}
 
-					g_free (line);
-				} while (i < l);
+					gval_tmp = g_new0 (GValue, 1);
+					if (l_v_content == 3)
+						{
+							zgfile = (ZakCgiFile *)g_new0 (ZakCgiFile, 1);
+							zgfile->name = g_strdup (param_name_file);
+							zgfile->content = g_memdup (param_value, file_l - 2);
+							zgfile->size = file_l - 2;
+							zgfile->content_type = g_strdup (content_type);
+							g_free (content_type);
+
+							g_value_init (gval_tmp, ZAK_CGI_TYPE_FILE);
+							g_value_take_boxed (gval_tmp, zgfile);
+						}
+					else
+						{
+							g_value_init (gval_tmp, G_TYPE_STRING);
+							g_value_set_string (gval_tmp, g_strdup (param_value));
+						}
+
+					gval = g_hash_table_lookup (ht, param_name);
+					if (gval != NULL)
+						{
+							if (!G_VALUE_HOLDS (gval, G_TYPE_PTR_ARRAY))
+								{
+									GValue *g;
+
+									g = (GValue *)g_new0 (GValue, 1);
+									g_value_init (g, G_VALUE_TYPE (gval));
+									g_value_copy (gval, g);
+									g_value_unset (gval);
+
+									/* converto to GPtrArray */
+									ar = g_ptr_array_new ();
+
+									g_ptr_array_add (ar, g);
+
+									g_value_init (gval, G_TYPE_PTR_ARRAY);
+									g_value_take_boxed (gval, ar);
+									g_hash_table_replace (ht, g_strdup (param_name), gval);
+								}
+							else
+								{
+									ar = (GPtrArray *)g_value_get_boxed (gval);
+								}
+							g_ptr_array_add (ar, gval_tmp);
+						}
+					else
+						{
+							g_hash_table_replace (ht, g_strdup (param_name), gval_tmp);
+						}
+
+					g_free (param_name);
+					g_free (param_value);
+					if (l_v_content == 3)
+						{
+							g_free (param_name_file);
+						}
+				}
 
 			g_free (_boundary);
 		}
