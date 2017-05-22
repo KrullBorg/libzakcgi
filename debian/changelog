@@ -1,10 +1,19 @@
-libzakcgi (0.0.1-1~2.gbp9d2f66) UNRELEASED; urgency=medium
+libzakcgi (0.0.1-1~3.gbp85eefa) UNRELEASED; urgency=medium
 
-  ** SNAPSHOT build @9d2f66d569e076b3cf944170b26cae9b234decd0 **
+  ** SNAPSHOT build @85eefa849c28fe8c6aa7689c51ad9abf4419b912 **
 
   [ Andrea Zagli ]
   * Initial release
 
   [ tux ]
 
- -- Andrea Zagli <azagli@libero.it>  Sun, 22 May 2016 09:49:11 +0200
+  [ Andrea Zagli ]
+  * Debian pkg: fix from upstream.
+  * Refactored function parse_stdin (for binary attached files).
+  * Removed debug refactoring parse_stdin.
+  * Removed other debug.
+  * Added content_type to ZakCgiFile.
+
+  [ tux ]
+
+ -- tux <tux@develop64.comune.scandicci.fi.it>  Mon, 22 May 2017 17:35:10 +0200
