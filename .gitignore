@@ -61,3 +61,15 @@ tests/tag
 tests/url
 *.gir
 *.typelib
+test-driver
+docs/reference/*-decl-list.txt
+docs/reference/*-decl.txt
+docs/reference/*-overrides.txt
+docs/reference/*-undeclared.txt
+docs/reference/*-undocumented.txt
+docs/reference/*-unused.txt
+docs/reference/*.args
+docs/reference/*.hierarchy
+docs/reference/*.interfaces
+docs/reference/*.prerequisites
+docs/reference/*.signals
