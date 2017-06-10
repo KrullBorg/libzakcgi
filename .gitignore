@@ -59,3 +59,5 @@ tests/redirect
 tests/session
 tests/tag
 tests/url
+*.gir
+*.typelib
