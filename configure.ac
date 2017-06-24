@@ -20,6 +20,11 @@ LT_INIT
 
 AC_LIBTOOL_WIN32_DLL
 
+GOBJECT_INTROSPECTION_CHECK([1.30.0])
+
+# check for gtk-doc
+GTK_DOC_CHECK([1.14],[--flavour no-tmpl])
+
 # Checks for programs.
 AC_PROG_CC
 AC_PROG_CXX
@@ -68,5 +73,7 @@ AC_CONFIG_FILES([
 	Makefile
 	src/Makefile
 	tests/Makefile
+	docs/Makefile
+	docs/reference/Makefile
 ])
 AC_OUTPUT
