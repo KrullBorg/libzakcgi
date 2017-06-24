@@ -10,9 +10,11 @@ diff --git a/Makefile.am b/Makefile.am
 index c87fc2b..72c9b28 100644
 --- a/Makefile.am
 +++ b/Makefile.am
-@@ -1,4 +1,4 @@
--SUBDIRS = src tests
-+SUBDIRS = src
+@@ -1,6 +1,6 @@
+ DISTCHECK_CONFIGURE_FLAGS = --enable-introspection --enable-gtk-doc
+ 
+-SUBDIRS = src tests docs
++SUBDIRS = src docs
  
  ACLOCAL_AMFLAGS = -I m4
  

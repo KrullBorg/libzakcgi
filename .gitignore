@@ -73,3 +73,4 @@ docs/reference/*.hierarchy
 docs/reference/*.interfaces
 docs/reference/*.prerequisites
 docs/reference/*.signals
+build/
