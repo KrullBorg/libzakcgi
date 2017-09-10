@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Andrea Zagli <azagli@libero.it>
+ * Copyright (C) 2015-2017 Andrea Zagli <azagli@libero.it>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -91,7 +91,8 @@ struct _ZakCgiFile
 {
 	gchar *name;
 	gchar *content;
-    guint size;
+	guint size;
+	gchar *content_type;
 };
 
 #define ZAK_CGI_TYPE_FILE (zak_cgi_file_get_type ())
