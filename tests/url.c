@@ -26,7 +26,7 @@ ht_foreach (gpointer key,
 	GString *str = (GString *)user_data;
 
 	g_string_append_printf (str, "<tr><td>%s</td><td>%s</td></tr>\n",
-							(gchar *)key, g_value_get_string ((GValue *)value));
+	                        (gchar *)key, g_value_get_string ((GValue *)value));
 }
 
 void
@@ -84,14 +84,14 @@ main (int argc, char *argv[])
 	str = g_string_new ("<html>\n"
 	                    "<head><title>Url</title></head>\n"
 	                    "<body>\n"
-						"FROM INIT<br/><br/>\n");
+	                    "FROM INIT<br/><br/>\n");
 
 	env = g_string_new ("");
 	g_string_append_printf (env, "<table>\n");
 	zak_cgi_main_env_foreach (zakcgimain, ht_foreach, env);
 	g_string_append_printf (env, "</table>\n");
 
-	url = zak_cgi_url_new (NULL);
+	url = zak_cgi_url_new (zakcgimain);
 
 	zak_cgi_url_connect_not_found (url, (ZakCgiUrlConnectedFunction)hook_not_found, str);
 
