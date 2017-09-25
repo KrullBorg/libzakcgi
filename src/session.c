@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2016 Andrea Zagli <azagli@libero.it>
+ * Copyright (C) 2015-2017 Andrea Zagli <azagli@libero.it>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -113,7 +113,7 @@ zak_cgi_session_init (ZakCgiSession *zak_cgi_session)
 }
 
 /**
- * zak_cgi_session_new:
+ * zak_cgi_session_new_minutes:
  * @zakcgimain:
  * @base_uri:
  * @path:

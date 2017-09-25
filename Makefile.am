@@ -1,4 +1,6 @@
-SUBDIRS = src tests
+DISTCHECK_CONFIGURE_FLAGS = --enable-introspection --enable-gtk-doc
+
+SUBDIRS = src tests docs
 
 ACLOCAL_AMFLAGS = -I m4
 

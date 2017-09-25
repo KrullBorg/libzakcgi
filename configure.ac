@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.65)
-AC_INIT([libzakcgi], [0.1.0], [azagli@libero.it])
+AC_INIT([libzakcgi], [0.1.1], [azagli@libero.it])
 AC_CONFIG_SRCDIR([src/main.c])
 AC_CONFIG_HEADER([config.h])
 
@@ -19,6 +19,11 @@ AC_CANONICAL_SYSTEM
 LT_INIT
 
 AC_LIBTOOL_WIN32_DLL
+
+GOBJECT_INTROSPECTION_CHECK([1.30.0])
+
+# check for gtk-doc
+GTK_DOC_CHECK([1.14],[--flavour no-tmpl])
 
 # Checks for programs.
 AC_PROG_CC
@@ -68,5 +73,7 @@ AC_CONFIG_FILES([
 	Makefile
 	src/Makefile
 	tests/Makefile
+	docs/Makefile
+	docs/reference/Makefile
 ])
 AC_OUTPUT
