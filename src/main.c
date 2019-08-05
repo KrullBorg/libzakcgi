@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2017 Andrea Zagli <azagli@libero.it>
+ * Copyright (C) 2015-2019 Andrea Zagli <azagli@libero.it>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -628,9 +628,10 @@ static GHashTable
 						{
 							ar = (GPtrArray *)g_value_get_boxed (gval);
 						}
-					if (parts[1] == NULL)
+					if (parts[1] == NULL
+					    || g_strcmp0 (parts[1], "") == 0)
 						{
-							g_ptr_array_add (ar, "");
+							g_ptr_array_add (ar, g_strdup (""));
 						}
 					else
 						{
@@ -646,9 +647,10 @@ static GHashTable
 
 					g_value_init (gval, G_TYPE_STRING);
 
-					if (parts[1] == NULL)
+					if (parts[1] == NULL
+					    || g_strcmp0 (parts[1], "") == 0)
 						{
-							g_value_set_string (gval, "");
+							g_value_set_string (gval, g_strdup (""));
 						}
 					else
 						{
