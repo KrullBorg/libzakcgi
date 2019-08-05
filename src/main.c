@@ -569,6 +569,7 @@ static GHashTable
 	gchar *value;
 
 	GValue *gval;
+	GValue *gvaltmp;
 	GPtrArray *ar;
 
 	ht = NULL;
@@ -614,7 +615,12 @@ static GHashTable
 							/* convert to GPtrArray */
 							ar = g_ptr_array_new ();
 
-							g_ptr_array_add (ar, g_strdup (g_value_get_string (gval)));
+							gvaltmp = g_new0 (GValue, 1);
+
+							g_value_init (gvaltmp, G_VALUE_TYPE (gval));
+							g_value_copy (gval, gvaltmp);
+
+							g_ptr_array_add (ar, gvaltmp);
 							g_value_unset (gval);
 
 							g_value_init (gval, G_TYPE_PTR_ARRAY);
@@ -628,16 +634,23 @@ static GHashTable
 						{
 							ar = (GPtrArray *)g_value_get_boxed (gval);
 						}
+
+					gvaltmp = g_new0 (GValue, 1);
+
+					g_value_init (gvaltmp, G_TYPE_STRING);
+
 					if (parts[1] == NULL
 					    || g_strcmp0 (parts[1], "") == 0)
 						{
-							g_ptr_array_add (ar, g_strdup (""));
+							g_value_set_string (gvaltmp, g_strdup (""));
+							g_ptr_array_add (ar, gvaltmp);
 						}
 					else
 						{
 							value = g_strdup (parts[1]);
 							form_decode (value);
-							g_ptr_array_add (ar, g_strdup (value));
+							g_value_set_string (gvaltmp, g_strdup (value));
+							g_ptr_array_add (ar, gvaltmp);
 							g_free (value);
 						}
 				}
