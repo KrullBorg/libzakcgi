@@ -601,6 +601,7 @@ static GHashTable
 		{
 			qstring = query_string;
 		}
+
 	params = g_strsplit (qstring, "&", -1);
 	l = g_strv_length (params);
 	for (i = 0; i < l; i++)
@@ -639,7 +640,8 @@ static GHashTable
 
 					g_value_init (gvaltmp, G_TYPE_STRING);
 
-					if (parts[1] == NULL
+					if (g_strv_length (parts) == 1
+					    || parts[1] == NULL
 					    || g_strcmp0 (parts[1], "") == 0)
 						{
 							g_value_set_string (gvaltmp, g_strdup (""));
@@ -660,7 +662,8 @@ static GHashTable
 
 					g_value_init (gval, G_TYPE_STRING);
 
-					if (parts[1] == NULL
+					if (g_strv_length (parts) == 1
+					    || parts[1] == NULL
 					    || g_strcmp0 (parts[1], "") == 0)
 						{
 							g_value_set_string (gval, g_strdup (""));
@@ -806,7 +809,7 @@ gchar
 
 	if (zakcgimain != NULL)
 		{
-			priv->stdin = g_memdup (ret, bytesread);
+			priv->stdin = g_memdup (ret, l + 1);
 		}
 
 	return ret;
