@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2019 Andrea Zagli <azagli@libero.it>
+ * Copyright (C) 2015-2020 Andrea Zagli <azagli@libero.it>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -1098,7 +1098,7 @@ static GHashTable
 						}
 					else
 						{
-							param_value = g_data_input_stream_read_line (dataistream, &length, NULL, NULL);
+							param_value = g_data_input_stream_read_upto (dataistream, "", -1, &length, NULL, NULL);
 							param_value[length - 1] = '\0';
 						}
 
